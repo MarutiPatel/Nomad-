@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   User, Edit, Settings, Shield, Eye, EyeOff, MapPin, 
   Calendar, Globe, Heart, Star, Trophy, Camera, Save, X
@@ -11,12 +11,25 @@ function ProfilePage() {
   const [isGhostMode, setIsGhostMode] = useState(false);
   
   const [editForm, setEditForm] = useState({
-    displayName: user?.displayName || '',
+    displayName: '',
     bio: '',
-    travelStyle: user?.travelStyle || 'Explorer',
+    travelStyle: 'Explorer',
     interests: [] as string[],
     languages: [] as string[]
   });
+
+  // Initialize form data with user data when component mounts or user changes
+  useEffect(() => {
+    if (user) {
+      setEditForm({
+        displayName: user.displayName || '',
+        bio: user.bio || '',
+        travelStyle: user.travelStyle || 'Explorer',
+        interests: user.interests || [],
+        languages: user.languages || []
+      });
+    }
+  }, [user]);
 
   const travelStyles = [
     'Explorer', 'Adventure Seeker', 'Nature Lover', 'Cultural Enthusiast',
@@ -36,10 +49,28 @@ function ProfilePage() {
   ];
 
   const handleSave = () => {
+    // Save all form data to user profile
     updateProfile({
       displayName: editForm.displayName,
-      travelStyle: editForm.travelStyle
+      bio: editForm.bio,
+      travelStyle: editForm.travelStyle,
+      interests: editForm.interests,
+      languages: editForm.languages
     });
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    // Reset form to original user data
+    if (user) {
+      setEditForm({
+        displayName: user.displayName || '',
+        bio: user.bio || '',
+        travelStyle: user.travelStyle || 'Explorer',
+        interests: user.interests || [],
+        languages: user.languages || []
+      });
+    }
     setIsEditing(false);
   };
 
@@ -61,6 +92,13 @@ function ProfilePage() {
     }));
   };
 
+  const handleInputChange = (field: string, value: string) => {
+    setEditForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   return (
     <div className="p-4 pb-20 lg:pb-4">
       {/* Header */}
@@ -79,12 +117,21 @@ function ProfilePage() {
             <span>{isGhostMode ? 'Ghost Mode' : 'Visible'}</span>
           </button>
           
-          <button
-            onClick={() => setIsEditing(!isEditing)}
-            className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-          >
-            {isEditing ? <X className="h-4 w-4 text-gray-400" /> : <Edit className="h-4 w-4 text-gray-400" />}
-          </button>
+          {!isEditing ? (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+            >
+              <Edit className="h-4 w-4 text-gray-400" />
+            </button>
+          ) : (
+            <button
+              onClick={handleCancel}
+              className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+            >
+              <X className="h-4 w-4 text-gray-400" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -107,11 +154,12 @@ function ProfilePage() {
             <input
               type="text"
               value={editForm.displayName}
-              onChange={(e) => setEditForm(prev => ({ ...prev, displayName: e.target.value }))}
+              onChange={(e) => handleInputChange('displayName', e.target.value)}
               className="text-xl font-bold text-white bg-transparent border-b border-white/20 focus:border-cyan-400 focus:outline-none text-center"
+              placeholder="Enter display name"
             />
           ) : (
-            <h2 className="text-xl font-bold text-white">{user?.displayName}</h2>
+            <h2 className="text-xl font-bold text-white">{editForm.displayName}</h2>
           )}
           
           <div className="flex items-center justify-center space-x-2 mt-2">
@@ -126,7 +174,7 @@ function ProfilePage() {
           {isEditing ? (
             <select
               value={editForm.travelStyle}
-              onChange={(e) => setEditForm(prev => ({ ...prev, travelStyle: e.target.value }))}
+              onChange={(e) => handleInputChange('travelStyle', e.target.value)}
               className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white focus:border-cyan-400 focus:outline-none"
             >
               {travelStyles.map(style => (
@@ -135,7 +183,7 @@ function ProfilePage() {
             </select>
           ) : (
             <span className="inline-block px-4 py-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full text-purple-400 border border-purple-400/30">
-              {user?.travelStyle}
+              {editForm.travelStyle}
             </span>
           )}
         </div>
@@ -146,7 +194,7 @@ function ProfilePage() {
           {isEditing ? (
             <textarea
               value={editForm.bio}
-              onChange={(e) => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
+              onChange={(e) => handleInputChange('bio', e.target.value)}
               placeholder="Tell fellow travelers about yourself..."
               className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none resize-none"
               rows={3}
@@ -234,24 +282,36 @@ function ProfilePage() {
 
         {/* Save Button */}
         {isEditing && (
-          <button
-            onClick={handleSave}
-            className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-3 rounded-2xl font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center space-x-2"
-          >
-            <Save className="h-5 w-5" />
-            <span>Save Changes</span>
-          </button>
+          <div className="flex space-x-3">
+            <button
+              onClick={handleCancel}
+              className="flex-1 px-6 py-3 border border-white/20 rounded-2xl text-gray-300 hover:bg-white/5 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-3 rounded-2xl font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center space-x-2"
+            >
+              <Save className="h-5 w-5" />
+              <span>Save Changes</span>
+            </button>
+          </div>
         )}
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 text-center">
-          <div className="text-lg font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">12</div>
+          <div className="text-lg font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+            {user?.footprints || 0}
+          </div>
           <div className="text-xs text-gray-400">Footprints</div>
         </div>
         <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 text-center">
-          <div className="text-lg font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">5</div>
+          <div className="text-lg font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
+            {user?.connections || 0}
+          </div>
           <div className="text-xs text-gray-400">Connections</div>
         </div>
         <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 text-center">

@@ -14,6 +14,8 @@ interface User {
   karma: number;
   footprints: number;
   connections: number;
+  interests: string[];
+  languages: string[];
 }
 
 interface AuthContextType {
@@ -97,6 +99,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const parsedUser = JSON.parse(savedUser);
         // Convert joinedAt back to Date object
         parsedUser.joinedAt = new Date(parsedUser.joinedAt);
+        
+        // Ensure all required fields exist for backwards compatibility
+        if (!parsedUser.interests) parsedUser.interests = [];
+        if (!parsedUser.languages) parsedUser.languages = [];
+        if (!parsedUser.bio) parsedUser.bio = '';
+        
         setUser(parsedUser);
       } catch (err) {
         console.error('Error parsing saved user:', err);
@@ -120,7 +128,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       location: 'Unknown',
       karma: Math.floor(Math.random() * 100) + 50,
       footprints: Math.floor(Math.random() * 20),
-      connections: Math.floor(Math.random() * 10)
+      connections: Math.floor(Math.random() * 10),
+      interests: [],
+      languages: []
     };
     return newUser;
   };
@@ -141,8 +151,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error('No account found with this email. Please sign up first.');
       }
       
-      // Convert joinedAt back to Date object
+      // Convert joinedAt back to Date object and ensure all fields exist
       existingUser.joinedAt = new Date(existingUser.joinedAt);
+      if (!existingUser.interests) existingUser.interests = [];
+      if (!existingUser.languages) existingUser.languages = [];
+      if (!existingUser.bio) existingUser.bio = '';
       
       setUser(existingUser);
       localStorage.setItem('nomad_user', JSON.stringify(existingUser));
@@ -175,6 +188,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       
       existingUser.joinedAt = new Date(existingUser.joinedAt);
+      if (!existingUser.interests) existingUser.interests = [];
+      if (!existingUser.languages) existingUser.languages = [];
+      if (!existingUser.bio) existingUser.bio = '';
       
       setUser(existingUser);
       localStorage.setItem('nomad_user', JSON.stringify(existingUser));
