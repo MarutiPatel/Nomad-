@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   MapPin, Camera, Heart, MessageCircle, Share, Plus, 
   Filter, Search, Map, Grid, List, Clock, Star, Eye,
-  Edit, Save, X, Trash2
+  Edit, Save, X, Trash2, Play, Video
 } from 'lucide-react';
 
 interface Footprint {
@@ -11,7 +11,8 @@ interface Footprint {
   coordinates: { lat: number; lng: number };
   title: string;
   description: string;
-  image: string;
+  mediaType: 'photo' | 'video';
+  mediaUrl: string;
   timestamp: Date;
   likes: number;
   comments: number;
@@ -35,7 +36,8 @@ function FootprintsPage() {
       coordinates: { lat: 15.2993, lng: 74.1240 },
       title: 'Sunset Paradise',
       description: 'Amazing sunset view with fellow travelers. The beach was perfect for evening walks and the local food was incredible!',
-      image: 'https://images.pexels.com/photos/1032650/pexels-photo-1032650.jpeg?auto=compress&cs=tinysrgb&w=400',
+      mediaType: 'photo',
+      mediaUrl: 'https://images.pexels.com/photos/1032650/pexels-photo-1032650.jpeg?auto=compress&cs=tinysrgb&w=400',
       timestamp: new Date('2024-01-15T18:30:00'),
       likes: 24,
       comments: 8,
@@ -47,9 +49,10 @@ function FootprintsPage() {
       id: '2',
       location: 'Manali, Himachal Pradesh',
       coordinates: { lat: 32.2396, lng: 77.1887 },
-      title: 'Mountain Adventure',
-      description: 'Trekking through the beautiful mountains of Manali. Met some amazing fellow adventurers here!',
-      image: 'https://images.pexels.com/photos/1366919/pexels-photo-1366919.jpeg?auto=compress&cs=tinysrgb&w=400',
+      title: 'Mountain Adventure Video',
+      description: 'Epic video of our mountain trek through the beautiful valleys of Manali. The views were absolutely breathtaking!',
+      mediaType: 'video',
+      mediaUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
       timestamp: new Date('2024-01-10T14:20:00'),
       likes: 18,
       comments: 5,
@@ -63,12 +66,28 @@ function FootprintsPage() {
       coordinates: { lat: 30.0869, lng: 78.2676 },
       title: 'Spiritual Journey',
       description: 'Found peace by the Ganges. The yoga sessions and meditation were life-changing.',
-      image: 'https://images.pexels.com/photos/1051838/pexels-photo-1051838.jpeg?auto=compress&cs=tinysrgb&w=400',
+      mediaType: 'photo',
+      mediaUrl: 'https://images.pexels.com/photos/1051838/pexels-photo-1051838.jpeg?auto=compress&cs=tinysrgb&w=400',
       timestamp: new Date('2024-01-05T08:15:00'),
       likes: 31,
       comments: 12,
       visibility: 'friends',
       tags: ['spiritual', 'yoga', 'ganges', 'peaceful'],
+      isLiked: true
+    },
+    {
+      id: '4',
+      location: 'Kerala Backwaters',
+      coordinates: { lat: 9.4981, lng: 76.3388 },
+      title: 'Backwater Boat Journey',
+      description: 'Captured this serene boat journey through the backwaters. The sound of water and birds was so calming.',
+      mediaType: 'video',
+      mediaUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+      timestamp: new Date('2024-01-03T16:45:00'),
+      likes: 42,
+      comments: 15,
+      visibility: 'public',
+      tags: ['kerala', 'backwaters', 'boat', 'nature'],
       isLiked: true
     }
   ];
@@ -115,17 +134,14 @@ function FootprintsPage() {
       if (navigator.share) {
         await navigator.share(shareData);
       } else {
-        // Fallback for browsers that don't support Web Share API
         await navigator.clipboard.writeText(`${footprint.title} - ${footprint.description}`);
         alert('Footprint copied to clipboard!');
       }
     } catch (error) {
-      // Handle permission denied or any other errors
       try {
         await navigator.clipboard.writeText(`${footprint.title} - ${footprint.description}`);
         alert('Footprint copied to clipboard!');
       } catch (clipboardError) {
-        // Final fallback if clipboard also fails
         console.error('Share and clipboard both failed:', error, clipboardError);
         alert('Unable to share. Please copy the content manually.');
       }
@@ -332,13 +348,35 @@ function FootprintCard({
 
   return (
     <div className="bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 overflow-hidden hover:border-white/20 transition-all duration-300 hover:scale-105">
-      {/* Image */}
+      {/* Media */}
       <div className="relative h-48 overflow-hidden">
-        <img
-          src={footprint.image}
-          alt={footprint.title}
-          className="w-full h-full object-cover"
-        />
+        {footprint.mediaType === 'photo' ? (
+          <img
+            src={footprint.mediaUrl}
+            alt={footprint.title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="relative w-full h-full">
+            <video
+              src={footprint.mediaUrl}
+              className="w-full h-full object-cover"
+              poster="https://images.pexels.com/photos/1366919/pexels-photo-1366919.jpeg?auto=compress&cs=tinysrgb&w=400"
+            />
+            {/* Video Play Overlay */}
+            <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+              <div className="bg-white/20 backdrop-blur-sm rounded-full p-4 hover:bg-white/30 transition-colors cursor-pointer">
+                <Play className="h-8 w-8 text-white" />
+              </div>
+            </div>
+            {/* Video Icon Badge */}
+            <div className="absolute top-3 left-3 bg-black/50 backdrop-blur-sm px-2 py-1 rounded-full flex items-center space-x-1">
+              <Video className="h-3 w-3 text-white" />
+              <span className="text-white text-xs">Video</span>
+            </div>
+          </div>
+        )}
+        
         <div className="absolute top-3 right-3">
           <div className={`px-2 py-1 rounded-full text-xs font-medium ${
             footprint.visibility === 'public' 
@@ -504,11 +542,30 @@ function FootprintListItem({
   return (
     <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 hover:border-white/20 transition-all duration-300">
       <div className="flex items-start space-x-4">
-        <img
-          src={footprint.image}
-          alt={footprint.title}
-          className="w-16 h-16 rounded-xl object-cover"
-        />
+        <div className="relative w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
+          {footprint.mediaType === 'photo' ? (
+            <img
+              src={footprint.mediaUrl}
+              alt={footprint.title}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <>
+              <video
+                src={footprint.mediaUrl}
+                className="w-full h-full object-cover"
+                poster="https://images.pexels.com/photos/1366919/pexels-photo-1366919.jpeg?auto=compress&cs=tinysrgb&w=100"
+              />
+              <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                <Play className="h-4 w-4 text-white" />
+              </div>
+              <div className="absolute top-1 right-1 bg-black/50 rounded p-1">
+                <Video className="h-2 w-2 text-white" />
+              </div>
+            </>
+          )}
+        </div>
+        
         <div className="flex-1">
           <div className="flex items-start justify-between mb-2">
             <div className="flex-1">
@@ -613,6 +670,8 @@ function CreateFootprintModal({
     title: '',
     location: '',
     description: '',
+    mediaType: 'photo' as 'photo' | 'video',
+    mediaUrl: '',
     visibility: 'public' as 'public' | 'private' | 'friends',
     tags: ''
   });
@@ -622,7 +681,6 @@ function CreateFootprintModal({
     const newFootprint = {
       ...formData,
       coordinates: { lat: 0, lng: 0 }, // Would be set by geolocation
-      image: 'https://images.pexels.com/photos/1032650/pexels-photo-1032650.jpeg?auto=compress&cs=tinysrgb&w=400',
       timestamp: new Date(),
       tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
     };
@@ -657,6 +715,50 @@ function CreateFootprintModal({
                 onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
                 className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none"
                 placeholder="Where are you?"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Media Type</label>
+              <div className="flex space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, mediaType: 'photo' }))}
+                  className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl transition-all duration-300 ${
+                    formData.mediaType === 'photo'
+                      ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg'
+                      : 'bg-white/10 text-gray-400 hover:text-white hover:bg-white/20'
+                  }`}
+                >
+                  <Camera className="h-5 w-5" />
+                  <span>Photo</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, mediaType: 'video' }))}
+                  className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl transition-all duration-300 ${
+                    formData.mediaType === 'video'
+                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
+                      : 'bg-white/10 text-gray-400 hover:text-white hover:bg-white/20'
+                  }`}
+                >
+                  <Video className="h-5 w-5" />
+                  <span>Video</span>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                {formData.mediaType === 'photo' ? 'Photo URL' : 'Video URL'}
+              </label>
+              <input
+                type="url"
+                value={formData.mediaUrl}
+                onChange={(e) => setFormData(prev => ({ ...prev, mediaUrl: e.target.value }))}
+                className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none"
+                placeholder={formData.mediaType === 'photo' ? "Enter photo URL" : "Enter video URL"}
                 required
               />
             </div>
@@ -753,11 +855,22 @@ function ViewFootprintModal({
           </div>
 
           <div className="mb-4">
-            <img
-              src={footprint.image}
-              alt={footprint.title}
-              className="w-full h-48 object-cover rounded-2xl"
-            />
+            {footprint.mediaType === 'photo' ? (
+              <img
+                src={footprint.mediaUrl}
+                alt={footprint.title}
+                className="w-full h-48 object-cover rounded-2xl"
+              />
+            ) : (
+              <div className="relative w-full h-48 rounded-2xl overflow-hidden">
+                <video
+                  src={footprint.mediaUrl}
+                  controls
+                  className="w-full h-full object-cover"
+                  poster="https://images.pexels.com/photos/1366919/pexels-photo-1366919.jpeg?auto=compress&cs=tinysrgb&w=400"
+                />
+              </div>
+            )}
           </div>
 
           <div className="space-y-4">
@@ -777,6 +890,23 @@ function ViewFootprintModal({
             <div>
               <h3 className="text-white font-medium mb-2">Posted</h3>
               <p className="text-gray-300 text-sm">{formatTimeAgo(footprint.timestamp)}</p>
+            </div>
+
+            <div>
+              <h3 className="text-white font-medium mb-2">Media Type</h3>
+              <div className="flex items-center space-x-2">
+                {footprint.mediaType === 'photo' ? (
+                  <>
+                    <Camera className="h-4 w-4 text-blue-400" />
+                    <span className="text-blue-400 text-sm">Photo</span>
+                  </>
+                ) : (
+                  <>
+                    <Video className="h-4 w-4 text-purple-400" />
+                    <span className="text-purple-400 text-sm">Video</span>
+                  </>
+                )}
+              </div>
             </div>
 
             <div className="flex flex-wrap gap-2">
