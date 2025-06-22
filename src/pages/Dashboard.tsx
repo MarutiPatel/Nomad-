@@ -5,7 +5,7 @@ import {
   Footprints, Radar, Target, Camera, Map, Heart, Trophy,
   Bell, Search, Plus, Menu, X, LogOut, Shield, Zap,
   Clock, Utensils, Bot, Eye, Gift, AlertTriangle, BookOpen,
-  Calendar, Globe
+  Calendar, Globe, RefreshCw
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import FootprintsPage from '../features/FootprintsPage';
@@ -25,6 +25,7 @@ import NomadNetworkPage from '../features/NomadNetworkPage';
 
 function Dashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const { user, logout } = useAuth();
   const location = useLocation();
 
@@ -54,6 +55,11 @@ function Dashboard() {
       return location.pathname === path;
     }
     return location.pathname.startsWith(path);
+  };
+
+  const handleLogout = () => {
+    logout();
+    setShowLogoutConfirm(false);
   };
 
   return (
@@ -111,12 +117,34 @@ function Dashboard() {
           {/* User Info */}
           <div className="p-4 border-b border-white/10">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-cyan-400 to-purple-500 flex items-center justify-center">
-                <User className="h-5 w-5 text-white" />
-              </div>
+              <img
+                src={user?.avatar || 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=100'}
+                alt={user?.displayName}
+                className="w-10 h-10 rounded-full object-cover"
+              />
               <div className="flex-1">
                 <div className="text-sm font-medium text-white">{user?.displayName}</div>
-                <div className="text-xs text-gray-400">{user?.travelStyle} Traveler</div>
+                <div className="text-xs text-gray-400">{user?.travelStyle}</div>
+              </div>
+              <div className="flex items-center space-x-1">
+                <div className="w-2 h-2 rounded-full bg-green-400"></div>
+                <span className="text-xs text-green-400">Online</span>
+              </div>
+            </div>
+            
+            {/* User Stats */}
+            <div className="grid grid-cols-3 gap-2 mt-3 text-center">
+              <div className="bg-white/5 rounded-lg p-2">
+                <div className="text-sm font-bold text-cyan-400">{user?.footprints || 0}</div>
+                <div className="text-xs text-gray-400">Footprints</div>
+              </div>
+              <div className="bg-white/5 rounded-lg p-2">
+                <div className="text-sm font-bold text-purple-400">{user?.connections || 0}</div>
+                <div className="text-xs text-gray-400">Connections</div>
+              </div>
+              <div className="bg-white/5 rounded-lg p-2">
+                <div className="text-sm font-bold text-green-400">{user?.karma || 0}</div>
+                <div className="text-xs text-gray-400">Karma</div>
               </div>
             </div>
           </div>
@@ -169,7 +197,7 @@ function Dashboard() {
           {/* Sidebar Footer */}
           <div className="p-4 border-t border-white/10">
             <button
-              onClick={logout}
+              onClick={() => setShowLogoutConfirm(true)}
               className="flex items-center space-x-3 px-4 py-3 rounded-2xl text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-all duration-300 w-full"
             >
               <LogOut className="h-5 w-5" />
@@ -227,6 +255,36 @@ function Dashboard() {
           ))}
         </div>
       </nav>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900/95 backdrop-blur-md rounded-3xl border border-white/20 max-w-sm w-full p-6">
+            <div className="text-center mb-6">
+              <LogOut className="h-12 w-12 text-red-400 mx-auto mb-4" />
+              <h2 className="text-xl font-bold text-white mb-2">Sign Out?</h2>
+              <p className="text-gray-400 text-sm">
+                Are you sure you want to sign out of your NOMAD account?
+              </p>
+            </div>
+            
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                className="flex-1 px-6 py-3 border border-white/20 rounded-2xl text-gray-300 hover:bg-white/5 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex-1 bg-gradient-to-r from-red-500 to-pink-500 px-6 py-3 rounded-2xl font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -244,12 +302,11 @@ function DashboardHome() {
   ];
 
   const recentActivity = [
-    { type: 'footprint', message: 'You dropped a footprint at Goa Beach', time: '2h ago', icon: Footprints },
-    { type: 'buddy', message: 'New travel buddy nearby in Mumbai', time: '4h ago', icon: Users },
-    { type: 'chat', message: 'Message from WanderingSpirit42', time: '6h ago', icon: MessageCircle },
-    { type: 'discovery', message: 'New hidden gem discovered', time: '1d ago', icon: Target },
-    { type: 'ar', message: 'AR tag created at secret beach', time: '2d ago', icon: Eye },
-    { type: 'karma', message: 'Earned 50 karma points for helping locals', time: '3d ago', icon: Heart }
+    { type: 'account', message: `Welcome ${user?.displayName}! Your account was created`, time: 'Just now', icon: User },
+    { type: 'system', message: 'Random travel name assigned for privacy', time: 'Just now', icon: Shield },
+    { type: 'discovery', message: 'Explore all 80+ features across 9 categories', time: 'Now', icon: Target },
+    { type: 'community', message: 'Ready to find your travel twin?', time: 'Now', icon: Users },
+    { type: 'journey', message: 'Your nomadic journey begins here', time: 'Now', icon: Compass }
   ];
 
   return (
@@ -258,30 +315,32 @@ function DashboardHome() {
       <div className="mb-8">
         <div className="bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-pink-500/10 backdrop-blur-sm rounded-3xl p-6 border border-white/10">
           <div className="flex items-center space-x-4 mb-4">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-cyan-400 to-purple-500 flex items-center justify-center">
-              <User className="h-6 w-6 text-white" />
-            </div>
+            <img
+              src={user?.avatar || 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=100'}
+              alt={user?.displayName}
+              className="w-12 h-12 rounded-full object-cover"
+            />
             <div>
-              <h1 className="text-xl font-bold text-white">Welcome back, {user?.displayName}!</h1>
-              <p className="text-gray-400 text-sm">Ready for your next adventure?</p>
+              <h1 className="text-xl font-bold text-white">Welcome, {user?.displayName}!</h1>
+              <p className="text-gray-400 text-sm">Your anonymous travel identity is ready</p>
             </div>
           </div>
           
           <div className="grid grid-cols-4 gap-4">
             <div className="text-center">
-              <div className="text-lg font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">12</div>
+              <div className="text-lg font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">{user?.footprints || 0}</div>
               <div className="text-xs text-gray-400">Footprints</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">5</div>
+              <div className="text-lg font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">{user?.connections || 0}</div>
               <div className="text-xs text-gray-400">Connections</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-bold bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent">3</div>
+              <div className="text-lg font-bold bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent">1</div>
               <div className="text-xs text-gray-400">Cities</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-bold bg-gradient-to-r from-green-400 to-teal-500 bg-clip-text text-transparent">850</div>
+              <div className="text-lg font-bold bg-gradient-to-r from-green-400 to-teal-500 bg-clip-text text-transparent">{user?.karma || 0}</div>
               <div className="text-xs text-gray-400">Karma</div>
             </div>
           </div>
@@ -307,7 +366,7 @@ function DashboardHome() {
 
       {/* Recent Activity */}
       <div className="mb-8">
-        <h2 className="text-lg font-semibold mb-4 text-white">Recent Activity</h2>
+        <h2 className="text-lg font-semibold mb-4 text-white">Getting Started</h2>
         <div className="space-y-3">
           {recentActivity.map((activity, index) => (
             <div key={index} className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
@@ -325,43 +384,44 @@ function DashboardHome() {
         </div>
       </div>
 
-      {/* Travel Stats */}
+      {/* User Profile Summary */}
       <div className="bg-gradient-to-r from-green-500/10 via-blue-500/10 to-purple-500/10 backdrop-blur-sm rounded-3xl p-6 border border-white/10">
         <div className="flex items-center space-x-2 mb-4">
-          <Trophy className="h-6 w-6 text-yellow-400" />
-          <h2 className="text-lg font-semibold text-white">Travel Achievements</h2>
+          <User className="h-6 w-6 text-cyan-400" />
+          <h2 className="text-lg font-semibold text-white">Your Travel Identity</h2>
         </div>
         
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-300">Explorer Badge</span>
-            <div className="flex items-center space-x-2">
-              <div className="w-16 h-2 bg-gray-700 rounded-full">
-                <div className="w-12 h-2 bg-gradient-to-r from-cyan-400 to-purple-500 rounded-full"></div>
-              </div>
-              <span className="text-xs text-gray-400">75%</span>
-            </div>
+            <span className="text-sm text-gray-300">Display Name</span>
+            <span className="text-sm text-cyan-400 font-medium">{user?.displayName}</span>
           </div>
           
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-300">Social Butterfly</span>
-            <div className="flex items-center space-x-2">
-              <div className="w-16 h-2 bg-gray-700 rounded-full">
-                <div className="w-8 h-2 bg-gradient-to-r from-green-400 to-teal-500 rounded-full"></div>
-              </div>
-              <span className="text-xs text-gray-400">50%</span>
-            </div>
+            <span className="text-sm text-gray-300">Travel Style</span>
+            <span className="text-sm text-purple-400 font-medium">{user?.travelStyle}</span>
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-300">Karma Master</span>
+            <span className="text-sm text-gray-300">Member Since</span>
+            <span className="text-sm text-green-400 font-medium">
+              {user?.joinedAt ? new Date(user.joinedAt).toLocaleDateString() : 'Today'}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-300">Privacy Status</span>
             <div className="flex items-center space-x-2">
-              <div className="w-16 h-2 bg-gray-700 rounded-full">
-                <div className="w-14 h-2 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full"></div>
-              </div>
-              <span className="text-xs text-gray-400">85%</span>
+              <Shield className="h-3 w-3 text-green-400" />
+              <span className="text-sm text-green-400 font-medium">Protected</span>
             </div>
           </div>
+        </div>
+
+        <div className="mt-6 p-3 bg-black/20 rounded-xl">
+          <p className="text-xs text-gray-400 text-center">
+            Your identity is completely anonymous. Only your travel experiences are shared with the community.
+          </p>
         </div>
       </div>
     </div>

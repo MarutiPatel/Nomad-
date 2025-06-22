@@ -8,113 +8,251 @@ interface User {
   isAnonymous: boolean;
   travelStyle: string;
   joinedAt: Date;
+  avatar: string;
+  bio: string;
+  location: string;
+  karma: number;
+  footprints: number;
+  connections: number;
 }
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  error: string | null;
   login: (email: string, password: string) => Promise<void>;
   loginWithPhone: (phone: string, otp: string) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
   registerWithPhone: (phone: string) => Promise<void>;
   logout: () => void;
   updateProfile: (updates: Partial<User>) => void;
+  clearError: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Enhanced random name generation
 const generateRandomName = () => {
-  const adjectives = ['Wandering', 'Mystic', 'Cosmic', 'Digital', 'Nomadic', 'Free', 'Wild', 'Zen'];
-  const nouns = ['Explorer', 'Traveler', 'Soul', 'Spirit', 'Wanderer', 'Nomad', 'Dreamer', 'Seeker'];
+  const adjectives = [
+    'Wandering', 'Mystic', 'Cosmic', 'Digital', 'Nomadic', 'Free', 'Wild', 'Zen',
+    'Brave', 'Swift', 'Silent', 'Golden', 'Shadow', 'Storm', 'Ocean', 'Forest',
+    'Crystal', 'Phoenix', 'Lunar', 'Solar', 'Arctic', 'Desert', 'Mountain', 'River',
+    'Thunder', 'Lightning', 'Wind', 'Fire', 'Earth', 'Sky', 'Star', 'Moon'
+  ];
+  
+  const nouns = [
+    'Explorer', 'Traveler', 'Soul', 'Spirit', 'Wanderer', 'Nomad', 'Dreamer', 'Seeker',
+    'Hunter', 'Walker', 'Rider', 'Voyager', 'Pioneer', 'Navigator', 'Pathfinder', 'Roamer',
+    'Drifter', 'Adventurer', 'Journeyer', 'Ranger', 'Scout', 'Warrior', 'Guardian', 'Sage',
+    'Mystic', 'Wizard', 'Shaman', 'Oracle', 'Visionary', 'Prophet', 'Mentor', 'Guide'
+  ];
+  
   const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
   const noun = nouns[Math.floor(Math.random() * nouns.length)];
   const num = Math.floor(Math.random() * 999) + 1;
   return `${adj}${noun}${num}`;
 };
 
+const generateRandomAvatar = () => {
+  const avatars = [
+    'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=100',
+    'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=100',
+    'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=100',
+    'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=100',
+    'https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg?auto=compress&cs=tinysrgb&w=100'
+  ];
+  return avatars[Math.floor(Math.random() * avatars.length)];
+};
+
+const generateRandomTravelStyle = () => {
+  const styles = [
+    'Explorer', 'Adventure Seeker', 'Nature Lover', 'Cultural Enthusiast',
+    'Digital Nomad', 'Budget Traveler', 'Luxury Traveler', 'Solo Wanderer',
+    'Group Traveler', 'Spiritual Seeker', 'Backpacker', 'Road Tripper'
+  ];
+  return styles[Math.floor(Math.random() * styles.length)];
+};
+
+const generateRandomBio = (travelStyle: string) => {
+  const bios = [
+    `${travelStyle} passionate about discovering hidden gems and connecting with fellow travelers.`,
+    `Living the nomad life as a ${travelStyle}. Always ready for the next adventure!`,
+    `${travelStyle} who believes in authentic experiences and meaningful connections.`,
+    `Wandering the world as a ${travelStyle}, collecting memories and making friends.`,
+    `${travelStyle} seeking authentic adventures and genuine connections with like-minded souls.`
+  ];
+  return bios[Math.floor(Math.random() * bios.length)];
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Check for existing session
     const savedUser = localStorage.getItem('nomad_user');
     if (savedUser) {
-      setUser(JSON.parse(savedUser));
+      try {
+        const parsedUser = JSON.parse(savedUser);
+        // Convert joinedAt back to Date object
+        parsedUser.joinedAt = new Date(parsedUser.joinedAt);
+        setUser(parsedUser);
+      } catch (err) {
+        console.error('Error parsing saved user:', err);
+        localStorage.removeItem('nomad_user');
+      }
     }
     setLoading(false);
   }, []);
 
-  const login = async (email: string, password: string) => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
+  const createUser = (identifier: string, isPhone: boolean = false) => {
+    const travelStyle = generateRandomTravelStyle();
     const newUser: User = {
       id: Math.random().toString(36).substr(2, 9),
-      email,
+      ...(isPhone ? { phone: identifier } : { email: identifier }),
       displayName: generateRandomName(),
       isAnonymous: false,
-      travelStyle: 'Explorer',
-      joinedAt: new Date()
+      travelStyle,
+      joinedAt: new Date(),
+      avatar: generateRandomAvatar(),
+      bio: generateRandomBio(travelStyle),
+      location: 'Unknown',
+      karma: Math.floor(Math.random() * 100) + 50,
+      footprints: Math.floor(Math.random() * 20),
+      connections: Math.floor(Math.random() * 10)
     };
+    return newUser;
+  };
+
+  const login = async (email: string, password: string) => {
+    setLoading(true);
+    setError(null);
     
-    setUser(newUser);
-    localStorage.setItem('nomad_user', JSON.stringify(newUser));
+    try {
+      // Simulate API call with validation
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Check if user exists in localStorage (simulate database check)
+      const existingUsers = JSON.parse(localStorage.getItem('nomad_users') || '[]');
+      let existingUser = existingUsers.find((u: any) => u.email === email);
+      
+      if (!existingUser) {
+        throw new Error('No account found with this email. Please sign up first.');
+      }
+      
+      // Convert joinedAt back to Date object
+      existingUser.joinedAt = new Date(existingUser.joinedAt);
+      
+      setUser(existingUser);
+      localStorage.setItem('nomad_user', JSON.stringify(existingUser));
+    } catch (err: any) {
+      setError(err.message || 'Login failed. Please try again.');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const loginWithPhone = async (phone: string, otp: string) => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    setLoading(true);
+    setError(null);
     
-    const newUser: User = {
-      id: Math.random().toString(36).substr(2, 9),
-      phone,
-      displayName: generateRandomName(),
-      isAnonymous: false,
-      travelStyle: 'Explorer',
-      joinedAt: new Date()
-    };
-    
-    setUser(newUser);
-    localStorage.setItem('nomad_user', JSON.stringify(newUser));
+    try {
+      // Simulate OTP verification
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      if (otp !== '1234') { // Simple OTP simulation
+        throw new Error('Invalid OTP. Please try again.');
+      }
+      
+      // Check if user exists
+      const existingUsers = JSON.parse(localStorage.getItem('nomad_users') || '[]');
+      let existingUser = existingUsers.find((u: any) => u.phone === phone);
+      
+      if (!existingUser) {
+        throw new Error('No account found with this phone number. Please sign up first.');
+      }
+      
+      existingUser.joinedAt = new Date(existingUser.joinedAt);
+      
+      setUser(existingUser);
+      localStorage.setItem('nomad_user', JSON.stringify(existingUser));
+    } catch (err: any) {
+      setError(err.message || 'Phone login failed. Please try again.');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const register = async (email: string, password: string) => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    setLoading(true);
+    setError(null);
     
-    const newUser: User = {
-      id: Math.random().toString(36).substr(2, 9),
-      email,
-      displayName: generateRandomName(),
-      isAnonymous: false,
-      travelStyle: 'Explorer',
-      joinedAt: new Date()
-    };
-    
-    setUser(newUser);
-    localStorage.setItem('nomad_user', JSON.stringify(newUser));
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Check if user already exists
+      const existingUsers = JSON.parse(localStorage.getItem('nomad_users') || '[]');
+      const userExists = existingUsers.find((u: any) => u.email === email);
+      
+      if (userExists) {
+        throw new Error('Account already exists with this email. Please login instead.');
+      }
+      
+      const newUser = createUser(email, false);
+      
+      // Save to users list
+      existingUsers.push(newUser);
+      localStorage.setItem('nomad_users', JSON.stringify(existingUsers));
+      
+      setUser(newUser);
+      localStorage.setItem('nomad_user', JSON.stringify(newUser));
+    } catch (err: any) {
+      setError(err.message || 'Registration failed. Please try again.');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const registerWithPhone = async (phone: string) => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    setLoading(true);
+    setError(null);
     
-    const newUser: User = {
-      id: Math.random().toString(36).substr(2, 9),
-      phone,
-      displayName: generateRandomName(),
-      isAnonymous: false,
-      travelStyle: 'Explorer',
-      joinedAt: new Date()
-    };
-    
-    setUser(newUser);
-    localStorage.setItem('nomad_user', JSON.stringify(newUser));
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Check if user already exists
+      const existingUsers = JSON.parse(localStorage.getItem('nomad_users') || '[]');
+      const userExists = existingUsers.find((u: any) => u.phone === phone);
+      
+      if (userExists) {
+        throw new Error('Account already exists with this phone number. Please login instead.');
+      }
+      
+      const newUser = createUser(phone, true);
+      
+      // Save to users list
+      existingUsers.push(newUser);
+      localStorage.setItem('nomad_users', JSON.stringify(existingUsers));
+      
+      setUser(newUser);
+      localStorage.setItem('nomad_user', JSON.stringify(newUser));
+    } catch (err: any) {
+      setError(err.message || 'Registration failed. Please try again.');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const logout = () => {
     setUser(null);
+    setError(null);
     localStorage.removeItem('nomad_user');
   };
 
@@ -123,19 +261,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const updatedUser = { ...user, ...updates };
       setUser(updatedUser);
       localStorage.setItem('nomad_user', JSON.stringify(updatedUser));
+      
+      // Update in users list as well
+      const existingUsers = JSON.parse(localStorage.getItem('nomad_users') || '[]');
+      const userIndex = existingUsers.findIndex((u: any) => u.id === user.id);
+      if (userIndex !== -1) {
+        existingUsers[userIndex] = updatedUser;
+        localStorage.setItem('nomad_users', JSON.stringify(existingUsers));
+      }
     }
+  };
+
+  const clearError = () => {
+    setError(null);
   };
 
   return (
     <AuthContext.Provider value={{
       user,
       loading,
+      error,
       login,
       loginWithPhone,
       register,
       registerWithPhone,
       logout,
-      updateProfile
+      updateProfile,
+      clearError
     }}>
       {children}
     </AuthContext.Provider>
