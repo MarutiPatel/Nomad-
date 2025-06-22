@@ -1,13 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-  MapPin, Camera, Heart, MessageCircle, Share, Plus, Filter, Search, Map, Grid, List, Clock, Star, Eye,
-  Edit, Save, X, Trash2, Play, Video, FileText, Mic, MoreHorizontal, Bookmark, Flag, Send, Smile,
-  Zap, Globe, Shield, Users, Lock, Timer, TrendingUp, Calendar, Navigation, CloudRain, Sun, 
-  ThumbsUp, Laugh, Angry, Sad, ChevronDown, ChevronUp, Reply, Hash, AtSign, Paperclip, 
-  Download, Upload, BarChart3, Image as ImageIcon, Volume2, VolumeX, RotateCcw, Copy,
-  Layers, Compass, Target, Award, Flame, Coffee, Mountain, Plane, Music, Utensils, Building,
-  Activity, Wifi, Battery, Signal, MapPin as LocationPin, AlertCircle, CheckCircle, Info
-} from 'lucide-react';
+import { MapPin, Camera, Heart, MessageCircle, Share, Plus, Filter, Search, Map, Grid, List, Clock, Star, Eye, Edit, Save, X, Trash2, Play, Video, FileText, Mic, MoreHorizontal, Bookmark, Flag, Send, Smile, Zap, Globe, Shield, Users, Lock, Timer, TrendingUp, Calendar, Navigation, CloudRain, Sun, ThumbsUp, Laugh, Angry, Salad as Sad, ChevronDown, ChevronUp, Reply, Hash, AtSign, Paperclip, Download, Upload, BarChart3, Image as ImageIcon, Volume2, VolumeX, RotateCcw, Copy, Layers, Compass, Target, Award, Flame, Coffee, Mountain, Plane, Music, Utensils, Building, Activity, Wifi, Battery, Signal, MapPin as LocationPin, AlertCircle, CheckCircle, Info } from 'lucide-react';
 
 interface Footprint {
   id: string;
