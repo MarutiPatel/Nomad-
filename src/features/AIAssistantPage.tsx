@@ -519,9 +519,9 @@ function AIAssistantPage() {
   };
 
   return (
-    <div className="flex flex-col h-screen relative">
+    <div className="flex flex-col h-screen bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900">
       {/* Header */}
-      <div className="bg-black/30 backdrop-blur-md border-b border-white/10 p-4 relative z-10">
+      <div className="bg-black/30 backdrop-blur-md border-b border-white/10 p-4 flex-shrink-0 z-50">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-400 to-cyan-500 flex items-center justify-center">
             <Bot className="h-6 w-6 text-white" />
@@ -539,12 +539,29 @@ function AIAssistantPage() {
         </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 relative" style={{ maxHeight: 'calc(100vh - 280px)' }}>
+      {/* AI Features Section */}
+      <div className="p-4 border-b border-white/10 flex-shrink-0 z-40 bg-gradient-to-r from-slate-900/98 to-indigo-900/98 backdrop-blur-md">
+        <div className="grid grid-cols-2 gap-2">
+          {aiFeatures.map((feature) => (
+            <button
+              key={feature.id}
+              onClick={() => handleFeatureClick(feature)}
+              className={`bg-gradient-to-r ${feature.color} bg-opacity-20 backdrop-blur-sm rounded-xl p-3 border border-white/10 hover:border-white/30 transition-all duration-300 text-left group hover:scale-[1.02] hover:shadow-lg`}
+            >
+              <feature.icon className="h-5 w-5 text-white mb-2 group-hover:scale-110 transition-transform" />
+              <div className="text-sm font-medium text-white">{feature.title}</div>
+              <div className="text-xs text-gray-400">{feature.description}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Messages Container */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 z-30" style={{ maxHeight: 'calc(100vh - 320px)' }}>
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`flex ${message.isUser ? 'justify-end' : 'justify-start'} relative z-10`}
+            className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
           >
             <div className={`max-w-xs lg:max-w-md ${
               message.isUser ? 'ml-auto' : 'mr-auto'
@@ -553,18 +570,18 @@ function AIAssistantPage() {
                 <div className={`rounded-2xl px-4 py-3 ${
                   message.isUser
                     ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white'
-                    : 'bg-white/10 text-white border border-white/10'
+                    : 'bg-white/10 text-white border border-white/10 backdrop-blur-sm'
                 }`}>
                   <p className="text-sm">{message.content}</p>
                 </div>
               ) : (
-                <div className="bg-white/10 border border-white/10 rounded-2xl p-4 relative z-20">
+                <div className="bg-white/10 border border-white/10 rounded-2xl p-4 backdrop-blur-sm">
                   <p className="text-white text-sm mb-3">{message.content}</p>
                   
                   {message.type === 'itinerary' && message.data && (
                     <div className="space-y-3">
                       {message.data.days.map((day: any, index: number) => (
-                        <div key={index} className="bg-black/20 rounded-xl p-3">
+                        <div key={index} className="bg-black/20 rounded-xl p-3 backdrop-blur-sm">
                           <div className="flex items-center justify-between mb-2">
                             <h4 className="text-cyan-400 font-medium">Day {day.day}: {day.title}</h4>
                             <span className="text-green-400 text-xs">{day.estimated_cost}</span>
@@ -578,7 +595,7 @@ function AIAssistantPage() {
                             ))}
                           </div>
                           {day.highlights && (
-                            <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-lg p-2 mt-2">
+                            <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-lg p-2 mt-2 backdrop-blur-sm">
                               <div className="text-yellow-400 text-xs font-medium mb-1">Highlights:</div>
                               {day.highlights.map((highlight: string, i: number) => (
                                 <div key={i} className="text-yellow-300 text-xs">{highlight}</div>
@@ -587,7 +604,7 @@ function AIAssistantPage() {
                           )}
                         </div>
                       ))}
-                      <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl p-3 border border-green-400/30">
+                      <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl p-3 border border-green-400/30 backdrop-blur-sm">
                         <div className="text-green-400 font-medium text-sm">Total Budget: {message.data.totalBudget}</div>
                         <div className="text-green-300 text-xs mt-1">💡 Tips included in detailed itinerary</div>
                       </div>
@@ -597,7 +614,7 @@ function AIAssistantPage() {
                   {message.type === 'recommendation' && message.data && (
                     <div className="space-y-3">
                       {message.data.recommendations?.map((rec: any, index: number) => (
-                        <div key={index} className="bg-black/20 rounded-xl p-3">
+                        <div key={index} className="bg-black/20 rounded-xl p-3 backdrop-blur-sm">
                           <div className="flex items-start justify-between mb-2">
                             <div className="flex-1">
                               <h4 className="text-white font-medium">{rec.name}</h4>
@@ -617,7 +634,7 @@ function AIAssistantPage() {
                           </div>
                         </div>
                       )) || message.data.options?.map((option: any, index: number) => (
-                        <div key={index} className="bg-black/20 rounded-xl p-3">
+                        <div key={index} className="bg-black/20 rounded-xl p-3 backdrop-blur-sm">
                           <h4 className="text-white font-medium mb-1">{option.type}</h4>
                           <div className="grid grid-cols-2 gap-2 text-xs mb-2">
                             <div><span className="text-gray-400">Duration:</span> <span className="text-cyan-400">{option.duration}</span></div>
@@ -629,14 +646,14 @@ function AIAssistantPage() {
                           </div>
                         </div>
                       )) || message.data.places?.map((place: any, index: number) => (
-                        <div key={index} className="bg-black/20 rounded-xl p-3">
+                        <div key={index} className="bg-black/20 rounded-xl p-3 backdrop-blur-sm">
                           <h4 className="text-white font-medium mb-1">{place.name}</h4>
                           <p className="text-gray-300 text-xs mb-2">{place.description}</p>
                           <div className="grid grid-cols-2 gap-2 text-xs">
                             <div><span className="text-gray-400">Difficulty:</span> <span className="text-cyan-400">{place.difficulty}</span></div>
                             <div><span className="text-gray-400">Best Time:</span> <span className="text-green-400">{place.bestTime}</span></div>
                           </div>
-                          <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg p-2 mt-2">
+                          <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg p-2 mt-2 backdrop-blur-sm">
                             <div className="text-blue-400 text-xs">💡 {place.tips}</div>
                           </div>
                         </div>
@@ -645,7 +662,7 @@ function AIAssistantPage() {
                   )}
 
                   {message.type === 'suggestion' && message.data && (
-                    <div className="bg-black/20 rounded-xl p-3">
+                    <div className="bg-black/20 rounded-xl p-3 backdrop-blur-sm">
                       {message.data.type === 'budget' && (
                         <>
                           <div className="text-center mb-3">
@@ -669,7 +686,7 @@ function AIAssistantPage() {
                       )}
                       {message.data.type === 'weather' && (
                         <div className="space-y-3">
-                          <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-lg p-3">
+                          <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-lg p-3 backdrop-blur-sm">
                             <div className="text-cyan-400 font-medium text-sm mb-2">Current Weather</div>
                             <div className="grid grid-cols-2 gap-2 text-xs">
                               <div>Temperature: {message.data.current.temperature}</div>
@@ -698,7 +715,7 @@ function AIAssistantPage() {
                     <div className="space-y-3">
                       {message.data.type === 'packing' && (
                         <div className="space-y-3">
-                          <div className="bg-black/20 rounded-xl p-3">
+                          <div className="bg-black/20 rounded-xl p-3 backdrop-blur-sm">
                             <h4 className="text-cyan-400 font-medium mb-2">Essential Items</h4>
                             <div className="grid grid-cols-1 gap-1">
                               {message.data.essentials.map((item: string, i: number) => (
@@ -709,7 +726,7 @@ function AIAssistantPage() {
                               ))}
                             </div>
                           </div>
-                          <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl p-3 border border-purple-400/30">
+                          <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl p-3 border border-purple-400/30 backdrop-blur-sm">
                             <h4 className="text-purple-400 font-medium mb-2">Pro Tips</h4>
                             {message.data.tips.map((tip: string, i: number) => (
                               <div key={i} className="text-purple-300 text-xs mb-1">💡 {tip}</div>
@@ -742,8 +759,8 @@ function AIAssistantPage() {
         ))}
 
         {isTyping && (
-          <div className="flex justify-start relative z-10">
-            <div className="bg-white/10 border border-white/10 rounded-2xl px-4 py-3">
+          <div className="flex justify-start">
+            <div className="bg-white/10 border border-white/10 rounded-2xl px-4 py-3 backdrop-blur-sm">
               <div className="flex items-center space-x-2">
                 <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
                 <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
@@ -756,25 +773,8 @@ function AIAssistantPage() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* AI Features */}
-      <div className="p-4 border-t border-white/10 relative z-10 bg-gradient-to-r from-slate-900/95 to-indigo-900/95 backdrop-blur-sm">
-        <div className="grid grid-cols-2 gap-2 mb-4">
-          {aiFeatures.map((feature) => (
-            <button
-              key={feature.id}
-              onClick={() => handleFeatureClick(feature)}
-              className={`bg-gradient-to-r ${feature.color} bg-opacity-20 backdrop-blur-sm rounded-xl p-3 border border-white/10 hover:border-white/20 transition-all duration-300 text-left group hover:scale-105 relative z-30`}
-            >
-              <feature.icon className="h-5 w-5 text-white mb-2 group-hover:scale-110 transition-transform" />
-              <div className="text-sm font-medium text-white">{feature.title}</div>
-              <div className="text-xs text-gray-400">{feature.description}</div>
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Message Input */}
-      <div className="bg-black/30 backdrop-blur-md border-t border-white/10 p-4 relative z-10">
+      <div className="bg-black/30 backdrop-blur-md border-t border-white/10 p-4 flex-shrink-0 z-50">
         <div className="flex items-center space-x-3">
           <div className="flex-1 relative">
             <input
