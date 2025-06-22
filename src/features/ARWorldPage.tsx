@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import { Camera, MapPin, Eye, MessageCircle, Star, Plus, Filter, Search, Layers, Zap, Heart, Users, Globe, Clock, Navigation, Share, Bookmark, Mountain as Mountains, Building, Landmark, Crown, Pyramid } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { 
+  Camera, MapPin, Eye, MessageCircle, Star, Plus, Filter, Search, Layers, Zap, Heart, Users, Globe, Clock, Navigation, Share, Bookmark, Mountain as Mountains, Building, Landmark, Crown, Pyramid, Radio, Video, Mic, Volume2, Play, Pause, RotateCcw, Maximize, Globe as Earth, Wifi, Languages, CloudSnow, Sun, CloudRain, Wind, Navigation2, UserCheck
+} from 'lucide-react';
 
 interface ARTag {
   id: string;
@@ -35,11 +37,40 @@ interface WorldWonder {
   facts: string[];
 }
 
+interface LiveARExperience {
+  id: string;
+  title: string;
+  type: 'live-tour' | 'ar-stream' | 'collaborative' | 'translation' | 'weather' | 'traffic' | 'events';
+  description: string;
+  location: string;
+  host?: string;
+  participants: number;
+  maxParticipants?: number;
+  startTime: Date;
+  duration: string;
+  isLive: boolean;
+  isJoined: boolean;
+  category: 'guided-tour' | 'social' | 'utility' | 'educational' | 'entertainment';
+  features: string[];
+  image: string;
+  status: 'starting-soon' | 'live-now' | 'ending-soon' | 'ended';
+}
+
 function ARWorldPage() {
-  const [activeTab, setActiveTab] = useState<'ar-tags' | 'wonders'>('ar-tags');
+  const [activeTab, setActiveTab] = useState<'ar-tags' | 'wonders' | 'live-ar'>('ar-tags');
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedWonder, setSelectedWonder] = useState<WorldWonder | null>(null);
+  const [selectedLiveExperience, setSelectedLiveExperience] = useState<LiveARExperience | null>(null);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Update time every minute for live experiences
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000);
+    return () => clearInterval(timer);
+  }, []);
 
   const mockARTags: ARTag[] = [
     {
@@ -132,95 +163,116 @@ function ARWorldPage() {
         'Rediscovered by Hiram Bingham in 1911',
         'Located 2,430 meters above sea level'
       ]
+    }
+  ];
+
+  const mockLiveARExperiences: LiveARExperience[] = [
+    {
+      id: '1',
+      title: 'Live Guided Tour: Taj Mahal Sunset',
+      type: 'live-tour',
+      description: 'Join our expert guide for a live AR tour of Taj Mahal during golden hour. See historical reconstructions and hidden details.',
+      location: 'Taj Mahal, Agra',
+      host: 'HistoryMaster_AR',
+      participants: 24,
+      maxParticipants: 30,
+      startTime: new Date(Date.now() + 15 * 60 * 1000), // Starting in 15 minutes
+      duration: '45 minutes',
+      isLive: false,
+      isJoined: false,
+      category: 'guided-tour',
+      features: ['Live commentary', 'Historical overlays', 'Q&A session', 'Photo opportunities'],
+      image: 'https://images.pexels.com/photos/1603650/pexels-photo-1603650.jpeg?auto=compress&cs=tinysrgb&w=400',
+      status: 'starting-soon'
+    },
+    {
+      id: '2',
+      title: 'Real-time Weather AR Overlay',
+      type: 'weather',
+      description: 'See live weather patterns, wind directions, and upcoming changes through AR visualization.',
+      location: 'Your current location',
+      participants: 156,
+      startTime: new Date(),
+      duration: 'Always available',
+      isLive: true,
+      isJoined: true,
+      category: 'utility',
+      features: ['Live weather data', 'Wind visualization', '24h forecast', 'Rain radar'],
+      image: 'https://images.pexels.com/photos/1118873/pexels-photo-1118873.jpeg?auto=compress&cs=tinysrgb&w=400',
+      status: 'live-now'
     },
     {
       id: '3',
-      name: 'Great Wall of China',
-      location: 'Beijing',
-      country: 'China',
-      description: 'Experience the Great Wall through different dynasties with AR time-travel technology.',
-      arExperience: 'See the wall being built, witness ancient battles, and walk with virtual soldiers from different eras',
-      image: 'https://images.pexels.com/photos/2412603/pexels-photo-2412603.jpeg?auto=compress&cs=tinysrgb&w=400',
-      type: 'ancient',
-      difficulty: 'hard',
-      duration: '45-60 minutes',
-      rating: 4.7,
-      totalExperiences: 18750,
-      isBookmarked: false,
-      facts: [
-        'Built over many dynasties spanning 2,000+ years',
-        'Total length is approximately 21,000 km',
-        'Not visible from space with naked eye (common myth)',
-        'Employs millions of workers throughout history'
-      ]
+      title: 'Collaborative Street Art Creation',
+      type: 'collaborative',
+      description: 'Join other travelers to create virtual street art that others can see through AR at this location.',
+      location: 'Mumbai Street Art District',
+      participants: 8,
+      maxParticipants: 12,
+      startTime: new Date(Date.now() - 10 * 60 * 1000), // Started 10 minutes ago
+      duration: '60 minutes',
+      isLive: true,
+      isJoined: false,
+      category: 'social',
+      features: ['Collaborative drawing', 'Real-time sharing', 'Save creations', 'Vote on best art'],
+      image: 'https://images.pexels.com/photos/1686536/pexels-photo-1686536.jpeg?auto=compress&cs=tinysrgb&w=400',
+      status: 'live-now'
     },
     {
       id: '4',
-      name: 'Pyramids of Giza',
-      location: 'Giza',
-      country: 'Egypt',
-      description: 'Journey inside the pyramids with AR to explore hidden chambers and ancient burial rituals.',
-      arExperience: 'Enter sealed chambers, see mummies and treasures, witness the pyramid construction process',
-      image: 'https://images.pexels.com/photos/71241/pyramid-egypt-pyramid-of-cheops-giza-71241.jpeg?auto=compress&cs=tinysrgb&w=400',
-      type: 'ancient',
-      difficulty: 'medium',
-      duration: '50-70 minutes',
-      rating: 4.9,
-      totalExperiences: 22100,
-      isBookmarked: true,
-      facts: [
-        'Built around 2580-2510 BCE for Pharaoh Khufu',
-        'Originally 146.5 meters tall (now 138.8m)',
-        'Made of approximately 2.3 million stone blocks',
-        'Only remaining wonder of the ancient world'
-      ]
+      title: 'Live AR Translation Hub',
+      type: 'translation',
+      description: 'Real-time AR translation of signs, menus, and conversations. Point camera and see instant translations.',
+      location: 'Delhi Local Markets',
+      participants: 89,
+      startTime: new Date(),
+      duration: 'Always available',
+      isLive: true,
+      isJoined: false,
+      category: 'utility',
+      features: ['Text recognition', 'Voice translation', 'Menu scanning', 'Conversation mode'],
+      image: 'https://images.pexels.com/photos/1608113/pexels-photo-1608113.jpeg?auto=compress&cs=tinysrgb&w=400',
+      status: 'live-now'
     },
     {
       id: '5',
-      name: 'Colosseum',
-      location: 'Rome',
-      country: 'Italy',
-      description: 'Experience gladiator battles and see the Colosseum in its full glory with AR reconstruction.',
-      arExperience: 'Watch gladiator fights, see the arena floor mechanisms, and experience crowd sounds from ancient Rome',
-      image: 'https://images.pexels.com/photos/2825034/pexels-photo-2825034.jpeg?auto=compress&cs=tinysrgb&w=400',
-      type: 'ancient',
-      difficulty: 'easy',
-      duration: '40-55 minutes',
-      rating: 4.8,
-      totalExperiences: 19650,
-      isBookmarked: false,
-      facts: [
-        'Built between 70-80 AD under the Flavian dynasty',
-        'Could hold 50,000-80,000 spectators',
-        'Had a retractable roof system called velarium',
-        'Underground area called hypogeum housed animals and gladiators'
-      ]
+      title: 'Live Stream: Ganga Aarti Ceremony',
+      type: 'ar-stream',
+      description: 'Experience the sacred Ganga Aarti ceremony live with AR enhancements showing spiritual significance.',
+      location: 'Varanasi Ghats',
+      host: 'SpiritualGuide_VNS',
+      participants: 145,
+      maxParticipants: 200,
+      startTime: new Date(Date.now() - 5 * 60 * 1000), // Started 5 minutes ago
+      duration: '30 minutes',
+      isLive: true,
+      isJoined: true,
+      category: 'educational',
+      features: ['Live ceremony stream', 'Spiritual overlays', 'Cultural explanations', 'Interactive elements'],
+      image: 'https://images.pexels.com/photos/1051838/pexels-photo-1051838.jpeg?auto=compress&cs=tinysrgb&w=400',
+      status: 'live-now'
     },
     {
       id: '6',
-      name: 'Angkor Wat',
-      location: 'Siem Reap',
-      country: 'Cambodia',
-      description: 'Discover the massive temple complex as it appeared during the Khmer Empire through AR.',
-      arExperience: 'See the temple covered in gold, witness ancient ceremonies, and explore lost sections of the complex',
-      image: 'https://images.pexels.com/photos/2853909/pexels-photo-2853909.jpeg?auto=compress&cs=tinysrgb&w=400',
-      type: 'ancient',
-      difficulty: 'medium',
-      duration: '75-100 minutes',
-      rating: 4.9,
-      totalExperiences: 8940,
-      isBookmarked: true,
-      facts: [
-        'Built in early 12th century by King Suryavarman VII',
-        'Originally dedicated to Hindu god Vishnu',
-        'Covers an area of 162.6 hectares',
-        'Largest religious monument in the world'
-      ]
+      title: 'Real-time Traffic & Navigation AR',
+      type: 'traffic',
+      description: 'See live traffic conditions, best routes, and navigation directions overlaid on your real-world view.',
+      location: 'Bangalore City Center',
+      participants: 203,
+      startTime: new Date(),
+      duration: 'Always available',
+      isLive: true,
+      isJoined: false,
+      category: 'utility',
+      features: ['Live traffic data', 'Route optimization', 'Hazard alerts', 'Parking availability'],
+      image: 'https://images.pexels.com/photos/1519088/pexels-photo-1519088.jpeg?auto=compress&cs=tinysrgb&w=400',
+      status: 'live-now'
     }
   ];
 
   const [arTags, setArTags] = useState(mockARTags);
   const [worldWonders, setWorldWonders] = useState(mockWorldWonders);
+  const [liveExperiences, setLiveExperiences] = useState(mockLiveARExperiences);
 
   const tagFilters = [
     { id: 'all', label: 'All', icon: Eye },
@@ -236,6 +288,16 @@ function ARWorldPage() {
     { id: 'modern', label: 'Modern', icon: Building },
     { id: 'natural', label: 'Natural', icon: Mountains },
     { id: 'architectural', label: 'Architecture', icon: Landmark }
+  ];
+
+  const liveFilters = [
+    { id: 'all', label: 'All', icon: Radio },
+    { id: 'live-tour', label: 'Live Tours', icon: Users },
+    { id: 'ar-stream', label: 'AR Streams', icon: Video },
+    { id: 'collaborative', label: 'Collaborative', icon: Heart },
+    { id: 'translation', label: 'Translation', icon: Languages },
+    { id: 'weather', label: 'Weather', icon: CloudSnow },
+    { id: 'traffic', label: 'Traffic', icon: Navigation2 }
   ];
 
   const handleLike = (id: string) => {
@@ -262,6 +324,18 @@ function ARWorldPage() {
     ));
   };
 
+  const handleJoinLiveExperience = (id: string) => {
+    setLiveExperiences(prev => prev.map(exp => 
+      exp.id === id 
+        ? { 
+            ...exp, 
+            isJoined: !exp.isJoined,
+            participants: exp.isJoined ? exp.participants - 1 : exp.participants + 1
+          }
+        : exp
+    ));
+  };
+
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'secret': return 'from-purple-400 to-pink-500';
@@ -280,6 +354,38 @@ function ARWorldPage() {
       case 'natural': return 'from-green-400 to-teal-500';
       case 'architectural': return 'from-purple-400 to-pink-500';
       default: return 'from-gray-400 to-gray-500';
+    }
+  };
+
+  const getLiveTypeColor = (type: string) => {
+    switch (type) {
+      case 'live-tour': return 'from-blue-400 to-cyan-500';
+      case 'ar-stream': return 'from-purple-400 to-pink-500';
+      case 'collaborative': return 'from-green-400 to-teal-500';
+      case 'translation': return 'from-yellow-400 to-orange-500';
+      case 'weather': return 'from-cyan-400 to-blue-500';
+      case 'traffic': return 'from-red-400 to-orange-500';
+      default: return 'from-gray-400 to-gray-500';
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'live-now': return 'from-red-400 to-red-500';
+      case 'starting-soon': return 'from-yellow-400 to-orange-500';
+      case 'ending-soon': return 'from-orange-400 to-red-500';
+      case 'ended': return 'from-gray-400 to-gray-500';
+      default: return 'from-gray-400 to-gray-500';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'live-now': return 'LIVE NOW';
+      case 'starting-soon': return 'STARTING SOON';
+      case 'ending-soon': return 'ENDING SOON';
+      case 'ended': return 'ENDED';
+      default: return status.toUpperCase();
     }
   };
 
@@ -302,6 +408,17 @@ function ARWorldPage() {
     return `${diffInDays}d ago`;
   };
 
+  const formatTimeUntilStart = (startTime: Date) => {
+    const now = new Date();
+    const diffInMinutes = Math.floor((startTime.getTime() - now.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes <= 0) return 'Starting now';
+    if (diffInMinutes < 60) return `${diffInMinutes}m`;
+    
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    return `${diffInHours}h ${diffInMinutes % 60}m`;
+  };
+
   const filteredTags = selectedFilter === 'all' 
     ? arTags 
     : arTags.filter(tag => tag.type === selectedFilter);
@@ -310,19 +427,23 @@ function ARWorldPage() {
     ? (selectedFilter === 'all' ? worldWonders : worldWonders.filter(wonder => wonder.type === selectedFilter))
     : [];
 
+  const filteredLiveExperiences = activeTab === 'live-ar'
+    ? (selectedFilter === 'all' ? liveExperiences : liveExperiences.filter(exp => exp.type === selectedFilter))
+    : [];
+
   return (
     <div className="p-4 pb-20 lg:pb-4">
       {/* Header */}
       <div className="text-center mb-6">
         <h1 className="text-2xl font-bold text-white mb-2">AR World</h1>
-        <p className="text-gray-400 text-sm">Discover hidden messages and explore world wonders through AR</p>
+        <p className="text-gray-400 text-sm">Experience real-time AR, explore world wonders, and discover hidden messages</p>
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex rounded-2xl bg-black/20 p-1 mb-6">
+      <div className="flex rounded-2xl bg-black/20 p-1 mb-6 overflow-x-auto">
         <button
           onClick={() => setActiveTab('ar-tags')}
-          className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl transition-all duration-300 ${
+          className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl transition-all duration-300 whitespace-nowrap ${
             activeTab === 'ar-tags'
               ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
               : 'text-gray-400 hover:text-white'
@@ -333,7 +454,7 @@ function ARWorldPage() {
         </button>
         <button
           onClick={() => setActiveTab('wonders')}
-          className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl transition-all duration-300 ${
+          className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl transition-all duration-300 whitespace-nowrap ${
             activeTab === 'wonders'
               ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg'
               : 'text-gray-400 hover:text-white'
@@ -341,6 +462,18 @@ function ARWorldPage() {
         >
           <Globe className="h-4 w-4" />
           <span className="text-sm font-medium">World Wonders</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('live-ar')}
+          className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl transition-all duration-300 whitespace-nowrap ${
+            activeTab === 'live-ar'
+              ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-lg'
+              : 'text-gray-400 hover:text-white'
+          }`}
+        >
+          <Radio className="h-4 w-4" />
+          <span className="text-sm font-medium">Live AR</span>
+          <div className="w-2 h-2 rounded-full bg-red-400 animate-pulse"></div>
         </button>
       </div>
 
@@ -614,6 +747,185 @@ function ARWorldPage() {
         </div>
       )}
 
+      {activeTab === 'live-ar' && (
+        <div>
+          {/* Live Status Header */}
+          <div className="bg-gradient-to-r from-red-500/10 to-orange-500/10 backdrop-blur-sm rounded-2xl p-4 border border-red-400/30 mb-6">
+            <div className="flex items-center space-x-2 mb-2">
+              <div className="w-3 h-3 rounded-full bg-red-400 animate-pulse"></div>
+              <span className="text-red-400 font-medium text-sm">Live AR Experiences</span>
+              <span className="text-gray-400 text-xs">•</span>
+              <span className="text-gray-400 text-xs">{liveExperiences.filter(exp => exp.isLive).length} live now</span>
+            </div>
+            <p className="text-gray-300 text-xs">Join real-time AR experiences happening around the world</p>
+          </div>
+
+          {/* Controls */}
+          <div className="flex items-center space-x-2 mb-6">
+            <button className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
+              <Search className="h-4 w-4 text-gray-400" />
+            </button>
+            <button className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
+              <Filter className="h-4 w-4 text-gray-400" />
+            </button>
+          </div>
+
+          {/* Live AR Filters */}
+          <div className="flex overflow-x-auto space-x-2 mb-6 pb-2">
+            {liveFilters.map((filter) => (
+              <button
+                key={filter.id}
+                onClick={() => setSelectedFilter(filter.id)}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-2xl font-medium text-sm whitespace-nowrap transition-all duration-300 ${
+                  selectedFilter === filter.id
+                    ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-lg'
+                    : 'bg-white/10 text-gray-400 hover:text-white hover:bg-white/20'
+                }`}
+              >
+                <filter.icon className="h-4 w-4" />
+                <span>{filter.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Live AR Experiences */}
+          <div className="space-y-4">
+            {filteredLiveExperiences.map((experience) => (
+              <div
+                key={experience.id}
+                className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden hover:border-white/20 transition-all duration-300"
+              >
+                {/* Experience Image */}
+                <div className="relative h-40 overflow-hidden">
+                  <img
+                    src={experience.image}
+                    alt={experience.title}
+                    className="w-full h-full object-cover"
+                  />
+                  
+                  {/* Status Badge */}
+                  <div className="absolute top-3 left-3">
+                    <div className={`px-3 py-1 rounded-full bg-gradient-to-r ${getStatusColor(experience.status)} bg-opacity-90 backdrop-blur-sm flex items-center space-x-1`}>
+                      {experience.status === 'live-now' && <div className="w-2 h-2 rounded-full bg-white animate-pulse"></div>}
+                      <span className="text-xs font-bold text-white">{getStatusText(experience.status)}</span>
+                    </div>
+                  </div>
+
+                  {/* Type Badge */}
+                  <div className="absolute top-3 right-3">
+                    <div className={`px-3 py-1 rounded-full bg-gradient-to-r ${getLiveTypeColor(experience.type)} bg-opacity-90 backdrop-blur-sm`}>
+                      <span className="text-xs font-medium text-white capitalize">{experience.type.replace('-', ' ')}</span>
+                    </div>
+                  </div>
+
+                  {/* Participants Count */}
+                  <div className="absolute bottom-3 right-3">
+                    <div className="bg-black/50 backdrop-blur-sm px-2 py-1 rounded-full flex items-center space-x-1">
+                      <Users className="h-3 w-3 text-white" />
+                      <span className="text-white text-xs">{experience.participants}</span>
+                      {experience.maxParticipants && (
+                        <span className="text-gray-300 text-xs">/{experience.maxParticipants}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Experience Content */}
+                <div className="p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-white mb-1">{experience.title}</h3>
+                      <div className="flex items-center space-x-2 text-gray-400 text-sm mb-2">
+                        <MapPin className="h-3 w-3" />
+                        <span>{experience.location}</span>
+                        {experience.host && (
+                          <>
+                            <span>•</span>
+                            <span>by {experience.host}</span>
+                          </>
+                        )}
+                      </div>
+                      {!experience.isLive && (
+                        <div className="flex items-center space-x-1 text-orange-400 text-sm">
+                          <Clock className="h-3 w-3" />
+                          <span>Starts in {formatTimeUntilStart(experience.startTime)}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <p className="text-gray-300 text-sm mb-3 leading-relaxed">{experience.description}</p>
+
+                  {/* Features */}
+                  <div className="mb-4">
+                    <div className="flex flex-wrap gap-1">
+                      {experience.features.slice(0, 3).map((feature, index) => (
+                        <span
+                          key={index}
+                          className={`px-2 py-1 rounded-full text-xs font-medium bg-gradient-to-r ${getLiveTypeColor(experience.type)} bg-opacity-20 text-white border border-white/10`}
+                        >
+                          {feature}
+                        </span>
+                      ))}
+                      {experience.features.length > 3 && (
+                        <span className="px-2 py-1 bg-white/10 rounded-full text-xs text-gray-400">
+                          +{experience.features.length - 3} more
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Stats */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-4 text-sm text-gray-400">
+                      <div className="flex items-center space-x-1">
+                        <Clock className="h-3 w-3" />
+                        <span>{experience.duration}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <UserCheck className="h-3 w-3" />
+                        <span>{experience.category}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex space-x-3">
+                    {experience.isLive ? (
+                      <button
+                        onClick={() => handleJoinLiveExperience(experience.id)}
+                        className={`flex-1 px-4 py-3 rounded-2xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-sm flex items-center justify-center space-x-2 ${
+                          experience.isJoined
+                            ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-400/30 text-green-400'
+                            : 'bg-gradient-to-r from-red-500 to-orange-500 text-white'
+                        }`}
+                      >
+                        {experience.type === 'ar-stream' && <Video className="h-4 w-4" />}
+                        {experience.type === 'live-tour' && <Users className="h-4 w-4" />}
+                        {experience.type === 'collaborative' && <Heart className="h-4 w-4" />}
+                        {(experience.type === 'translation' || experience.type === 'weather' || experience.type === 'traffic') && <Wifi className="h-4 w-4" />}
+                        <span>{experience.isJoined ? 'Joined' : 'Join Live'}</span>
+                      </button>
+                    ) : (
+                      <button className="flex-1 px-4 py-3 rounded-2xl font-medium text-gray-400 border border-gray-600 text-sm cursor-not-allowed">
+                        Starts {formatTimeUntilStart(experience.startTime)}
+                      </button>
+                    )}
+                    
+                    <button
+                      onClick={() => setSelectedLiveExperience(experience)}
+                      className="px-4 py-3 border border-white/20 rounded-2xl text-gray-300 hover:bg-white/5 transition-colors"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Create AR Tag Modal */}
       {showCreateModal && (
         <CreateARTagModal onClose={() => setShowCreateModal(false)} />
@@ -624,6 +936,15 @@ function ARWorldPage() {
         <WonderDetailModal
           wonder={selectedWonder}
           onClose={() => setSelectedWonder(null)}
+        />
+      )}
+
+      {/* Live Experience Detail Modal */}
+      {selectedLiveExperience && (
+        <LiveExperienceModal
+          experience={selectedLiveExperience}
+          onClose={() => setSelectedLiveExperience(null)}
+          onJoin={() => handleJoinLiveExperience(selectedLiveExperience.id)}
         />
       )}
     </div>
@@ -807,6 +1128,114 @@ function WonderDetailModal({
                 <Camera className="h-5 w-5" />
                 <span>Start AR Experience</span>
               </button>
+              
+              <button className="px-6 py-3 border border-white/20 rounded-2xl text-gray-300 hover:bg-white/5 transition-colors">
+                <Share className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LiveExperienceModal({ 
+  experience, 
+  onClose,
+  onJoin
+}: { 
+  experience: LiveARExperience; 
+  onClose: () => void;
+  onJoin: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-slate-900/95 backdrop-blur-md rounded-3xl border border-white/20 max-w-md w-full max-h-[80vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-white">{experience.title}</h2>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className="mb-4">
+            <img
+              src={experience.image}
+              alt={experience.title}
+              className="w-full h-48 object-cover rounded-2xl"
+            />
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-white font-medium mb-2">Description</h3>
+              <p className="text-gray-300 text-sm leading-relaxed">{experience.description}</p>
+            </div>
+
+            <div>
+              <h3 className="text-white font-medium mb-2">Location</h3>
+              <div className="flex items-center space-x-2 text-gray-300 text-sm">
+                <MapPin className="h-4 w-4" />
+                <span>{experience.location}</span>
+              </div>
+            </div>
+
+            {experience.host && (
+              <div>
+                <h3 className="text-white font-medium mb-2">Host</h3>
+                <p className="text-gray-300 text-sm">{experience.host}</p>
+              </div>
+            )}
+
+            <div>
+              <h3 className="text-white font-medium mb-2">Features</h3>
+              <div className="space-y-2">
+                {experience.features.map((feature, index) => (
+                  <div key={index} className="flex items-center space-x-2 text-gray-300 text-sm">
+                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                    <span>{feature}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <h3 className="text-white font-medium mb-2">Duration</h3>
+                <p className="text-gray-300 text-sm">{experience.duration}</p>
+              </div>
+              <div>
+                <h3 className="text-white font-medium mb-2">Participants</h3>
+                <p className="text-gray-300 text-sm">
+                  {experience.participants}
+                  {experience.maxParticipants && `/${experience.maxParticipants}`}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex space-x-3">
+              {experience.isLive ? (
+                <button
+                  onClick={onJoin}
+                  className={`flex-1 px-6 py-3 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center space-x-2 ${
+                    experience.isJoined
+                      ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-400/30 text-green-400'
+                      : 'bg-gradient-to-r from-red-500 to-orange-500 text-white'
+                  }`}
+                >
+                  <Radio className="h-5 w-5" />
+                  <span>{experience.isJoined ? 'Joined Live' : 'Join Live Experience'}</span>
+                </button>
+              ) : (
+                <button className="flex-1 px-6 py-3 rounded-2xl font-semibold text-gray-400 border border-gray-600 cursor-not-allowed">
+                  Experience Not Live
+                </button>
+              )}
               
               <button className="px-6 py-3 border border-white/20 rounded-2xl text-gray-300 hover:bg-white/5 transition-colors">
                 <Share className="h-5 w-5" />
