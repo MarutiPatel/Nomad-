@@ -519,9 +519,9 @@ function AIAssistantPage() {
   };
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen relative">
       {/* Header */}
-      <div className="bg-black/30 backdrop-blur-md border-b border-white/10 p-4">
+      <div className="bg-black/30 backdrop-blur-md border-b border-white/10 p-4 relative z-10">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-400 to-cyan-500 flex items-center justify-center">
             <Bot className="h-6 w-6 text-white" />
@@ -540,11 +540,11 @@ function AIAssistantPage() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 relative" style={{ maxHeight: 'calc(100vh - 280px)' }}>
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
+            className={`flex ${message.isUser ? 'justify-end' : 'justify-start'} relative z-10`}
           >
             <div className={`max-w-xs lg:max-w-md ${
               message.isUser ? 'ml-auto' : 'mr-auto'
@@ -558,7 +558,7 @@ function AIAssistantPage() {
                   <p className="text-sm">{message.content}</p>
                 </div>
               ) : (
-                <div className="bg-white/10 border border-white/10 rounded-2xl p-4">
+                <div className="bg-white/10 border border-white/10 rounded-2xl p-4 relative z-20">
                   <p className="text-white text-sm mb-3">{message.content}</p>
                   
                   {message.type === 'itinerary' && message.data && (
@@ -742,7 +742,7 @@ function AIAssistantPage() {
         ))}
 
         {isTyping && (
-          <div className="flex justify-start">
+          <div className="flex justify-start relative z-10">
             <div className="bg-white/10 border border-white/10 rounded-2xl px-4 py-3">
               <div className="flex items-center space-x-2">
                 <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
@@ -757,13 +757,13 @@ function AIAssistantPage() {
       </div>
 
       {/* AI Features */}
-      <div className="p-4 border-t border-white/10">
+      <div className="p-4 border-t border-white/10 relative z-10 bg-gradient-to-r from-slate-900/95 to-indigo-900/95 backdrop-blur-sm">
         <div className="grid grid-cols-2 gap-2 mb-4">
           {aiFeatures.map((feature) => (
             <button
               key={feature.id}
               onClick={() => handleFeatureClick(feature)}
-              className={`bg-gradient-to-r ${feature.color} bg-opacity-20 backdrop-blur-sm rounded-xl p-3 border border-white/10 hover:border-white/20 transition-all duration-300 text-left group hover:scale-105`}
+              className={`bg-gradient-to-r ${feature.color} bg-opacity-20 backdrop-blur-sm rounded-xl p-3 border border-white/10 hover:border-white/20 transition-all duration-300 text-left group hover:scale-105 relative z-30`}
             >
               <feature.icon className="h-5 w-5 text-white mb-2 group-hover:scale-110 transition-transform" />
               <div className="text-sm font-medium text-white">{feature.title}</div>
@@ -774,7 +774,7 @@ function AIAssistantPage() {
       </div>
 
       {/* Message Input */}
-      <div className="bg-black/30 backdrop-blur-md border-t border-white/10 p-4">
+      <div className="bg-black/30 backdrop-blur-md border-t border-white/10 p-4 relative z-10">
         <div className="flex items-center space-x-3">
           <div className="flex-1 relative">
             <input
