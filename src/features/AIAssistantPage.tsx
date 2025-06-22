@@ -1,10 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-  Bot, MessageCircle, Zap, Brain, Compass, Utensils, 
-  MapPin, Calendar, DollarSign, Backpack, Send, Mic,
-  Star, Clock, Navigation, Camera, Heart, Users, Plane,
-  Coffee, Mountain, Beach, Music, Wifi, Car, Train
-} from 'lucide-react';
+import { Bot, MessageCircle, Zap, Brain, Compass, Utensils, MapPin, Calendar, DollarSign, Backpack, Send, Mic, Star, Clock, Navigation, Camera, Heart, Users, Plane, Coffee, Mountain, Bean as Beach, Music, Wifi, Car, Train } from 'lucide-react';
 
 interface Message {
   id: string;
