@@ -519,9 +519,9 @@ function AIAssistantPage() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900">
-      {/* Header */}
-      <div className="bg-black/30 backdrop-blur-md border-b border-white/10 p-4 flex-shrink-0 z-50">
+    <div className="h-screen flex flex-col bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900">
+      {/* Header - Fixed */}
+      <div className="bg-black/30 backdrop-blur-md border-b border-white/10 p-4 flex-shrink-0">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-400 to-cyan-500 flex items-center justify-center">
             <Bot className="h-6 w-6 text-white" />
@@ -539,105 +539,69 @@ function AIAssistantPage() {
         </div>
       </div>
 
-      {/* ENLARGED Messages Container - Now takes most of the screen space */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-6 z-30" style={{ minHeight: 'calc(100vh - 400px)' }}>
+      {/* MESSAGES AREA - EXACTLY HALF PAGE HEIGHT */}
+      <div className="overflow-y-auto p-4 space-y-4" style={{ height: '50vh' }}>
         {messages.map((message) => (
           <div
             key={message.id}
             className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
           >
-            <div className={`max-w-2xl lg:max-w-4xl ${
+            <div className={`max-w-xl lg:max-w-2xl ${
               message.isUser ? 'ml-auto' : 'mr-auto'
             }`}>
               {message.type === 'text' ? (
-                <div className={`rounded-3xl px-6 py-4 ${
+                <div className={`rounded-2xl px-4 py-3 ${
                   message.isUser
                     ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white'
                     : 'bg-white/10 text-white border border-white/10 backdrop-blur-sm'
                 }`}>
-                  <p className="text-base leading-relaxed">{message.content}</p>
+                  <p className="text-sm leading-relaxed">{message.content}</p>
                 </div>
               ) : (
-                <div className="bg-white/10 border border-white/10 rounded-3xl p-6 backdrop-blur-sm">
-                  <p className="text-white text-base mb-4 leading-relaxed">{message.content}</p>
+                <div className="bg-white/10 border border-white/10 rounded-2xl p-4 backdrop-blur-sm">
+                  <p className="text-white text-sm mb-3 leading-relaxed">{message.content}</p>
                   
                   {message.type === 'itinerary' && message.data && (
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       {message.data.days.map((day: any, index: number) => (
-                        <div key={index} className="bg-black/20 rounded-2xl p-4 backdrop-blur-sm">
-                          <div className="flex items-center justify-between mb-3">
-                            <h4 className="text-cyan-400 font-semibold text-lg">Day {day.day}: {day.title}</h4>
-                            <span className="text-green-400 text-sm font-medium">{day.estimated_cost}</span>
+                        <div key={index} className="bg-black/20 rounded-xl p-3 backdrop-blur-sm">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="text-cyan-400 font-medium text-sm">Day {day.day}: {day.title}</h4>
+                            <span className="text-green-400 text-xs">{day.estimated_cost}</span>
                           </div>
-                          <div className="space-y-2 mb-3">
+                          <div className="space-y-1">
                             {day.activities.map((activity: string, i: number) => (
-                              <div key={i} className="flex items-center space-x-3 text-gray-300 text-sm">
-                                <div className="w-2 h-2 rounded-full bg-cyan-400" />
+                              <div key={i} className="flex items-center space-x-2 text-gray-300 text-xs">
+                                <div className="w-1 h-1 rounded-full bg-cyan-400" />
                                 <span>{activity}</span>
                               </div>
                             ))}
                           </div>
-                          {day.highlights && (
-                            <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-xl p-3 mt-3 backdrop-blur-sm">
-                              <div className="text-yellow-400 text-sm font-medium mb-2">Highlights:</div>
-                              {day.highlights.map((highlight: string, i: number) => (
-                                <div key={i} className="text-yellow-300 text-sm">{highlight}</div>
-                              ))}
-                            </div>
-                          )}
                         </div>
                       ))}
-                      <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-2xl p-4 border border-green-400/30 backdrop-blur-sm">
-                        <div className="text-green-400 font-semibold text-base">Total Budget: {message.data.totalBudget}</div>
-                        <div className="text-green-300 text-sm mt-2">💡 Tips included in detailed itinerary</div>
+                      <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl p-3 border border-green-400/30 backdrop-blur-sm">
+                        <div className="text-green-400 font-medium text-sm">Total Budget: {message.data.totalBudget}</div>
                       </div>
                     </div>
                   )}
 
                   {message.type === 'recommendation' && message.data && (
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       {message.data.recommendations?.map((rec: any, index: number) => (
-                        <div key={index} className="bg-black/20 rounded-2xl p-4 backdrop-blur-sm">
-                          <div className="flex items-start justify-between mb-3">
+                        <div key={index} className="bg-black/20 rounded-xl p-3 backdrop-blur-sm">
+                          <div className="flex items-start justify-between mb-2">
                             <div className="flex-1">
-                              <h4 className="text-white font-semibold text-lg">{rec.name}</h4>
-                              <p className="text-gray-400 text-sm">{rec.type}</p>
+                              <h4 className="text-white font-medium text-sm">{rec.name}</h4>
+                              <p className="text-gray-400 text-xs">{rec.type}</p>
                             </div>
                             <div className="flex items-center space-x-1">
-                              <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                              <span className="text-yellow-400 text-sm font-medium">{rec.rating}</span>
+                              <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                              <span className="text-yellow-400 text-xs">{rec.rating}</span>
                             </div>
                           </div>
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="text-orange-400 font-medium">{rec.specialty}</span>
-                              <span className="text-green-400 font-medium">{rec.price}</span>
-                            </div>
-                            <div className="text-gray-300 text-sm">{rec.distance} • {rec.highlight}</div>
-                          </div>
-                        </div>
-                      )) || message.data.options?.map((option: any, index: number) => (
-                        <div key={index} className="bg-black/20 rounded-2xl p-4 backdrop-blur-sm">
-                          <h4 className="text-white font-semibold text-lg mb-2">{option.type}</h4>
-                          <div className="grid grid-cols-2 gap-3 text-sm mb-3">
-                            <div><span className="text-gray-400">Duration:</span> <span className="text-cyan-400 font-medium">{option.duration}</span></div>
-                            <div><span className="text-gray-400">Cost:</span> <span className="text-green-400 font-medium">{option.cost}</span></div>
-                          </div>
-                          <div className="space-y-2">
-                            <div className="text-green-400 text-sm">✓ {option.pros.join(', ')}</div>
-                            <div className="text-orange-400 text-sm">⚠ {option.cons.join(', ')}</div>
-                          </div>
-                        </div>
-                      )) || message.data.places?.map((place: any, index: number) => (
-                        <div key={index} className="bg-black/20 rounded-2xl p-4 backdrop-blur-sm">
-                          <h4 className="text-white font-semibold text-lg mb-2">{place.name}</h4>
-                          <p className="text-gray-300 text-sm mb-3">{place.description}</p>
-                          <div className="grid grid-cols-2 gap-3 text-sm mb-3">
-                            <div><span className="text-gray-400">Difficulty:</span> <span className="text-cyan-400 font-medium">{place.difficulty}</span></div>
-                            <div><span className="text-gray-400">Best Time:</span> <span className="text-green-400 font-medium">{place.bestTime}</span></div>
-                          </div>
-                          <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl p-3 mt-3 backdrop-blur-sm">
-                            <div className="text-blue-400 text-sm">💡 {place.tips}</div>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-orange-400">{rec.specialty}</span>
+                            <span className="text-green-400">{rec.price}</span>
                           </div>
                         </div>
                       ))}
@@ -645,47 +609,28 @@ function AIAssistantPage() {
                   )}
 
                   {message.type === 'suggestion' && message.data && (
-                    <div className="bg-black/20 rounded-2xl p-4 backdrop-blur-sm">
+                    <div className="bg-black/20 rounded-xl p-3 backdrop-blur-sm">
                       {message.data.type === 'budget' && (
                         <>
-                          <div className="text-center mb-4">
-                            <div className="text-3xl font-bold text-green-400">{message.data.daily_budget}</div>
-                            <div className="text-sm text-gray-400">per day</div>
-                          </div>
-                          <div className="space-y-3 mb-4">
-                            {Object.entries(message.data.breakdown).map(([key, value]) => (
-                              <div key={key} className="flex items-center justify-between text-base">
-                                <span className="text-gray-300 capitalize font-medium">{key}</span>
-                                <span className="text-green-400 font-semibold">{value as string}</span>
-                              </div>
-                            ))}
+                          <div className="text-center mb-3">
+                            <div className="text-xl font-bold text-green-400">{message.data.daily_budget}</div>
+                            <div className="text-xs text-gray-400">per day</div>
                           </div>
                           <div className="space-y-2">
-                            {message.data.tips?.map((tip: string, i: number) => (
-                              <div key={i} className="text-blue-300 text-sm">💡 {tip}</div>
+                            {Object.entries(message.data.breakdown).map(([key, value]) => (
+                              <div key={key} className="flex items-center justify-between text-sm">
+                                <span className="text-gray-300 capitalize">{key}</span>
+                                <span className="text-green-400">{value as string}</span>
+                              </div>
                             ))}
                           </div>
                         </>
                       )}
-                      {message.data.type === 'weather' && (
-                        <div className="space-y-4">
-                          <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-xl p-4 backdrop-blur-sm">
-                            <div className="text-cyan-400 font-semibold text-base mb-3">Current Weather</div>
-                            <div className="grid grid-cols-2 gap-3 text-sm">
-                              <div>Temperature: <span className="font-medium">{message.data.current.temperature}</span></div>
-                              <div>Condition: <span className="font-medium">{message.data.current.condition}</span></div>
-                              <div>Humidity: <span className="font-medium">{message.data.current.humidity}</span></div>
-                              <div>Wind: <span className="font-medium">{message.data.current.windSpeed}</span></div>
-                            </div>
-                          </div>
-                          <div className="text-green-400 text-base font-medium">Best Time to Visit: {message.data.bestTime}</div>
-                        </div>
-                      )}
                       {message.data.type === 'help' && (
-                        <div className="space-y-3">
+                        <div className="space-y-2">
                           {message.data.suggestions.map((suggestion: string, i: number) => (
-                            <div key={i} className="flex items-center space-x-3 text-cyan-300 text-base">
-                              <Zap className="h-4 w-4 text-cyan-400" />
+                            <div key={i} className="flex items-center space-x-2 text-cyan-300 text-xs">
+                              <Zap className="h-3 w-3 text-cyan-400" />
                               <span>{suggestion}</span>
                             </div>
                           ))}
@@ -695,33 +640,25 @@ function AIAssistantPage() {
                   )}
 
                   {message.type === 'list' && message.data && (
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       {message.data.type === 'packing' && (
-                        <div className="space-y-4">
-                          <div className="bg-black/20 rounded-2xl p-4 backdrop-blur-sm">
-                            <h4 className="text-cyan-400 font-semibold text-lg mb-3">Essential Items</h4>
-                            <div className="grid grid-cols-2 gap-2">
-                              {message.data.essentials.map((item: string, i: number) => (
-                                <div key={i} className="flex items-center space-x-3 text-gray-300 text-sm">
-                                  <div className="w-2 h-2 rounded-full bg-green-400" />
-                                  <span>{item}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                          <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-2xl p-4 border border-purple-400/30 backdrop-blur-sm">
-                            <h4 className="text-purple-400 font-semibold text-base mb-3">Pro Tips</h4>
-                            {message.data.tips.map((tip: string, i: number) => (
-                              <div key={i} className="text-purple-300 text-sm mb-2">💡 {tip}</div>
+                        <div className="bg-black/20 rounded-xl p-3 backdrop-blur-sm">
+                          <h4 className="text-cyan-400 font-medium text-sm mb-2">Essential Items</h4>
+                          <div className="grid grid-cols-2 gap-1">
+                            {message.data.essentials.map((item: string, i: number) => (
+                              <div key={i} className="flex items-center space-x-2 text-gray-300 text-xs">
+                                <div className="w-1 h-1 rounded-full bg-green-400" />
+                                <span>{item}</span>
+                              </div>
                             ))}
                           </div>
                         </div>
                       )}
                       {message.data.type === 'tips' && (
-                        <div className="space-y-3">
+                        <div className="space-y-2">
                           {message.data.tips.map((tip: string, i: number) => (
-                            <div key={i} className="flex items-start space-x-3 text-gray-300 text-base">
-                              <div className="w-2 h-2 rounded-full bg-yellow-400 mt-2 flex-shrink-0" />
+                            <div key={i} className="flex items-start space-x-2 text-gray-300 text-xs">
+                              <div className="w-1 h-1 rounded-full bg-yellow-400 mt-1.5 flex-shrink-0" />
                               <span>{tip}</span>
                             </div>
                           ))}
@@ -732,7 +669,7 @@ function AIAssistantPage() {
                 </div>
               )}
               
-              <div className={`text-xs text-gray-400 mt-2 ${
+              <div className={`text-xs text-gray-500 mt-1 ${
                 message.isUser ? 'text-right' : 'text-left'
               }`}>
                 {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -743,12 +680,12 @@ function AIAssistantPage() {
 
         {isTyping && (
           <div className="flex justify-start">
-            <div className="bg-white/10 border border-white/10 rounded-3xl px-6 py-4 backdrop-blur-sm">
-              <div className="flex items-center space-x-3">
-                <div className="w-3 h-3 bg-purple-400 rounded-full animate-bounce"></div>
-                <div className="w-3 h-3 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                <div className="w-3 h-3 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                <span className="text-purple-400 text-base ml-3">AI is thinking...</span>
+            <div className="bg-white/10 border border-white/10 rounded-2xl px-4 py-3 backdrop-blur-sm">
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                <span className="text-purple-400 text-sm ml-2">AI is thinking...</span>
               </div>
             </div>
           </div>
@@ -756,26 +693,8 @@ function AIAssistantPage() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* AI Features Section - NOW MOVED BELOW THE MESSAGES */}
-      <div className="p-4 border-t border-white/10 flex-shrink-0 z-40 bg-gradient-to-r from-slate-900/98 to-indigo-900/98 backdrop-blur-md">
-        <h3 className="text-white font-semibold text-base mb-3 text-center">Quick Actions</h3>
-        <div className="grid grid-cols-2 gap-3">
-          {aiFeatures.map((feature) => (
-            <button
-              key={feature.id}
-              onClick={() => handleFeatureClick(feature)}
-              className={`bg-gradient-to-r ${feature.color} bg-opacity-20 backdrop-blur-sm rounded-2xl p-4 border border-white/10 hover:border-white/30 transition-all duration-300 text-left group hover:scale-[1.02] hover:shadow-lg`}
-            >
-              <feature.icon className="h-6 w-6 text-white mb-2 group-hover:scale-110 transition-transform" />
-              <div className="text-sm font-medium text-white">{feature.title}</div>
-              <div className="text-xs text-gray-400">{feature.description}</div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Message Input */}
-      <div className="bg-black/30 backdrop-blur-md border-t border-white/10 p-4 flex-shrink-0 z-50">
+      {/* INPUT AREA - RIGHT BELOW MESSAGES */}
+      <div className="bg-black/30 backdrop-blur-md border-t border-white/10 p-4 flex-shrink-0">
         <div className="flex items-center space-x-3">
           <div className="flex-1 relative">
             <input
@@ -803,6 +722,22 @@ function AIAssistantPage() {
           >
             <Send className="h-5 w-5 text-white" />
           </button>
+        </div>
+      </div>
+
+      {/* FEATURE BUTTONS - COMPACT AT THE BOTTOM */}
+      <div className="bg-black/40 backdrop-blur-md border-t border-white/10 p-3 flex-shrink-0">
+        <div className="grid grid-cols-6 gap-2">
+          {aiFeatures.map((feature) => (
+            <button
+              key={feature.id}
+              onClick={() => handleFeatureClick(feature)}
+              className={`bg-gradient-to-r ${feature.color} bg-opacity-20 backdrop-blur-sm rounded-xl p-2 border border-white/10 hover:border-white/30 transition-all duration-300 text-center group hover:scale-105`}
+            >
+              <feature.icon className="h-4 w-4 text-white mx-auto mb-1 group-hover:scale-110 transition-transform" />
+              <div className="text-xs font-medium text-white">{feature.title}</div>
+            </button>
+          ))}
         </div>
       </div>
     </div>
