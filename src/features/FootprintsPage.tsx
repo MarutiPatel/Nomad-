@@ -5,7 +5,8 @@ import {
   Edit, Save, X, Trash2, Play, Video, Send, Smile,
   Users, Globe, UserPlus, MoreHorizontal, ThumbsUp,
   Reply, Flag, Bookmark, TrendingUp, Zap, Crown,
-  AtSign, Hash, Settings, ChevronDown, ChevronUp
+  AtSign, Hash, Settings, ChevronDown, ChevronUp,
+  User
 } from 'lucide-react';
 
 interface User {
