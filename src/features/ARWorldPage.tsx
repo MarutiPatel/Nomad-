@@ -1,10 +1,5 @@
 import React, { useState } from 'react';
-import { 
-  Camera, MapPin, Eye, MessageCircle, Star, Plus, 
-  Filter, Search, Layers, Zap, Heart, Users, Globe,
-  Clock, Navigation, Share, Bookmark, Mountains, 
-  Building, Landmark, Crown, Pyramid
-} from 'lucide-react';
+import { Camera, MapPin, Eye, MessageCircle, Star, Plus, Filter, Search, Layers, Zap, Heart, Users, Globe, Clock, Navigation, Share, Bookmark, Mountain as Mountains, Building, Landmark, Crown, Pyramid } from 'lucide-react';
 
 interface ARTag {
   id: string;
