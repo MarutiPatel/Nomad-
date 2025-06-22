@@ -1,11 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Target, Compass, Wand2, Clock, Star, MapPin, 
-  Shuffle, Filter, Search, Zap, Globe, Camera, Heart,
-  Users, Play, RefreshCw, Sparkles, Map, Navigation,
-  Eye, Brain, Magic, Telescope, ArrowRight, CheckCircle,
-  Timer, Mountain, Plane, Coffee, Utensils, Music
-} from 'lucide-react';
+import { Target, Compass, Wand2, Clock, Star, MapPin, Shuffle, Filter, Search, Zap, Globe, Camera, Heart, Users, Play, RefreshCw, Sparkles, Map, Navigation, Eye, Brain, Magnet as Magic, Telescope, ArrowRight, CheckCircle, Timer, Mountain, Plane, Coffee, Utensils, Music } from 'lucide-react';
 
 interface DiscoveryItem {
   id: string;
