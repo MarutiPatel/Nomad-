@@ -1,12 +1,5 @@
 import React, { useState } from 'react';
-import { 
-  Camera, MapPin, Eye, MessageCircle, Star, Plus, 
-  Filter, Search, Layers, Zap, Gift, Heart, Users,
-  Clock, Navigation, Share, Bookmark, Headphones,
-  VrHeadset, Globe, Mountain, Plane, Gamepad2,
-  Monitor, Smartphone, Wifi, Play, Volume2,
-  Calendar, Trophy, Target, Compass, Map
-} from 'lucide-react';
+import { Camera, MapPin, Eye, MessageCircle, Star, Plus, Filter, Search, Layers, Zap, Gift, Heart, Users, Clock, Navigation, Share, Bookmark, Headphones, Headset as VrHeadset, Globe, Mountain, Plane, Gamepad2, Monitor, Smartphone, Wifi, Play, Volume2, Calendar, Trophy, Target, Compass, Map } from 'lucide-react';
 
 interface ARTag {
   id: string;
