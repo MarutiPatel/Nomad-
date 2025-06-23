@@ -5,7 +5,7 @@ import {
   Footprints, Radar, Target, Camera, Map, Heart, Trophy,
   Bell, Search, Plus, Menu, X, LogOut, Shield, Zap,
   Clock, Utensils, Bot, Eye, Gift, AlertTriangle, BookOpen,
-  Calendar, Globe, RefreshCw
+  Calendar, Globe, RefreshCw, Route
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import FootprintsPage from '../features/FootprintsPage';
@@ -22,6 +22,7 @@ import AIAssistantPage from '../features/AIAssistantPage';
 import TravelJournalPage from '../features/TravelJournalPage';
 import LiveEventsPage from '../features/LiveEventsPage';
 import NomadNetworkPage from '../features/NomadNetworkPage';
+import RouteDiscoveryPage from '../features/RouteDiscoveryPage';
 
 function Dashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -39,6 +40,7 @@ function Dashboard() {
   ];
 
   const additionalFeatures = [
+    { path: '/dashboard/route-discovery', icon: Route, label: 'Route Discovery' },
     { path: '/dashboard/journal', icon: BookOpen, label: 'Travel Journal' },
     { path: '/dashboard/events', icon: Calendar, label: 'Live Events' },
     { path: '/dashboard/network', icon: Globe, label: 'Nomad Network' },
@@ -223,6 +225,7 @@ function Dashboard() {
             <Route path="/discovery" element={<DiscoveryPage />} />
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/route-discovery" element={<RouteDiscoveryPage />} />
             <Route path="/journal" element={<TravelJournalPage />} />
             <Route path="/events" element={<LiveEventsPage />} />
             <Route path="/network" element={<NomadNetworkPage />} />
@@ -295,9 +298,9 @@ function DashboardHome() {
   const quickActions = [
     { icon: Plus, label: 'Drop Footprint', color: 'from-orange-400 to-pink-500', path: '/dashboard/footprints' },
     { icon: Radar, label: 'Find Buddies', color: 'from-cyan-400 to-blue-500', path: '/dashboard/radar' },
+    { icon: Route, label: 'Route Discovery', color: 'from-green-400 to-teal-500', path: '/dashboard/route-discovery' },
     { icon: Camera, label: 'AR World', color: 'from-purple-400 to-pink-500', path: '/dashboard/ar-world' },
-    { icon: Bot, label: 'AI Assistant', color: 'from-green-400 to-teal-500', path: '/dashboard/ai-assistant' },
-    { icon: BookOpen, label: 'Journal', color: 'from-blue-400 to-purple-500', path: '/dashboard/journal' },
+    { icon: Bot, label: 'AI Assistant', color: 'from-blue-400 to-purple-500', path: '/dashboard/ai-assistant' },
     { icon: Calendar, label: 'Live Events', color: 'from-red-400 to-orange-500', path: '/dashboard/events' }
   ];
 
