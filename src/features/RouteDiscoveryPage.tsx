@@ -6,7 +6,10 @@ import {
   Users, Calendar, DollarSign, Map, Eye, Play, Bookmark,
   ThumbsUp, MessageCircle, Award, Zap, Route as RouteIcon,
   Volume2, VolumeX, Settings, Target, Compass, Globe,
-  TrendingUp, CheckCircle, Info, ArrowRight, RefreshCw
+  TrendingUp, CheckCircle, Info, ArrowRight, RefreshCw,
+  X, Download, Upload, Smartphone, Monitor, Headphones,
+  Copy, ExternalLink, CreditCard, Phone, Mail, Image,
+  Video, FileText, Save, Edit, Trash2
 } from 'lucide-react';
 
 interface RouteStop {
@@ -41,6 +44,11 @@ interface SavedRoute {
   estimatedCost: string;
   difficulty: 'easy' | 'moderate' | 'challenging';
   tags: string[];
+  author?: string;
+  rating?: number;
+  reviews?: number;
+  likes?: number;
+  isLiked?: boolean;
 }
 
 interface CommunityRoute {
@@ -63,6 +71,9 @@ interface CommunityRoute {
   estimatedCost: string;
   isFeatured?: boolean;
   createdAt: Date;
+  routeStops: RouteStop[];
+  currency: string;
+  country: string;
 }
 
 interface AIMessage {
@@ -70,8 +81,16 @@ interface AIMessage {
   content: string;
   isUser: boolean;
   timestamp: Date;
-  type: 'text' | 'route' | 'recommendations';
+  type: 'text' | 'route' | 'recommendations' | 'route-imported' | 'route-customized';
   data?: any;
+}
+
+interface RouteCustomization {
+  addStops: string[];
+  removeStops: string[];
+  preferences: string[];
+  budget: string;
+  duration: string;
 }
 
 function RouteDiscoveryPage() {
@@ -90,6 +109,17 @@ function RouteDiscoveryPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedRoute, setGeneratedRoute] = useState<RouteStop[] | null>(null);
   const [showMap, setShowMap] = useState(false);
+  const [selectedCommunityRoute, setSelectedCommunityRoute] = useState<CommunityRoute | null>(null);
+  const [showRouteCustomization, setShowRouteCustomization] = useState(false);
+  const [routeCustomization, setRouteCustomization] = useState<RouteCustomization>({
+    addStops: [],
+    removeStops: [],
+    preferences: [],
+    budget: '',
+    duration: ''
+  });
+  const [showRoutePreview, setShowRoutePreview] = useState(false);
+  const [importedRoute, setImportedRoute] = useState<CommunityRoute | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const preferences = [
@@ -102,26 +132,29 @@ function RouteDiscoveryPage() {
   ];
 
   const quickRoutes = [
-    // India Routes
-    { from: 'Mumbai', to: 'Goa', distance: '463 km', time: '8h 30m', type: 'coastal', flag: '🇮🇳' },
-    { from: 'Delhi', to: 'Manali', distance: '570 km', time: '12h', type: 'mountain', flag: '🇮🇳' },
-    { from: 'Bangalore', to: 'Coorg', distance: '252 km', time: '5h 30m', type: 'nature', flag: '🇮🇳' },
-    { from: 'Pune', to: 'Lonavala', distance: '64 km', time: '1h 30m', type: 'weekend', flag: '🇮🇳' },
-    
     // USA Routes
-    { from: 'New York', to: 'Boston', distance: '215 miles', time: '4h 30m', type: 'coastal', flag: '🇺🇸' },
-    { from: 'Los Angeles', to: 'San Francisco', distance: '383 miles', time: '6h', type: 'scenic', flag: '🇺🇸' },
-    { from: 'Las Vegas', to: 'Grand Canyon', distance: '280 miles', time: '4h 15m', type: 'nature', flag: '🇺🇸' },
-    { from: 'Miami', to: 'Key West', distance: '165 miles', time: '3h 30m', type: 'tropical', flag: '🇺🇸' },
-    { from: 'Seattle', to: 'Portland', distance: '173 miles', time: '3h', type: 'urban', flag: '🇺🇸' },
+    { from: 'New York', to: 'Boston', distance: '347 km', time: '4h 30m', type: 'coastal', country: 'USA', currency: '$' },
+    { from: 'Los Angeles', to: 'San Francisco', distance: '617 km', time: '6h', type: 'scenic', country: 'USA', currency: '$' },
+    { from: 'Las Vegas', to: 'Grand Canyon', distance: '450 km', time: '4h 30m', type: 'nature', country: 'USA', currency: '$' },
+    { from: 'Miami', to: 'Key West', distance: '266 km', time: '3h 30m', type: 'tropical', country: 'USA', currency: '$' },
+    { from: 'Seattle', to: 'Portland', distance: '278 km', time: '3h', type: 'urban', country: 'USA', currency: '$' },
+    { from: 'Chicago', to: 'Milwaukee', distance: '150 km', time: '2h', type: 'weekend', country: 'USA', currency: '$' },
     
-    // Europe Routes
-    { from: 'Paris', to: 'Amsterdam', distance: '515 km', time: '5h 30m', type: 'cultural', flag: '🇪🇺' },
-    { from: 'Rome', to: 'Florence', distance: '272 km', time: '3h', type: 'heritage', flag: '🇮🇹' },
-    { from: 'London', to: 'Edinburgh', distance: '666 km', time: '8h', type: 'historic', flag: '🇬🇧' },
-    { from: 'Barcelona', to: 'Valencia', distance: '349 km', time: '4h', type: 'mediterranean', flag: '🇪🇸' },
-    { from: 'Munich', to: 'Salzburg', distance: '150 km', time: '2h', type: 'alpine', flag: '🇩🇪' },
-    { from: 'Vienna', to: 'Prague', distance: '291 km', time: '4h', type: 'royal', flag: '🇪🇺' }
+    // European Routes
+    { from: 'Paris', to: 'Amsterdam', distance: '515 km', time: '5h', type: 'cultural', country: 'Europe', currency: '€' },
+    { from: 'Rome', to: 'Florence', distance: '274 km', time: '3h', type: 'heritage', country: 'Europe', currency: '€' },
+    { from: 'London', to: 'Edinburgh', distance: '666 km', time: '7h', type: 'historic', country: 'Europe', currency: '£' },
+    { from: 'Barcelona', to: 'Valencia', distance: '349 km', time: '3h 30m', type: 'coastal', country: 'Europe', currency: '€' },
+    { from: 'Munich', to: 'Salzburg', distance: '150 km', time: '2h', type: 'alpine', country: 'Europe', currency: '€' },
+    { from: 'Vienna', to: 'Prague', distance: '333 km', time: '4h', type: 'royal', country: 'Europe', currency: '€' },
+    
+    // Indian Routes  
+    { from: 'Mumbai', to: 'Goa', distance: '463 km', time: '8h 30m', type: 'coastal', country: 'India', currency: '₹' },
+    { from: 'Delhi', to: 'Manali', distance: '570 km', time: '12h', type: 'mountain', country: 'India', currency: '₹' },
+    { from: 'Bangalore', to: 'Coorg', distance: '252 km', time: '5h 30m', type: 'nature', country: 'India', currency: '₹' },
+    { from: 'Chennai', to: 'Pondicherry', distance: '160 km', time: '3h 30m', type: 'heritage', country: 'India', currency: '₹' },
+    { from: 'Kolkata', to: 'Darjeeling', distance: '680 km', time: '14h', type: 'hill-station', country: 'India', currency: '₹' },
+    { from: 'Pune', to: 'Lonavala', distance: '64 km', time: '1h 30m', type: 'weekend', country: 'India', currency: '₹' }
   ];
 
   const mockSavedRoutes: SavedRoute[] = [
@@ -141,82 +174,116 @@ function RouteDiscoveryPage() {
     },
     {
       id: '2',
-      name: 'California Coast Adventure',
+      name: 'Pacific Coast Highway Adventure',
       from: 'Los Angeles',
       to: 'San Francisco',
-      distance: 383,
+      distance: 617,
       duration: '6h',
       stops: 15,
       lastUsed: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
-      timesUsed: 2,
-      estimatedCost: '$280',
+      timesUsed: 1,
+      estimatedCost: '$420',
       difficulty: 'moderate',
-      tags: ['pacific', 'coast', 'scenic']
+      tags: ['scenic', 'coastal', 'wine']
     },
     {
       id: '3',
-      name: 'European Art Trail',
+      name: 'European Culture Trail',
       from: 'Paris',
       to: 'Amsterdam',
       distance: 515,
-      duration: '5h 30m',
+      duration: '5h',
       stops: 8,
       lastUsed: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000),
-      timesUsed: 1,
-      estimatedCost: '€195',
+      timesUsed: 2,
+      estimatedCost: '€280',
       difficulty: 'easy',
-      tags: ['art', 'culture', 'museums']
+      tags: ['culture', 'museums', 'cafes']
     }
   ];
 
   const mockCommunityRoutes: CommunityRoute[] = [
     {
       id: '1',
-      title: 'Ultimate Goa Beach Hopping Experience',
-      author: 'BeachExplorer99',
-      authorAvatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=100',
-      from: 'Mumbai',
-      to: 'Goa',
-      distance: 463,
-      duration: '8h 30m',
-      stops: 15,
-      rating: 4.8,
-      reviews: 124,
-      likes: 89,
-      isLiked: false,
-      difficulty: 'easy',
-      tags: ['beaches', 'nightlife', 'food'],
-      description: 'Perfect coastal route with hidden beach shacks and sunset spots',
-      estimatedCost: '₹3,000',
-      isFeatured: true,
-      createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
-    },
-    {
-      id: '2',
       title: 'Pacific Coast Highway Magic',
       author: 'USRoadTripper',
-      authorAvatar: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=100',
+      authorAvatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=100',
       from: 'Los Angeles',
       to: 'San Francisco',
-      distance: 383,
+      distance: 617,
       duration: '6h',
       stops: 18,
       rating: 4.9,
       reviews: 89,
       likes: 156,
-      isLiked: true,
+      isLiked: false,
       difficulty: 'moderate',
       tags: ['ocean', 'cliffs', 'wine'],
       description: 'Iconic coastal drive with Big Sur highlights and wine country',
       estimatedCost: '$350',
       isFeatured: true,
-      createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000)
+      createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+      currency: '$',
+      country: 'USA',
+      routeStops: [
+        {
+          id: 'pch1',
+          name: 'Pea Soup Andersen\'s',
+          type: 'food',
+          location: 'Buellton, CA',
+          coordinates: { lat: 34.6136, lng: -120.1929 },
+          rating: 4.2,
+          reviews: 1200,
+          priceRange: '$15-25',
+          distance: 145,
+          estimatedTime: '2h 30m',
+          image: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400',
+          description: 'Famous split pea soup restaurant since 1924',
+          specialOffers: ['Free coffee refills', 'Kids eat free Sundays'],
+          safetyRating: 4.8,
+          carbonFootprint: 'Low impact'
+        },
+        {
+          id: 'pch2',
+          name: 'Big Sur Lodge',
+          type: 'stay',
+          location: 'Big Sur, CA',
+          coordinates: { lat: 36.2553, lng: -121.8053 },
+          rating: 4.6,
+          reviews: 456,
+          priceRange: '$280-450',
+          distance: 290,
+          estimatedTime: '4h 30m',
+          image: 'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg?auto=compress&cs=tinysrgb&w=400',
+          description: 'Rustic lodge in redwood forest with spectacular views',
+          specialOffers: ['National Park access included', 'Spa discounts'],
+          safetyRating: 4.9,
+          carbonFootprint: 'Eco-friendly'
+        },
+        {
+          id: 'pch3',
+          name: 'McWay Falls Viewpoint',
+          type: 'attraction',
+          location: 'Big Sur, CA',
+          coordinates: { lat: 36.1569, lng: -121.6700 },
+          rating: 4.8,
+          reviews: 2341,
+          priceRange: 'Free',
+          distance: 305,
+          estimatedTime: '5h',
+          image: 'https://images.pexels.com/photos/3244513/pexels-photo-3244513.jpeg?auto=compress&cs=tinysrgb&w=400',
+          description: '80-foot waterfall flowing onto the beach',
+          isHiddenGem: false,
+          safetyRating: 4.5,
+          carbonFootprint: 'Zero impact'
+        }
+      ]
     },
     {
-      id: '3',
+      id: '2',
       title: 'Romantic Rhine Valley Journey',
       author: 'EuropeNomad',
-      authorAvatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=100',
+      authorAvatar: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=100',
       from: 'Amsterdam',
       to: 'Munich',
       distance: 625,
@@ -224,218 +291,209 @@ function RouteDiscoveryPage() {
       stops: 12,
       rating: 4.7,
       reviews: 67,
-      likes: 134,
-      isLiked: false,
-      difficulty: 'moderate',
-      tags: ['castles', 'rivers', 'culture'],
+      likes: 234,
+      isLiked: true,
+      difficulty: 'easy',
+      tags: ['castles', 'culture', 'beer'],
       description: 'Fairy-tale route through German castles and Dutch countryside',
       estimatedCost: '€280',
       isFeatured: true,
-      createdAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000)
-    }
-  ];
-
-  // Enhanced route stops with international locations
-  const getRouteStopsForDestination = (from: string, to: string): RouteStop[] => {
-    // India Routes
-    if (from.toLowerCase().includes('pune') && to.toLowerCase().includes('lonavala')) {
-      return [
+      createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+      currency: '€',
+      country: 'Europe',
+      routeStops: [
         {
-          id: '1',
-          name: 'Highway Dhaba Delight',
-          type: 'food',
-          location: 'Khandala, Maharashtra',
-          coordinates: { lat: 18.7469, lng: 73.4831 },
-          rating: 4.5,
-          reviews: 234,
-          priceRange: '₹150-300',
-          distance: 45,
-          estimatedTime: '1h',
-          image: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400',
-          description: 'Authentic Punjabi food with scenic valley views',
-          specialOffers: ['Free chai with meal', '20% off for groups'],
-          isHiddenGem: true,
-          safetyRating: 4.8,
-          carbonFootprint: 'Low impact'
-        },
-        {
-          id: '2',
-          name: 'Karla Cave Resort',
-          type: 'stay',
-          location: 'Karla, Maharashtra',
-          coordinates: { lat: 18.7469, lng: 73.4831 },
-          rating: 4.7,
-          reviews: 89,
-          priceRange: '₹2000-4000',
-          distance: 35,
-          estimatedTime: '45m',
-          image: 'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg?auto=compress&cs=tinysrgb&w=400',
-          description: 'Heritage resort near ancient Buddhist caves',
-          specialOffers: ['Cave tour included', 'Complimentary breakfast'],
-          safetyRating: 4.9,
-          carbonFootprint: 'Eco-friendly'
-        },
-        {
-          id: '3',
-          name: 'Pawna Lake Camping',
-          type: 'camping',
-          location: 'Pawna Lake, Maharashtra',
-          coordinates: { lat: 18.7469, lng: 73.4831 },
-          rating: 4.6,
-          reviews: 156,
-          priceRange: '₹800-1500',
-          distance: 55,
-          estimatedTime: '1h 15m',
-          image: 'https://images.pexels.com/photos/1687845/pexels-photo-1687845.jpeg?auto=compress&cs=tinysrgb&w=400',
-          description: 'Lakeside camping with stargazing and water activities',
-          isHiddenGem: true,
-          safetyRating: 4.5,
-          carbonFootprint: 'Minimal impact'
-        }
-      ];
-    }
-    
-    // USA Routes
-    if (from.toLowerCase().includes('los angeles') && to.toLowerCase().includes('san francisco')) {
-      return [
-        {
-          id: 'us1',
-          name: 'Pea Soup Andersen\'s',
-          type: 'food',
-          location: 'Buellton, California',
-          coordinates: { lat: 34.6136, lng: -120.1926 },
-          rating: 4.3,
-          reviews: 1247,
-          priceRange: '$15-30',
-          distance: 180,
-          estimatedTime: '3h',
-          image: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400',
-          description: 'Famous roadside stop serving legendary split pea soup since 1924',
-          specialOffers: ['Free coffee refills', 'Route 101 special menu'],
-          isHiddenGem: false,
-          safetyRating: 4.9,
-          carbonFootprint: 'Local sourcing'
-        },
-        {
-          id: 'us2',
-          name: 'Big Sur Lodge',
-          type: 'stay',
-          location: 'Big Sur, California',
-          coordinates: { lat: 36.2704, lng: -121.8081 },
-          rating: 4.6,
-          reviews: 892,
-          priceRange: '$200-400',
-          distance: 280,
-          estimatedTime: '4h 30m',
-          image: 'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg?auto=compress&cs=tinysrgb&w=400',
-          description: 'Rustic lodge among redwoods with Pacific Ocean views',
-          specialOffers: ['Spa package deals', 'Hiking map included'],
-          safetyRating: 4.8,
-          carbonFootprint: 'Eco-certified'
-        },
-        {
-          id: 'us3',
-          name: 'McWay Falls Viewpoint',
-          type: 'attraction',
-          location: 'Big Sur, California',
-          coordinates: { lat: 36.1590, lng: -121.6694 },
-          rating: 4.9,
-          reviews: 2156,
-          priceRange: 'Free',
-          distance: 285,
-          estimatedTime: '4h 40m',
-          image: 'https://images.pexels.com/photos/3244513/pexels-photo-3244513.jpeg?auto=compress&cs=tinysrgb&w=400',
-          description: 'Iconic waterfall dropping 80 feet onto pristine beach',
-          isHiddenGem: true,
-          safetyRating: 4.7,
-          carbonFootprint: 'Zero impact'
-        }
-      ];
-    }
-
-    // Europe Routes
-    if (from.toLowerCase().includes('paris') && to.toLowerCase().includes('amsterdam')) {
-      return [
-        {
-          id: 'eu1',
-          name: 'Café de la Paix',
+          id: 'rhine1',
+          name: 'Belgian Waffle House',
           type: 'food',
           location: 'Brussels, Belgium',
           coordinates: { lat: 50.8503, lng: 4.3517 },
           rating: 4.4,
-          reviews: 567,
-          priceRange: '€20-40',
-          distance: 265,
-          estimatedTime: '3h',
+          reviews: 890,
+          priceRange: '€8-15',
+          distance: 120,
+          estimatedTime: '2h',
           image: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400',
-          description: 'Traditional Belgian brasserie with authentic waffles and beer',
-          specialOffers: ['Belgian beer tasting', 'Waffle making class'],
-          isHiddenGem: false,
-          safetyRating: 4.8,
-          carbonFootprint: 'Local ingredients'
+          description: 'Authentic Belgian waffles with 20 toppings',
+          specialOffers: ['Student discounts', 'Free coffee with waffle'],
+          safetyRating: 4.7,
+          carbonFootprint: 'Local sourcing'
         },
         {
-          id: 'eu2',
-          name: 'Hotel des Galeries',
+          id: 'rhine2',
+          name: 'Cologne Cathedral Hotel',
           type: 'stay',
-          location: 'Brussels, Belgium',
-          coordinates: { lat: 50.8476, lng: 4.3572 },
+          location: 'Cologne, Germany',
+          coordinates: { lat: 50.9375, lng: 6.9603 },
           rating: 4.5,
-          reviews: 423,
-          priceRange: '€120-250',
-          distance: 267,
-          estimatedTime: '3h 05m',
+          reviews: 234,
+          priceRange: '€120-200',
+          distance: 280,
+          estimatedTime: '3h 30m',
           image: 'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg?auto=compress&cs=tinysrgb&w=400',
-          description: 'Boutique hotel in historic Galeries Royales Saint-Hubert',
-          specialOffers: ['Museum pass included', 'Late checkout'],
-          safetyRating: 4.9,
+          description: 'Boutique hotel with cathedral views',
+          specialOffers: ['Cathedral tour included', 'Breakfast buffet'],
+          safetyRating: 4.8,
           carbonFootprint: 'Green certified'
-        },
-        {
-          id: 'eu3',
-          name: 'Atomium & Mini-Europe',
-          type: 'attraction',
-          location: 'Brussels, Belgium',
-          coordinates: { lat: 50.8950, lng: 4.3412 },
-          rating: 4.3,
-          reviews: 1834,
-          priceRange: '€16-25',
-          distance: 270,
-          estimatedTime: '3h 10m',
-          image: 'https://images.pexels.com/photos/3244513/pexels-photo-3244513.jpeg?auto=compress&cs=tinysrgb&w=400',
-          description: 'Iconic symbol of Brussels with panoramic city views',
-          specialOffers: ['Combined ticket discount', 'Audio guide included'],
-          safetyRating: 4.6,
-          carbonFootprint: 'Educational focus'
         }
-      ];
+      ]
+    },
+    {
+      id: '3',
+      title: 'Himalayan Spirit Quest',
+      author: 'MountainSage',
+      authorAvatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=100',
+      from: 'Delhi',
+      to: 'Leh',
+      distance: 1150,
+      duration: '2 days',
+      stops: 20,
+      rating: 4.8,
+      reviews: 123,
+      likes: 445,
+      isLiked: false,
+      difficulty: 'challenging',
+      tags: ['mountains', 'spiritual', 'adventure'],
+      description: 'Epic journey through world\'s highest motorable passes',
+      estimatedCost: '₹12,500',
+      isFeatured: true,
+      createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+      currency: '₹',
+      country: 'India',
+      routeStops: [
+        {
+          id: 'leh1',
+          name: 'Rishikesh Ashram Stay',
+          type: 'stay',
+          location: 'Rishikesh, Uttarakhand',
+          coordinates: { lat: 30.0869, lng: 78.2676 },
+          rating: 4.6,
+          reviews: 567,
+          priceRange: '₹800-1500',
+          distance: 240,
+          estimatedTime: '6h',
+          image: 'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg?auto=compress&cs=tinysrgb&w=400',
+          description: 'Peaceful ashram by Ganges with yoga sessions',
+          specialOffers: ['Free yoga classes', 'Meditation sessions'],
+          safetyRating: 4.7,
+          carbonFootprint: 'Sustainable'
+        }
+      ]
+    },
+    {
+      id: '4',
+      title: 'New England Fall Foliage',
+      author: 'AutumnChaser',
+      authorAvatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=100',
+      from: 'Boston',
+      to: 'Burlington',
+      distance: 346,
+      duration: '4h 30m',
+      stops: 14,
+      rating: 4.6,
+      reviews: 78,
+      likes: 189,
+      isLiked: true,
+      difficulty: 'easy',
+      tags: ['fall', 'scenic', 'historic'],
+      description: 'Spectacular autumn colors through Vermont countryside',
+      estimatedCost: '$240',
+      createdAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
+      currency: '$',
+      country: 'USA',
+      routeStops: []
     }
+  ];
 
-    // Default international mix
-    return [
-      {
-        id: 'default1',
-        name: 'International Food Court',
-        type: 'food',
-        location: 'Highway Stop',
-        coordinates: { lat: 0, lng: 0 },
-        rating: 4.4,
-        reviews: 234,
-        priceRange: 'Varies',
-        distance: 50,
-        estimatedTime: '1h',
-        image: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400',
-        description: 'Global cuisine options for international travelers',
-        specialOffers: ['Multi-currency accepted', 'Traveler discounts'],
-        safetyRating: 4.5,
-        carbonFootprint: 'Sustainable sourcing'
-      }
-    ];
-  };
+  const mockRouteStops: RouteStop[] = [
+    {
+      id: '1',
+      name: 'Highway Dhaba Delight',
+      type: 'food',
+      location: 'Panvel, Maharashtra',
+      coordinates: { lat: 18.9894, lng: 73.1267 },
+      rating: 4.5,
+      reviews: 234,
+      priceRange: '₹150-300',
+      distance: 45,
+      estimatedTime: '1h',
+      image: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400',
+      description: 'Authentic Punjabi food with truck driver vibes',
+      specialOffers: ['Free chai with meal', '20% off for groups'],
+      isHiddenGem: true,
+      safetyRating: 4.8,
+      carbonFootprint: 'Low impact'
+    },
+    {
+      id: '2',
+      name: 'Sunset Point Resort',
+      type: 'stay',
+      location: 'Mahabaleshwar, Maharashtra',
+      coordinates: { lat: 17.9242, lng: 73.6582 },
+      rating: 4.7,
+      reviews: 89,
+      priceRange: '₹2000-4000',
+      distance: 120,
+      estimatedTime: '3h',
+      image: 'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg?auto=compress&cs=tinysrgb&w=400',
+      description: 'Hillside resort with panoramic valley views',
+      specialOffers: ['Early check-in free', 'Complimentary breakfast'],
+      safetyRating: 4.9,
+      carbonFootprint: 'Eco-friendly'
+    },
+    {
+      id: '3',
+      name: 'Ancient Cave Temples',
+      type: 'attraction',
+      location: 'Karla, Maharashtra',
+      coordinates: { lat: 18.7469, lng: 73.4831 },
+      rating: 4.6,
+      reviews: 156,
+      priceRange: 'Free',
+      distance: 85,
+      estimatedTime: '2h 30m',
+      image: 'https://images.pexels.com/photos/3244513/pexels-photo-3244513.jpeg?auto=compress&cs=tinysrgb&w=400',
+      description: '2000-year-old Buddhist cave temples with intricate carvings',
+      isHiddenGem: true,
+      safetyRating: 4.5,
+      carbonFootprint: 'Zero impact'
+    },
+    {
+      id: '4',
+      name: 'Green Valley Camping',
+      type: 'camping',
+      location: 'Pawna Lake, Maharashtra',
+      coordinates: { lat: 18.7469, lng: 73.4831 },
+      rating: 4.4,
+      reviews: 78,
+      priceRange: '₹800-1500',
+      distance: 95,
+      estimatedTime: '2h 45m',
+      image: 'https://images.pexels.com/photos/1687845/pexels-photo-1687845.jpeg?auto=compress&cs=tinysrgb&w=400',
+      description: 'Lakeside camping with bonfire and stargazing',
+      specialOffers: ['Equipment rental included', 'Group discounts'],
+      safetyRating: 4.3,
+      carbonFootprint: 'Minimal impact'
+    }
+  ];
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [aiMessages]);
+
+  // Initialize AI Assistant with welcome message
+  useEffect(() => {
+    if (showAIAssistant && aiMessages.length === 0) {
+      const welcomeMessage: AIMessage = {
+        id: 'welcome',
+        content: "🤖 **Route Discovery AI Assistant** at your service! I can help you:\n\n🗺️ **Plan custom routes** with hidden gems\n🌟 **Customize community routes** to your preferences\n💡 **Suggest alternatives** based on budget/time\n🔍 **Find specific stops** (food, hotels, attractions)\n🚗 **Optimize travel** for fuel, time, or scenic beauty\n\nWhat kind of route adventure are you planning today?",
+        isUser: false,
+        timestamp: new Date(),
+        type: 'text'
+      };
+      setAiMessages([welcomeMessage]);
+    }
+  }, [showAIAssistant, aiMessages.length]);
 
   const handleQuickRoute = (route: any) => {
     setRouteData({
@@ -443,6 +501,18 @@ function RouteDiscoveryPage() {
       from: route.from,
       to: route.to
     });
+    
+    // Add AI message about the selected route
+    const routeMessage: AIMessage = {
+      id: Date.now().toString(),
+      content: `Great choice! I've set up your route from **${route.from}** to **${route.to}**. This is a beautiful ${route.type} route in ${route.country}. Would you like me to:\n\n🎯 **Find specific stops** (restaurants, hotels, attractions)\n💰 **Adjust for budget** (${route.currency} currency)\n⏰ **Optimize for time** vs scenic beauty\n🎒 **Add traveler preferences**\n\nJust tell me what you're looking for!`,
+      isUser: false,
+      timestamp: new Date(),
+      type: 'recommendations'
+    };
+    
+    setAiMessages(prev => [...prev, routeMessage]);
+    setShowAIAssistant(true);
   };
 
   const togglePreference = (prefId: string) => {
@@ -463,63 +533,71 @@ function RouteDiscoveryPage() {
     // Simulate AI processing
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    // Get route-specific stops
-    const routeStops = getRouteStopsForDestination(routeData.from, routeData.to);
-    
-    // Filter stops based on preferences
-    const filteredStops = routeData.preferences.length > 0 
-      ? routeStops.filter(stop => routeData.preferences.includes(stop.type))
-      : routeStops;
-
-    // Determine currency and distance unit based on route
-    const getCurrencyAndUnits = (from: string, to: string) => {
-      if (from.includes('New York') || from.includes('Los Angeles') || from.includes('Miami') || 
-          to.includes('Boston') || to.includes('San Francisco') || to.includes('Las Vegas')) {
-        return { currency: '$', distance: 'miles', cost: '280' };
-      } else if (from.includes('Paris') || from.includes('London') || from.includes('Rome') || 
-                 to.includes('Amsterdam') || to.includes('Munich') || to.includes('Barcelona')) {
-        return { currency: '€', distance: 'km', cost: '195' };
-      } else {
-        return { currency: '₹', distance: 'km', cost: '2,500' };
-      }
-    };
-
-    const { currency, distance, cost } = getCurrencyAndUnits(routeData.from, routeData.to);
-    
     const aiMessage: AIMessage = {
       id: Date.now().toString(),
-      content: `Perfect! I've analyzed your international route from ${routeData.from} to ${routeData.to} and found some amazing stops based on your preferences. This route offers a perfect blend of ${routeData.preferences.join(', ')} experiences!`,
+      content: `🎉 **Route Generated Successfully!** I've analyzed your preferences for **${routeData.from} → ${routeData.to}** and found some amazing discoveries!`,
       isUser: false,
       timestamp: new Date(),
       type: 'route',
       data: {
-        route: filteredStops,
-        totalDistance: `463 ${distance}`,
+        route: mockRouteStops,
+        totalDistance: '463 km',
         estimatedTime: '8h 30m',
-        estimatedCost: `${currency}${cost}`,
-        highlights: [
-          `${filteredStops.filter(s => s.isHiddenGem).length} hidden gems`,
-          `${filteredStops.filter(s => s.carbonFootprint).length} eco-friendly stops`,
-          '1 local favorite'
-        ]
+        estimatedCost: '₹2,500',
+        highlights: ['3 hidden gems', '2 eco-friendly stops', '1 local favorite'],
+        preferences: routeData.preferences
       }
     };
     
-    // Add contextual follow-up message
-    setTimeout(() => {
-      const followUpMessage: AIMessage = {
-        id: (Date.now() + 1).toString(),
-        content: `This route spans across beautiful landscapes! Would you like me to suggest the best time to travel, check current weather conditions, or find budget-friendly alternatives? I can also help with visa requirements for international routes! 🌍`,
-        isUser: false,
-        timestamp: new Date(),
-        type: 'text'
-      };
-      setAiMessages(prev => [...prev, followUpMessage]);
-    }, 3000);
-    
     setAiMessages(prev => [...prev, aiMessage]);
-    setGeneratedRoute(filteredStops);
+    setGeneratedRoute(mockRouteStops);
     setIsGenerating(false);
+  };
+
+  const handleUseRoute = async (route: CommunityRoute) => {
+    setSelectedCommunityRoute(route);
+    setImportedRoute(route);
+    setShowRoutePreview(true);
+    
+    // Add AI message about importing the route
+    const importMessage: AIMessage = {
+      id: Date.now().toString(),
+      content: `🚀 **Route "${route.title}" imported successfully!**\n\n📍 **${route.from} → ${route.to}**\n🏁 **${route.stops} stops** • **${route.duration}** • **${route.estimatedCost}**\n⭐ **${route.rating}/5** from ${route.reviews} travelers\n\n🎯 **What would you like to do?**\n• **Use as-is** - Start with this exact route\n• **Customize** - Modify stops, budget, or preferences\n• **Get alternatives** - Similar routes with different focuses\n• **Ask questions** - About specific stops or the route\n\nI can also help you book accommodations or find real-time traffic updates!`,
+      isUser: false,
+      timestamp: new Date(),
+      type: 'route-imported',
+      data: {
+        route: route,
+        canCustomize: true,
+        hasAlternatives: true
+      }
+    };
+    
+    setAiMessages(prev => [...prev, importMessage]);
+    setShowAIAssistant(true);
+  };
+
+  const handleCustomizeRoute = () => {
+    setShowRouteCustomization(true);
+  };
+
+  const applyRouteCustomization = () => {
+    if (!selectedCommunityRoute) return;
+    
+    const customizationMessage: AIMessage = {
+      id: Date.now().toString(),
+      content: `✨ **Route customized successfully!** Here's what I've updated:\n\n${routeCustomization.addStops.length > 0 ? `➕ **Added stops:** ${routeCustomization.addStops.join(', ')}\n` : ''}${routeCustomization.removeStops.length > 0 ? `➖ **Removed stops:** ${routeCustomization.removeStops.join(', ')}\n` : ''}${routeCustomization.preferences.length > 0 ? `🎯 **Preferences:** ${routeCustomization.preferences.join(', ')}\n` : ''}${routeCustomization.budget ? `💰 **Budget:** ${routeCustomization.budget}\n` : ''}${routeCustomization.duration ? `⏰ **Duration:** ${routeCustomization.duration}\n` : ''}\n🎉 Your personalized route is ready! Would you like me to:\n• **Show updated route details**\n• **Find alternative accommodations**\n• **Check real-time conditions**\n• **Export to your calendar**`,
+      isUser: false,
+      timestamp: new Date(),
+      type: 'route-customized',
+      data: {
+        originalRoute: selectedCommunityRoute,
+        customizations: routeCustomization
+      }
+    };
+    
+    setAiMessages(prev => [...prev, customizationMessage]);
+    setShowRouteCustomization(false);
   };
 
   const handleAISend = async () => {
@@ -537,67 +615,134 @@ function RouteDiscoveryPage() {
     const currentInput = aiInput;
     setAiInput('');
     
-    // Simulate AI thinking
+    // Simulate AI processing
     setTimeout(() => {
-      const input = currentInput.toLowerCase();
-      let response = '';
+      const aiResponse = generateAIResponse(currentInput);
+      setAiMessages(prev => [...prev, aiResponse]);
+    }, 1000);
+  };
 
-      // International travel responses
-      if (input.includes('visa') || input.includes('passport')) {
-        response = "For international routes, I recommend checking visa requirements at least 2-3 months in advance. US routes typically need ESTA/visa, European routes may need Schengen visa. Would you like specific visa information for your destination?";
-      } else if (input.includes('weather') || input.includes('climate')) {
-        response = "Great question! For international routes, weather varies significantly. US West Coast is mild year-round, European routes are best in spring/summer (April-September). Indian routes avoid monsoon season (June-September). Want specific weather forecasts?";
-      } else if (input.includes('currency') || input.includes('money') || input.includes('budget')) {
-        response = "Smart planning! For international routes: US trips budget $200-400/day, European routes €150-300/day, Indian routes ₹2000-5000/day. This includes accommodation, food, and attractions. Need detailed cost breakdowns?";
-      } else if (input.includes('language') || input.includes('communication')) {
-        response = "Language tips for your route: English works well in US/UK routes, basic French helps in France, German in Germany, and Hindi/English in India. I can suggest useful phrases for your destination!";
-      } else if (input.includes('food') || input.includes('restaurant')) {
-        response = "Amazing food awaits! US routes offer diverse cuisine and food trucks, European routes feature local specialties and michelin restaurants, Indian routes have incredible street food and regional dishes. Want specific food recommendations?";
-      } else if (input.includes('time') || input.includes('duration')) {
-        response = "Timing is everything! Consider jet lag for international flights, time zone changes, and local peak seasons. European summer is busy but beautiful, US has varied seasons, India's winter is perfect for travel.";
-      } else if (input.includes('hidden') || input.includes('secret')) {
-        response = "I love finding hidden gems! Each route has secret spots - US has hidden viewpoints, Europe has local taverns tourists miss, India has secret temples and villages. Want me to reveal some exclusive locations?";
-      } else {
-        const responses = [
-          "Excellent question! For international routes, I always recommend checking local customs and tipping practices. Each country has unique travel etiquette that enhances your experience.",
-          "That's perfect for planning! International routes offer incredible diversity - from American road trip culture to European train journeys to Indian spiritual experiences. What interests you most?",
-          "Great thinking! For multi-country routes, consider transportation options: rental cars in US, trains in Europe, or domestic flights in India. Each has unique advantages!",
-          "Love your curiosity! International travel opens so many possibilities. I can help with everything from local SIM cards to cultural experiences. What specific aspect interests you?"
-        ];
-        response = responses[Math.floor(Math.random() * responses.length)];
-      }
-      
-      const aiResponse: AIMessage = {
+  const generateAIResponse = (userInput: string): AIMessage => {
+    const input = userInput.toLowerCase();
+    
+    // Route planning responses
+    if (input.includes('route') || input.includes('plan')) {
+      return {
         id: (Date.now() + 1).toString(),
-        content: response,
+        content: `🗺️ **Great! Let me help you plan the perfect route.** Could you tell me:\n\n📍 **Starting point** and **destination**?\n🎯 **What interests you most?** (food, nature, culture, adventure)\n⏰ **How much time** do you have?\n💰 **What's your budget** range?\n🚗 **Transportation** preference?\n\nI'll find hidden gems and create a personalized itinerary just for you!`,
         isUser: false,
         timestamp: new Date(),
         type: 'text'
       };
+    }
+
+    // Food-related responses
+    if (input.includes('food') || input.includes('restaurant') || input.includes('eat')) {
+      return {
+        id: (Date.now() + 1).toString(),
+        content: `🍴 **Food lover detected!** I can help you find:\n\n🏪 **Local favorites** - Hidden gems locals love\n🍕 **Cuisine types** - What are you craving?\n💰 **Budget range** - Street food to fine dining\n⭐ **Highly rated** spots with traveler reviews\n🚚 **Food trucks** and unique experiences\n\nTell me your location and what type of food adventure you want!`,
+        isUser: false,
+        timestamp: new Date(),
+        type: 'text'
+      };
+    }
+
+    // Budget-related responses
+    if (input.includes('budget') || input.includes('cheap') || input.includes('expensive') || input.includes('cost')) {
+      return {
+        id: (Date.now() + 1).toString(),
+        content: `💰 **Budget planning is smart!** I can help optimize costs:\n\n🏨 **Accommodation** - From hostels to luxury\n⛽ **Transportation** - Fuel vs flights vs trains\n🍽️ **Food budget** - Street food vs restaurants\n🎫 **Activities** - Free attractions vs paid experiences\n💡 **Money-saving tips** for your destination\n\nWhat's your total budget and where are you traveling?`,
+        isUser: false,
+        timestamp: new Date(),
+        type: 'text'
+      };
+    }
+
+    // Accommodation responses
+    if (input.includes('hotel') || input.includes('stay') || input.includes('accommodation') || input.includes('sleep')) {
+      return {
+        id: (Date.now() + 1).toString(),
+        content: `🏨 **Perfect! Let me find you great places to stay:**\n\n🏠 **Types:** Hotels, hostels, B&Bs, camping, unique stays\n💰 **Budget:** What's your nightly budget range?\n📍 **Location:** City center, nature, or specific area?\n✨ **Amenities:** WiFi, breakfast, parking, pool?\n⭐ **Style:** Luxury, budget, boutique, or local experience?\n\nTell me your destination and preferences!`,
+        isUser: false,
+        timestamp: new Date(),
+        type: 'text'
+      };
+    }
+
+    // Safety and travel tips
+    if (input.includes('safe') || input.includes('danger') || input.includes('tips') || input.includes('advice')) {
+      return {
+        id: (Date.now() + 1).toString(),
+        content: `🛡️ **Safety first! Here are essential travel tips:**\n\n📱 **Emergency contacts** for your destination\n🗺️ **Safe areas** vs areas to avoid\n💊 **Health precautions** and vaccinations\n📋 **Documents** needed and backup copies\n🚨 **Local emergency** numbers and embassies\n💰 **Money safety** - cards vs cash\n\nWhich destination are you concerned about? I'll provide specific safety info!`,
+        isUser: false,
+        timestamp: new Date(),
+        type: 'text'
+      };
+    }
+
+    // Weather and timing
+    if (input.includes('weather') || input.includes('season') || input.includes('time') || input.includes('when')) {
+      return {
+        id: (Date.now() + 1).toString(),
+        content: `🌤️ **Perfect timing makes perfect trips!**\n\n🗓️ **Best seasons** for your destination\n🌡️ **Weather patterns** and what to expect\n🎉 **Local events** and festivals\n👕 **What to pack** for the climate\n💰 **Price variations** by season\n🏖️ **Peak vs off-season** pros and cons\n\nWhere and when are you planning to travel?`,
+        isUser: false,
+        timestamp: new Date(),
+        type: 'text'
+      };
+    }
+
+    // Transportation
+    if (input.includes('transport') || input.includes('flight') || input.includes('train') || input.includes('bus') || input.includes('car')) {
+      return {
+        id: (Date.now() + 1).toString(),
+        content: `🚗 **Let's get you moving efficiently!**\n\n✈️ **Flights** - Best booking times and deals\n🚂 **Trains** - Scenic routes and passes\n🚌 **Buses** - Budget options and comfort levels\n🚗 **Car rental** - Freedom vs cost analysis\n🏍️ **Local transport** - Bikes, scooters, metro\n🗺️ **Route optimization** for time and cost\n\nWhat's your starting point and destination?`,
+        isUser: false,
+        timestamp: new Date(),
+        type: 'text'
+      };
+    }
+
+    // Default helpful response
+    const responses = [
+      "🌟 **I'm here to make your route planning amazing!** You can ask me about:\n\n🗺️ **Routes & planning** - Custom itineraries\n🍴 **Food discoveries** - Local favorites & hidden gems\n🏨 **Accommodations** - Best places to stay\n💰 **Budget optimization** - Save money smartly\n🛡️ **Safety tips** - Travel securely\n🚗 **Transportation** - Best ways to get around\n\nWhat would you like to explore?",
       
-      setAiMessages(prev => [...prev, aiResponse]);
-    }, 1000);
+      "🤖 **Route Discovery AI ready!** I can help with:\n\n📍 **Destination planning** - Where should you go?\n⏰ **Time optimization** - Make the most of your trip\n🎯 **Interest matching** - Find what you love\n🌟 **Hidden gems** - Discover secret spots\n📱 **Real-time updates** - Current conditions\n💡 **Smart suggestions** - Personalized recommendations\n\nWhat's your travel question?",
+      
+      "🚀 **Let's plan something amazing!** I specialize in:\n\n🎨 **Custom routes** - Tailored to your style\n🏆 **Top-rated stops** - Proven traveler favorites\n💎 **Unique experiences** - Off the beaten path\n📊 **Data-driven planning** - Best times, prices, weather\n🤝 **Community insights** - Real traveler reviews\n🎁 **Surprise discoveries** - Unexpected delights\n\nWhat kind of adventure are you dreaming of?"
+    ];
+    
+    return {
+      id: (Date.now() + 1).toString(),
+      content: responses[Math.floor(Math.random() * responses.length)],
+      isUser: false,
+      timestamp: new Date(),
+      type: 'text'
+    };
   };
 
   const handleVoiceInput = () => {
     setIsListening(!isListening);
     if (!isListening) {
-      // Simulate voice input with international options
+      // Simulate voice input
       setTimeout(() => {
-        const voiceRoutes = [
-          { from: 'New York', to: 'Boston' },
-          { from: 'Paris', to: 'Amsterdam' },
-          { from: 'Mumbai', to: 'Goa' },
-          { from: 'Los Angeles', to: 'San Francisco' },
-          { from: 'London', to: 'Edinburgh' }
-        ];
-        const randomRoute = voiceRoutes[Math.floor(Math.random() * voiceRoutes.length)];
         setRouteData({
           ...routeData,
-          from: randomRoute.from,
-          to: randomRoute.to
+          from: 'Mumbai',
+          to: 'Goa'
         });
         setIsListening(false);
+        
+        // Add AI message about voice input
+        const voiceMessage: AIMessage = {
+          id: Date.now().toString(),
+          content: "🎤 **Voice input received!** I heard you want to plan a route from **Mumbai to Goa**. This is one of India's most popular coastal routes! Would you like me to:\n\n🏖️ **Find beach stops** along the way\n🍛 **Discover food spots** and local dhabas\n🏨 **Suggest accommodations** for overnight stays\n⛽ **Add fuel stations** and rest stops\n\nJust let me know what interests you most!",
+          isUser: false,
+          timestamp: new Date(),
+          type: 'text'
+        };
+        
+        setAiMessages(prev => [...prev, voiceMessage]);
+        setShowAIAssistant(true);
       }, 3000);
     }
   };
@@ -641,7 +786,7 @@ function RouteDiscoveryPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-white mb-1">Route Discovery</h1>
-          <p className="text-gray-400 text-sm">Plan your journey with hidden gems and perfect stops worldwide 🌍</p>
+          <p className="text-gray-400 text-sm">Plan your journey with hidden gems and perfect stops</p>
         </div>
         
         <div className="flex items-center space-x-2">
@@ -706,35 +851,45 @@ function RouteDiscoveryPage() {
         <div className="space-y-6">
           {/* Quick Route Examples */}
           <div>
-            <h3 className="text-lg font-semibold text-white mb-4">Popular International Routes 🌍</h3>
-            <div className="grid grid-cols-2 gap-3">
+            <h3 className="text-lg font-semibold text-white mb-4">Popular Routes Worldwide</h3>
+            <div className="grid grid-cols-1 gap-3">
               {quickRoutes.map((route, index) => (
                 <button
                   key={index}
                   onClick={() => handleQuickRoute(route)}
-                  className="bg-white/5 backdrop-blur-sm rounded-2xl p-3 border border-white/10 hover:border-white/20 transition-all duration-300 text-left"
+                  className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10 hover:border-white/20 transition-all duration-300 text-left group hover:scale-[1.02]"
                 >
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="text-white font-medium text-sm">
-                      {route.from} → {route.to}
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="text-white font-medium text-sm mb-1 group-hover:text-cyan-400 transition-colors">
+                        {route.from} → {route.to}
+                      </div>
+                      <div className="text-gray-400 text-xs">
+                        {route.distance} • {route.time}
+                      </div>
                     </div>
-                    <span className="text-lg">{route.flag}</span>
-                  </div>
-                  <div className="text-gray-400 text-xs mb-2">
-                    {route.distance} • {route.time}
-                  </div>
-                  <div className={`inline-block px-2 py-1 rounded-full text-xs ${
-                    route.type === 'coastal' ? 'bg-blue-500/20 text-blue-400' :
-                    route.type === 'mountain' || route.type === 'alpine' ? 'bg-green-500/20 text-green-400' :
-                    route.type === 'nature' ? 'bg-emerald-500/20 text-emerald-400' :
-                    route.type === 'heritage' || route.type === 'cultural' ? 'bg-purple-500/20 text-purple-400' :
-                    route.type === 'historic' || route.type === 'royal' ? 'bg-indigo-500/20 text-indigo-400' :
-                    route.type === 'scenic' ? 'bg-cyan-500/20 text-cyan-400' :
-                    route.type === 'tropical' ? 'bg-pink-500/20 text-pink-400' :
-                    route.type === 'mediterranean' ? 'bg-orange-500/20 text-orange-400' :
-                    'bg-yellow-500/20 text-yellow-400'
-                  }`}>
-                    {route.type}
+                    <div className="flex items-center space-x-2">
+                      <div className={`inline-block px-2 py-1 rounded-full text-xs ${
+                        route.type === 'coastal' ? 'bg-blue-500/20 text-blue-400' :
+                        route.type === 'mountain' ? 'bg-green-500/20 text-green-400' :
+                        route.type === 'nature' ? 'bg-emerald-500/20 text-emerald-400' :
+                        route.type === 'heritage' ? 'bg-purple-500/20 text-purple-400' :
+                        route.type === 'cultural' ? 'bg-pink-500/20 text-pink-400' :
+                        route.type === 'scenic' ? 'bg-cyan-500/20 text-cyan-400' :
+                        route.type === 'tropical' ? 'bg-orange-500/20 text-orange-400' :
+                        route.type === 'urban' ? 'bg-gray-500/20 text-gray-400' :
+                        route.type === 'historic' ? 'bg-indigo-500/20 text-indigo-400' :
+                        route.type === 'alpine' ? 'bg-teal-500/20 text-teal-400' :
+                        route.type === 'royal' ? 'bg-purple-500/20 text-purple-400' :
+                        route.type === 'hill-station' ? 'bg-green-500/20 text-green-400' :
+                        route.type === 'fall' ? 'bg-yellow-500/20 text-yellow-400' :
+                        'bg-orange-500/20 text-orange-400'
+                      }`}>
+                        {route.type}
+                      </div>
+                      <span className="text-gray-400 text-xs">{route.country}</span>
+                      <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-cyan-400 group-hover:translate-x-1 transition-all" />
+                    </div>
                   </div>
                 </button>
               ))}
@@ -743,7 +898,7 @@ function RouteDiscoveryPage() {
 
           {/* Route Planning Form */}
           <div className="bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Plan Your Global Journey</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">Plan Your Journey</h3>
             
             <div className="space-y-4">
               {/* From/To Inputs */}
@@ -756,7 +911,7 @@ function RouteDiscoveryPage() {
                     type="text"
                     value={routeData.from}
                     onChange={(e) => setRouteData({ ...routeData, from: e.target.value })}
-                    placeholder="Starting location (e.g., New York, Paris, Mumbai)"
+                    placeholder="Starting location"
                     className="w-full pl-12 pr-4 py-4 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none"
                   />
                 </div>
@@ -769,7 +924,7 @@ function RouteDiscoveryPage() {
                     type="text"
                     value={routeData.to}
                     onChange={(e) => setRouteData({ ...routeData, to: e.target.value })}
-                    placeholder="Destination (e.g., Boston, Amsterdam, Goa)"
+                    placeholder="Destination"
                     className="w-full pl-12 pr-4 py-4 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none"
                   />
                 </div>
@@ -805,7 +960,7 @@ function RouteDiscoveryPage() {
 
               {/* Preferences */}
               <div>
-                <h4 className="text-white font-medium mb-3">What would you like to discover worldwide?</h4>
+                <h4 className="text-white font-medium mb-3">What would you like to discover?</h4>
                 <div className="grid grid-cols-2 gap-2">
                   {preferences.map((pref) => (
                     <button
@@ -862,8 +1017,44 @@ function RouteDiscoveryPage() {
           {generatedRoute && (
             <div className="bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white">Your AI-Generated International Route</h3>
+                <h3 className="text-lg font-semibold text-white">Your AI-Generated Route</h3>
                 <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => {
+                      // Save route functionality
+                      const routeToSave: SavedRoute = {
+                        id: Date.now().toString(),
+                        name: `${routeData.from} to ${routeData.to} Route`,
+                        from: routeData.from,
+                        to: routeData.to,
+                        distance: 463,
+                        duration: '8h 30m',
+                        stops: generatedRoute.length,
+                        lastUsed: new Date(),
+                        timesUsed: 1,
+                        estimatedCost: '₹2,500',
+                        difficulty: 'easy',
+                        tags: routeData.preferences
+                      };
+                      
+                      console.log('Route saved:', routeToSave);
+                      
+                      // Add success message
+                      const saveMessage: AIMessage = {
+                        id: Date.now().toString(),
+                        content: `✅ **Route saved successfully!** I've added "${routeToSave.name}" to your saved routes. You can find it in the **Saved Routes** tab anytime. Would you like me to:\n\n📅 **Add to calendar** with optimal timing\n📱 **Export details** for offline access\n🔔 **Set reminders** for preparation tasks\n🗺️ **Share with travel buddies**`,
+                        isUser: false,
+                        timestamp: new Date(),
+                        type: 'text'
+                      };
+                      
+                      setAiMessages(prev => [...prev, saveMessage]);
+                    }}
+                    className="flex items-center space-x-1 px-3 py-2 bg-green-500/20 text-green-400 rounded-xl text-sm hover:bg-green-500/30 transition-colors"
+                  >
+                    <Save className="h-4 w-4" />
+                    <span>Save Route</span>
+                  </button>
                   <Heart className="h-5 w-5 text-gray-400 hover:text-pink-400 cursor-pointer transition-colors" />
                   <Share className="h-5 w-5 text-gray-400 hover:text-blue-400 cursor-pointer transition-colors" />
                 </div>
@@ -873,7 +1064,7 @@ function RouteDiscoveryPage() {
                 {generatedRoute.map((stop, index) => {
                   const IconComponent = getTypeIcon(stop.type);
                   return (
-                    <div key={stop.id} className="bg-black/20 rounded-2xl p-4 border border-white/10">
+                    <div key={stop.id} className="bg-black/20 rounded-2xl p-4 border border-white/10 hover:border-white/20 transition-all">
                       <div className="flex items-start space-x-4">
                         <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${getTypeColor(stop.type)} flex items-center justify-center flex-shrink-0`}>
                           <IconComponent className="h-6 w-6 text-white" />
@@ -955,7 +1146,7 @@ function RouteDiscoveryPage() {
       {activeTab === 'saved' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-white">Your Saved International Routes</h3>
+            <h3 className="text-lg font-semibold text-white">Your Saved Routes</h3>
             <div className="flex items-center space-x-2">
               <button className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
                 <Search className="h-4 w-4 text-gray-400" />
@@ -967,7 +1158,7 @@ function RouteDiscoveryPage() {
           </div>
           
           {mockSavedRoutes.map((route) => (
-            <div key={route.id} className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4">
+            <div key={route.id} className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 hover:border-white/20 transition-all">
               <div className="flex items-start justify-between mb-3">
                 <div>
                   <h4 className="text-white font-medium">{route.name}</h4>
@@ -1017,7 +1208,32 @@ function RouteDiscoveryPage() {
                   Last used: {route.lastUsed.toLocaleDateString()}
                 </div>
                 <div className="flex items-center space-x-2">
-                  <button className="px-3 py-2 bg-cyan-500/20 text-cyan-400 rounded-xl text-sm hover:bg-cyan-500/30 transition-colors">
+                  <button 
+                    onClick={() => {
+                      // Use saved route - populate form
+                      setRouteData({
+                        from: route.from,
+                        to: route.to,
+                        departure: '',
+                        travelers: 1,
+                        preferences: route.tags
+                      });
+                      setActiveTab('planner');
+                      
+                      // Add AI message
+                      const useMessage: AIMessage = {
+                        id: Date.now().toString(),
+                        content: `🔄 **Loaded "${route.name}"** successfully! I've set up your route planning form with:\n\n📍 **${route.from} → ${route.to}**\n🏷️ **Preferences:** ${route.tags.join(', ')}\n📊 **Previous stats:** ${route.distance}km, ${route.duration}, ${route.stops} stops\n\nWould you like me to:\n• **Update with current conditions**\n• **Find new stops** along the way\n• **Adjust for different preferences**\n• **Optimize for time/cost**`,
+                        isUser: false,
+                        timestamp: new Date(),
+                        type: 'text'
+                      };
+                      
+                      setAiMessages(prev => [...prev, useMessage]);
+                      setShowAIAssistant(true);
+                    }}
+                    className="px-3 py-2 bg-cyan-500/20 text-cyan-400 rounded-xl text-sm hover:bg-cyan-500/30 transition-colors"
+                  >
                     Use Route
                   </button>
                   <button className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
@@ -1033,7 +1249,7 @@ function RouteDiscoveryPage() {
       {activeTab === 'community' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-white">Global Community Routes</h3>
+            <h3 className="text-lg font-semibold text-white">Community Routes</h3>
             <div className="flex items-center space-x-2">
               <button className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
                 <Search className="h-4 w-4 text-gray-400" />
@@ -1043,9 +1259,20 @@ function RouteDiscoveryPage() {
               </button>
             </div>
           </div>
+
+          {/* Featured Routes Banner */}
+          <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 backdrop-blur-sm rounded-2xl p-4 border border-yellow-400/30 mb-4">
+            <div className="flex items-center space-x-2 mb-2">
+              <Award className="h-5 w-5 text-yellow-400" />
+              <span className="text-yellow-400 font-medium">Featured International Routes</span>
+            </div>
+            <p className="text-gray-300 text-sm">
+              Discover amazing routes from travelers worldwide - USA, Europe, and India
+            </p>
+          </div>
           
           {mockCommunityRoutes.map((route) => (
-            <div key={route.id} className={`bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 ${
+            <div key={route.id} className={`bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 hover:border-white/20 transition-all duration-300 ${
               route.isFeatured ? 'border-yellow-400/30 bg-gradient-to-r from-yellow-500/5 to-orange-500/5' : ''
             }`}>
               {route.isFeatured && (
@@ -1064,7 +1291,7 @@ function RouteDiscoveryPage() {
                 <div className="flex-1">
                   <h4 className="text-white font-medium">{route.title}</h4>
                   <div className="text-gray-400 text-sm">{route.from} → {route.to}</div>
-                  <div className="text-gray-400 text-xs">by {route.author}</div>
+                  <div className="text-gray-400 text-xs">by {route.author} • {route.country}</div>
                 </div>
                 <div className="text-right">
                   <div className="flex items-center space-x-1">
@@ -1107,6 +1334,11 @@ function RouteDiscoveryPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   <button
+                    onClick={() => {
+                      // Toggle like
+                      route.isLiked = !route.isLiked;
+                      route.likes += route.isLiked ? 1 : -1;
+                    }}
                     className={`flex items-center space-x-1 transition-colors ${
                       route.isLiked ? 'text-pink-400' : 'text-gray-400 hover:text-pink-400'
                     }`}
@@ -1119,11 +1351,20 @@ function RouteDiscoveryPage() {
                     <MessageCircle className="h-4 w-4" />
                     <span>{route.reviews}</span>
                   </div>
+
+                  <div className="flex items-center space-x-1 text-gray-400 text-sm">
+                    <Globe className="h-4 w-4" />
+                    <span>{route.country}</span>
+                  </div>
                 </div>
                 
                 <div className="flex items-center space-x-2">
-                  <button className="px-3 py-2 bg-purple-500/20 text-purple-400 rounded-xl text-sm hover:bg-purple-500/30 transition-colors">
-                    Use Route
+                  <button
+                    onClick={() => handleUseRoute(route)}
+                    className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl text-sm hover:shadow-lg transition-all duration-300 hover:scale-105 flex items-center space-x-1"
+                  >
+                    <Download className="h-4 w-4" />
+                    <span>Use Route</span>
                   </button>
                   <button className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
                     <Share className="h-4 w-4 text-gray-400" />
@@ -1141,78 +1382,50 @@ function RouteDiscoveryPage() {
           <div className="flex items-center justify-between p-4 border-b border-white/10">
             <div className="flex items-center space-x-2">
               <Bot className="h-5 w-5 text-purple-400" />
-              <span className="text-white font-medium">Global Route AI Assistant</span>
+              <span className="text-white font-medium">Route AI Assistant</span>
             </div>
             <button
               onClick={() => setShowAIAssistant(false)}
               className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
             >
-              ✕
+              <X className="h-4 w-4 text-white" />
             </button>
           </div>
           
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {aiMessages.length === 0 && (
-              <div className="text-center text-gray-400 text-sm">
-                <Bot className="h-12 w-12 mx-auto mb-3 text-purple-400" />
-                <p>Hi! I'm your Global Route AI assistant. I can help you find the best international routes, hidden gems, and perfect stops for your worldwide journey.</p>
-                <div className="mt-4 space-y-2">
-                  <button
-                    onClick={() => setAiMessages([{
-                      id: '1',
-                      content: "Find me hidden food spots on the Pacific Coast Highway",
-                      isUser: true,
-                      timestamp: new Date(),
-                      type: 'text'
-                    }])}
-                    className="w-full text-left p-2 bg-white/5 rounded-lg text-xs hover:bg-white/10 transition-colors"
-                  >
-                    "Find hidden spots on international routes"
-                  </button>
-                  <button
-                    onClick={() => setAiMessages([{
-                      id: '1',
-                      content: "Help me plan a Europe road trip with visa requirements",
-                      isUser: true,
-                      timestamp: new Date(),
-                      type: 'text'
-                    }])}
-                    className="w-full text-left p-2 bg-white/5 rounded-lg text-xs hover:bg-white/10 transition-colors"
-                  >
-                    "Help with visa and travel requirements"
-                  </button>
-                  <button
-                    onClick={() => setAiMessages([{
-                      id: '1',
-                      content: "What's the best season for a USA cross-country road trip?",
-                      isUser: true,
-                      timestamp: new Date(),
-                      type: 'text'
-                    }])}
-                    className="w-full text-left p-2 bg-white/5 rounded-lg text-xs hover:bg-white/10 transition-colors"
-                  >
-                    "Best travel seasons for different countries"
-                  </button>
-                </div>
-              </div>
-            )}
-            
             {aiMessages.map((message) => (
               <div key={message.id} className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-xs rounded-2xl px-4 py-3 ${
                   message.isUser
                     ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white'
-                    : 'bg-white/10 text-white'
+                    : 'bg-white/10 text-white border border-white/10 backdrop-blur-sm'
                 }`}>
-                  <p className="text-sm">{message.content}</p>
+                  <p className="text-sm leading-relaxed whitespace-pre-line">{message.content}</p>
+                  
                   {message.type === 'route' && message.data && (
                     <div className="mt-3 pt-3 border-t border-white/20">
-                      <div className="text-xs text-white/80 mb-2">International Route Summary:</div>
+                      <div className="text-xs text-white/80 mb-2">Route Summary:</div>
                       <div className="space-y-1 text-xs">
-                        <div>Distance: {message.data.totalDistance}</div>
-                        <div>Time: {message.data.estimatedTime}</div>
-                        <div>Cost: {message.data.estimatedCost}</div>
-                        <div className="text-cyan-300">{message.data.highlights.join(', ')}</div>
+                        <div>📍 Distance: {message.data.totalDistance}</div>
+                        <div>⏰ Time: {message.data.estimatedTime}</div>
+                        <div>💰 Cost: {message.data.estimatedCost}</div>
+                        <div className="text-cyan-300">✨ {message.data.highlights.join(', ')}</div>
+                      </div>
+                    </div>
+                  )}
+
+                  {message.type === 'route-imported' && message.data && (
+                    <div className="mt-3 pt-3 border-t border-white/20">
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={handleCustomizeRoute}
+                          className="flex-1 bg-blue-500/20 text-blue-400 px-3 py-1 rounded-lg text-xs hover:bg-blue-500/30 transition-colors"
+                        >
+                          Customize
+                        </button>
+                        <button className="flex-1 bg-green-500/20 text-green-400 px-3 py-1 rounded-lg text-xs hover:bg-green-500/30 transition-colors">
+                          Use As-Is
+                        </button>
                       </div>
                     </div>
                   )}
@@ -1229,7 +1442,7 @@ function RouteDiscoveryPage() {
                 value={aiInput}
                 onChange={(e) => setAiInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleAISend()}
-                placeholder="Ask about international routes..."
+                placeholder="Ask about routes, places, tips..."
                 className="flex-1 px-3 py-2 bg-black/20 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none text-sm"
               />
               <button
@@ -1243,38 +1456,252 @@ function RouteDiscoveryPage() {
         </div>
       )}
 
+      {/* Route Customization Modal */}
+      {showRouteCustomization && selectedCommunityRoute && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900/95 backdrop-blur-md rounded-3xl border border-white/20 max-w-md w-full max-h-[80vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-white">Customize Route</h2>
+                <button
+                  onClick={() => setShowRouteCustomization(false)}
+                  className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                >
+                  <X className="h-5 w-5 text-white" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-white font-medium mb-2">Original Route</h3>
+                  <div className="bg-black/20 rounded-xl p-3">
+                    <div className="text-cyan-400 font-medium">{selectedCommunityRoute.title}</div>
+                    <div className="text-gray-400 text-sm">{selectedCommunityRoute.from} → {selectedCommunityRoute.to}</div>
+                    <div className="text-gray-400 text-sm">{selectedCommunityRoute.stops} stops • {selectedCommunityRoute.estimatedCost}</div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-white font-medium mb-2">Add Stops</h3>
+                  <input
+                    type="text"
+                    placeholder="Add places you want to visit..."
+                    className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                        setRouteCustomization(prev => ({
+                          ...prev,
+                          addStops: [...prev.addStops, e.currentTarget.value.trim()]
+                        }));
+                        e.currentTarget.value = '';
+                      }
+                    }}
+                  />
+                  {routeCustomization.addStops.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {routeCustomization.addStops.map((stop, index) => (
+                        <span key={index} className="px-2 py-1 bg-green-500/20 text-green-400 rounded-full text-xs flex items-center space-x-1">
+                          <span>{stop}</span>
+                          <button
+                            onClick={() => setRouteCustomization(prev => ({
+                              ...prev,
+                              addStops: prev.addStops.filter((_, i) => i !== index)
+                            }))}
+                            className="text-green-300 hover:text-white"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <h3 className="text-white font-medium mb-2">Budget Range</h3>
+                  <select
+                    value={routeCustomization.budget}
+                    onChange={(e) => setRouteCustomization(prev => ({ ...prev, budget: e.target.value }))}
+                    className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white focus:border-cyan-400 focus:outline-none"
+                  >
+                    <option value="">Keep original budget</option>
+                    <option value="budget">Budget (30% less)</option>
+                    <option value="standard">Standard (same as original)</option>
+                    <option value="luxury">Luxury (50% more)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <h3 className="text-white font-medium mb-2">Duration Preference</h3>
+                  <select
+                    value={routeCustomization.duration}
+                    onChange={(e) => setRouteCustomization(prev => ({ ...prev, duration: e.target.value }))}
+                    className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white focus:border-cyan-400 focus:outline-none"
+                  >
+                    <option value="">Keep original duration</option>
+                    <option value="shorter">Shorter (optimize for time)</option>
+                    <option value="same">Same duration</option>
+                    <option value="longer">Longer (more stops and leisure)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <h3 className="text-white font-medium mb-2">Focus Preferences</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {['Scenic routes', 'Local food', 'Historic sites', 'Adventure', 'Photography', 'Shopping'].map((pref) => (
+                      <button
+                        key={pref}
+                        onClick={() => setRouteCustomization(prev => ({
+                          ...prev,
+                          preferences: prev.preferences.includes(pref)
+                            ? prev.preferences.filter(p => p !== pref)
+                            : [...prev.preferences, pref]
+                        }))}
+                        className={`p-2 rounded-xl text-sm transition-colors ${
+                          routeCustomization.preferences.includes(pref)
+                            ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-400/30'
+                            : 'bg-white/5 text-gray-400 border border-white/10 hover:border-white/20'
+                        }`}
+                      >
+                        {pref}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex space-x-3 pt-4">
+                  <button
+                    onClick={() => setShowRouteCustomization(false)}
+                    className="flex-1 px-6 py-3 border border-white/20 rounded-2xl text-gray-300 hover:bg-white/5 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={applyRouteCustomization}
+                    className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-3 rounded-2xl font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    Apply Changes
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Route Preview Modal */}
+      {showRoutePreview && importedRoute && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900/95 backdrop-blur-md rounded-3xl border border-white/20 max-w-md w-full max-h-[80vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-white">Route Preview</h2>
+                <button
+                  onClick={() => setShowRoutePreview(false)}
+                  className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                >
+                  <X className="h-5 w-5 text-white" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-2xl p-4 border border-purple-400/30">
+                  <h3 className="text-white font-medium mb-2">{importedRoute.title}</h3>
+                  <div className="space-y-1 text-sm">
+                    <div className="text-gray-300">{importedRoute.from} → {importedRoute.to}</div>
+                    <div className="text-purple-400">{importedRoute.stops} stops • {importedRoute.duration} • {importedRoute.estimatedCost}</div>
+                    <div className="flex items-center space-x-2">
+                      <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                      <span className="text-yellow-400">{importedRoute.rating}/5</span>
+                      <span className="text-gray-400">({importedRoute.reviews} reviews)</span>
+                    </div>
+                  </div>
+                </div>
+
+                {importedRoute.routeStops && importedRoute.routeStops.length > 0 && (
+                  <div>
+                    <h3 className="text-white font-medium mb-3">Route Stops</h3>
+                    <div className="space-y-2">
+                      {importedRoute.routeStops.slice(0, 3).map((stop, index) => (
+                        <div key={stop.id} className="bg-black/20 rounded-xl p-3">
+                          <div className="flex items-center space-x-3">
+                            <div className={`w-8 h-8 rounded-full bg-gradient-to-r ${getTypeColor(stop.type)} flex items-center justify-center`}>
+                              {React.createElement(getTypeIcon(stop.type), { className: "h-4 w-4 text-white" })}
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="text-white font-medium text-sm">{stop.name}</h4>
+                              <div className="text-gray-400 text-xs">{stop.location}</div>
+                            </div>
+                            <div className="text-right">
+                              <div className="flex items-center space-x-1">
+                                <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                                <span className="text-yellow-400 text-xs">{stop.rating}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {importedRoute.routeStops.length > 3 && (
+                        <div className="text-center text-gray-400 text-sm">
+                          +{importedRoute.routeStops.length - 3} more stops
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => {
+                      // Use route as-is - import to planning
+                      setRouteData({
+                        from: importedRoute.from,
+                        to: importedRoute.to,
+                        departure: '',
+                        travelers: 1,
+                        preferences: []
+                      });
+                      setActiveTab('planner');
+                      setShowRoutePreview(false);
+                    }}
+                    className="flex-1 bg-gradient-to-r from-green-500 to-teal-500 px-6 py-3 rounded-2xl font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    Use Route
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowRoutePreview(false);
+                      setShowRouteCustomization(true);
+                    }}
+                    className="flex-1 bg-gradient-to-r from-blue-500 to-cyan-500 px-6 py-3 rounded-2xl font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    Customize
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Map Overlay */}
       {showMap && (
         <div className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-slate-900/95 backdrop-blur-md rounded-3xl border border-white/20 w-full max-w-4xl h-96">
             <div className="flex items-center justify-between p-4 border-b border-white/10">
-              <h3 className="text-white font-medium">Global Route Map 🌍</h3>
+              <h3 className="text-white font-medium">Interactive Route Map</h3>
               <button
                 onClick={() => setShowMap(false)}
                 className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
               >
-                ✕
+                <X className="h-5 w-5 text-white" />
               </button>
             </div>
             <div className="p-4 h-80 bg-gradient-to-br from-slate-800 to-slate-700 rounded-b-3xl flex items-center justify-center">
               <div className="text-center text-gray-400">
-                <Globe className="h-16 w-16 mx-auto mb-4 animate-spin" />
-                <p>Interactive world map would be displayed here</p>
-                <p className="text-sm mt-2">Showing your international route with all discovered stops</p>
-                <div className="mt-4 flex items-center justify-center space-x-4 text-xs">
-                  <span className="flex items-center space-x-1">
-                    <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
-                    <span>USA Routes</span>
-                  </span>
-                  <span className="flex items-center space-x-1">
-                    <span className="w-2 h-2 bg-purple-400 rounded-full"></span>
-                    <span>Europe Routes</span>
-                  </span>
-                  <span className="flex items-center space-x-1">
-                    <span className="w-2 h-2 bg-orange-400 rounded-full"></span>
-                    <span>India Routes</span>
-                  </span>
-                </div>
+                <Map className="h-16 w-16 mx-auto mb-4" />
+                <p>Interactive map would be displayed here</p>
+                <p className="text-sm mt-2">Showing route with all discovered stops</p>
               </div>
             </div>
           </div>
