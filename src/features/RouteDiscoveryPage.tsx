@@ -1,5 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Navigation, MapPin, Clock, Star, Heart, Share, Plus, Filter, Search, Bot, Mic, Send, Car, Train, Plane, Footprints, Utensils, Coffee, Bed, Camera, Fuel, TreePine, AlertTriangle, Users, Calendar, DollarSign, Map, Eye, Play, Bookmark, ThumbsUp, MessageCircle, Award, Zap, RouteIcon, Volume2, VolumeX, Settings, Target, Compass, Globe, TrendingUp, CheckCircle, Info, ArrowRight, RefreshCw, Sparkles, CloudLightning as Lightning, MapPinIcon } from 'lucide-react';
+import { 
+  Navigation, MapPin, Clock, Star, Heart, Share, Plus, Filter, 
+  Search, Bot, Mic, Send, Car, Train, Plane, Footprints,
+  Utensils, Coffee, Bed, Camera, Fuel, TreePine, AlertTriangle,
+  Users, Calendar, DollarSign, Map, Eye, Play, Bookmark,
+  ThumbsUp, MessageCircle, Award, Zap, Route as RouteIcon,
+  Volume2, VolumeX, Settings, Target, Compass, Globe,
+  TrendingUp, CheckCircle, Info, ArrowRight, RefreshCw
+} from 'lucide-react';
 
 interface RouteStop {
   id: string;
@@ -18,8 +26,6 @@ interface RouteStop {
   isHiddenGem?: boolean;
   safetyRating: number;
   carbonFootprint?: string;
-  openingHours?: string;
-  contactInfo?: string;
 }
 
 interface SavedRoute {
@@ -64,7 +70,7 @@ interface AIMessage {
   content: string;
   isUser: boolean;
   timestamp: Date;
-  type: 'text' | 'route' | 'recommendations' | 'analysis' | 'suggestions';
+  type: 'text' | 'route' | 'recommendations';
   data?: any;
 }
 
@@ -96,12 +102,26 @@ function RouteDiscoveryPage() {
   ];
 
   const quickRoutes = [
-    { from: 'Mumbai', to: 'Goa', distance: '463 km', time: '8h 30m', type: 'coastal' },
-    { from: 'Delhi', to: 'Manali', distance: '570 km', time: '12h', type: 'mountain' },
-    { from: 'Bangalore', to: 'Coorg', distance: '252 km', time: '5h 30m', type: 'nature' },
-    { from: 'Chennai', to: 'Pondicherry', distance: '160 km', time: '3h 30m', type: 'heritage' },
-    { from: 'Kolkata', to: 'Darjeeling', distance: '680 km', time: '14h', type: 'hill-station' },
-    { from: 'Pune', to: 'Lonavala', distance: '64 km', time: '1h 30m', type: 'weekend' }
+    // India Routes
+    { from: 'Mumbai', to: 'Goa', distance: '463 km', time: '8h 30m', type: 'coastal', flag: '🇮🇳' },
+    { from: 'Delhi', to: 'Manali', distance: '570 km', time: '12h', type: 'mountain', flag: '🇮🇳' },
+    { from: 'Bangalore', to: 'Coorg', distance: '252 km', time: '5h 30m', type: 'nature', flag: '🇮🇳' },
+    { from: 'Pune', to: 'Lonavala', distance: '64 km', time: '1h 30m', type: 'weekend', flag: '🇮🇳' },
+    
+    // USA Routes
+    { from: 'New York', to: 'Boston', distance: '215 miles', time: '4h 30m', type: 'coastal', flag: '🇺🇸' },
+    { from: 'Los Angeles', to: 'San Francisco', distance: '383 miles', time: '6h', type: 'scenic', flag: '🇺🇸' },
+    { from: 'Las Vegas', to: 'Grand Canyon', distance: '280 miles', time: '4h 15m', type: 'nature', flag: '🇺🇸' },
+    { from: 'Miami', to: 'Key West', distance: '165 miles', time: '3h 30m', type: 'tropical', flag: '🇺🇸' },
+    { from: 'Seattle', to: 'Portland', distance: '173 miles', time: '3h', type: 'urban', flag: '🇺🇸' },
+    
+    // Europe Routes
+    { from: 'Paris', to: 'Amsterdam', distance: '515 km', time: '5h 30m', type: 'cultural', flag: '🇪🇺' },
+    { from: 'Rome', to: 'Florence', distance: '272 km', time: '3h', type: 'heritage', flag: '🇮🇹' },
+    { from: 'London', to: 'Edinburgh', distance: '666 km', time: '8h', type: 'historic', flag: '🇬🇧' },
+    { from: 'Barcelona', to: 'Valencia', distance: '349 km', time: '4h', type: 'mediterranean', flag: '🇪🇸' },
+    { from: 'Munich', to: 'Salzburg', distance: '150 km', time: '2h', type: 'alpine', flag: '🇩🇪' },
+    { from: 'Vienna', to: 'Prague', distance: '291 km', time: '4h', type: 'royal', flag: '🇪🇺' }
   ];
 
   const mockSavedRoutes: SavedRoute[] = [
@@ -121,17 +141,31 @@ function RouteDiscoveryPage() {
     },
     {
       id: '2',
-      name: 'Delhi Mountain Adventure',
-      from: 'Delhi',
-      to: 'Manali',
-      distance: 570,
-      duration: '12h',
-      stops: 8,
+      name: 'California Coast Adventure',
+      from: 'Los Angeles',
+      to: 'San Francisco',
+      distance: 383,
+      duration: '6h',
+      stops: 15,
       lastUsed: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
-      timesUsed: 1,
-      estimatedCost: '₹4,200',
+      timesUsed: 2,
+      estimatedCost: '$280',
       difficulty: 'moderate',
-      tags: ['mountains', 'adventure', 'scenic']
+      tags: ['pacific', 'coast', 'scenic']
+    },
+    {
+      id: '3',
+      name: 'European Art Trail',
+      from: 'Paris',
+      to: 'Amsterdam',
+      distance: 515,
+      duration: '5h 30m',
+      stops: 8,
+      lastUsed: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000),
+      timesUsed: 1,
+      estimatedCost: '€195',
+      difficulty: 'easy',
+      tags: ['art', 'culture', 'museums']
     }
   ];
 
@@ -159,29 +193,245 @@ function RouteDiscoveryPage() {
     },
     {
       id: '2',
-      title: 'Himalayan Heights Adventure',
-      author: 'MountainSoul42',
+      title: 'Pacific Coast Highway Magic',
+      author: 'USRoadTripper',
       authorAvatar: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=100',
-      from: 'Delhi',
-      to: 'Leh',
-      distance: 1150,
-      duration: '2 days',
-      stops: 20,
+      from: 'Los Angeles',
+      to: 'San Francisco',
+      distance: 383,
+      duration: '6h',
+      stops: 18,
       rating: 4.9,
-      reviews: 67,
+      reviews: 89,
       likes: 156,
       isLiked: true,
-      difficulty: 'challenging',
-      tags: ['mountains', 'adventure', 'camping'],
-      description: 'Epic mountain journey through high altitude passes',
-      estimatedCost: '₹8,500',
+      difficulty: 'moderate',
+      tags: ['ocean', 'cliffs', 'wine'],
+      description: 'Iconic coastal drive with Big Sur highlights and wine country',
+      estimatedCost: '$350',
       isFeatured: true,
-      createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000)
+      createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000)
+    },
+    {
+      id: '3',
+      title: 'Romantic Rhine Valley Journey',
+      author: 'EuropeNomad',
+      authorAvatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=100',
+      from: 'Amsterdam',
+      to: 'Munich',
+      distance: 625,
+      duration: '7h',
+      stops: 12,
+      rating: 4.7,
+      reviews: 67,
+      likes: 134,
+      isLiked: false,
+      difficulty: 'moderate',
+      tags: ['castles', 'rivers', 'culture'],
+      description: 'Fairy-tale route through German castles and Dutch countryside',
+      estimatedCost: '€280',
+      isFeatured: true,
+      createdAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000)
     }
   ];
 
-  const [myFootprints] = useState(mockSavedRoutes);
-  const [friendsFootprints] = useState(mockCommunityRoutes);
+  // Enhanced route stops with international locations
+  const getRouteStopsForDestination = (from: string, to: string): RouteStop[] => {
+    // India Routes
+    if (from.toLowerCase().includes('pune') && to.toLowerCase().includes('lonavala')) {
+      return [
+        {
+          id: '1',
+          name: 'Highway Dhaba Delight',
+          type: 'food',
+          location: 'Khandala, Maharashtra',
+          coordinates: { lat: 18.7469, lng: 73.4831 },
+          rating: 4.5,
+          reviews: 234,
+          priceRange: '₹150-300',
+          distance: 45,
+          estimatedTime: '1h',
+          image: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400',
+          description: 'Authentic Punjabi food with scenic valley views',
+          specialOffers: ['Free chai with meal', '20% off for groups'],
+          isHiddenGem: true,
+          safetyRating: 4.8,
+          carbonFootprint: 'Low impact'
+        },
+        {
+          id: '2',
+          name: 'Karla Cave Resort',
+          type: 'stay',
+          location: 'Karla, Maharashtra',
+          coordinates: { lat: 18.7469, lng: 73.4831 },
+          rating: 4.7,
+          reviews: 89,
+          priceRange: '₹2000-4000',
+          distance: 35,
+          estimatedTime: '45m',
+          image: 'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg?auto=compress&cs=tinysrgb&w=400',
+          description: 'Heritage resort near ancient Buddhist caves',
+          specialOffers: ['Cave tour included', 'Complimentary breakfast'],
+          safetyRating: 4.9,
+          carbonFootprint: 'Eco-friendly'
+        },
+        {
+          id: '3',
+          name: 'Pawna Lake Camping',
+          type: 'camping',
+          location: 'Pawna Lake, Maharashtra',
+          coordinates: { lat: 18.7469, lng: 73.4831 },
+          rating: 4.6,
+          reviews: 156,
+          priceRange: '₹800-1500',
+          distance: 55,
+          estimatedTime: '1h 15m',
+          image: 'https://images.pexels.com/photos/1687845/pexels-photo-1687845.jpeg?auto=compress&cs=tinysrgb&w=400',
+          description: 'Lakeside camping with stargazing and water activities',
+          isHiddenGem: true,
+          safetyRating: 4.5,
+          carbonFootprint: 'Minimal impact'
+        }
+      ];
+    }
+    
+    // USA Routes
+    if (from.toLowerCase().includes('los angeles') && to.toLowerCase().includes('san francisco')) {
+      return [
+        {
+          id: 'us1',
+          name: 'Pea Soup Andersen\'s',
+          type: 'food',
+          location: 'Buellton, California',
+          coordinates: { lat: 34.6136, lng: -120.1926 },
+          rating: 4.3,
+          reviews: 1247,
+          priceRange: '$15-30',
+          distance: 180,
+          estimatedTime: '3h',
+          image: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400',
+          description: 'Famous roadside stop serving legendary split pea soup since 1924',
+          specialOffers: ['Free coffee refills', 'Route 101 special menu'],
+          isHiddenGem: false,
+          safetyRating: 4.9,
+          carbonFootprint: 'Local sourcing'
+        },
+        {
+          id: 'us2',
+          name: 'Big Sur Lodge',
+          type: 'stay',
+          location: 'Big Sur, California',
+          coordinates: { lat: 36.2704, lng: -121.8081 },
+          rating: 4.6,
+          reviews: 892,
+          priceRange: '$200-400',
+          distance: 280,
+          estimatedTime: '4h 30m',
+          image: 'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg?auto=compress&cs=tinysrgb&w=400',
+          description: 'Rustic lodge among redwoods with Pacific Ocean views',
+          specialOffers: ['Spa package deals', 'Hiking map included'],
+          safetyRating: 4.8,
+          carbonFootprint: 'Eco-certified'
+        },
+        {
+          id: 'us3',
+          name: 'McWay Falls Viewpoint',
+          type: 'attraction',
+          location: 'Big Sur, California',
+          coordinates: { lat: 36.1590, lng: -121.6694 },
+          rating: 4.9,
+          reviews: 2156,
+          priceRange: 'Free',
+          distance: 285,
+          estimatedTime: '4h 40m',
+          image: 'https://images.pexels.com/photos/3244513/pexels-photo-3244513.jpeg?auto=compress&cs=tinysrgb&w=400',
+          description: 'Iconic waterfall dropping 80 feet onto pristine beach',
+          isHiddenGem: true,
+          safetyRating: 4.7,
+          carbonFootprint: 'Zero impact'
+        }
+      ];
+    }
+
+    // Europe Routes
+    if (from.toLowerCase().includes('paris') && to.toLowerCase().includes('amsterdam')) {
+      return [
+        {
+          id: 'eu1',
+          name: 'Café de la Paix',
+          type: 'food',
+          location: 'Brussels, Belgium',
+          coordinates: { lat: 50.8503, lng: 4.3517 },
+          rating: 4.4,
+          reviews: 567,
+          priceRange: '€20-40',
+          distance: 265,
+          estimatedTime: '3h',
+          image: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400',
+          description: 'Traditional Belgian brasserie with authentic waffles and beer',
+          specialOffers: ['Belgian beer tasting', 'Waffle making class'],
+          isHiddenGem: false,
+          safetyRating: 4.8,
+          carbonFootprint: 'Local ingredients'
+        },
+        {
+          id: 'eu2',
+          name: 'Hotel des Galeries',
+          type: 'stay',
+          location: 'Brussels, Belgium',
+          coordinates: { lat: 50.8476, lng: 4.3572 },
+          rating: 4.5,
+          reviews: 423,
+          priceRange: '€120-250',
+          distance: 267,
+          estimatedTime: '3h 05m',
+          image: 'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg?auto=compress&cs=tinysrgb&w=400',
+          description: 'Boutique hotel in historic Galeries Royales Saint-Hubert',
+          specialOffers: ['Museum pass included', 'Late checkout'],
+          safetyRating: 4.9,
+          carbonFootprint: 'Green certified'
+        },
+        {
+          id: 'eu3',
+          name: 'Atomium & Mini-Europe',
+          type: 'attraction',
+          location: 'Brussels, Belgium',
+          coordinates: { lat: 50.8950, lng: 4.3412 },
+          rating: 4.3,
+          reviews: 1834,
+          priceRange: '€16-25',
+          distance: 270,
+          estimatedTime: '3h 10m',
+          image: 'https://images.pexels.com/photos/3244513/pexels-photo-3244513.jpeg?auto=compress&cs=tinysrgb&w=400',
+          description: 'Iconic symbol of Brussels with panoramic city views',
+          specialOffers: ['Combined ticket discount', 'Audio guide included'],
+          safetyRating: 4.6,
+          carbonFootprint: 'Educational focus'
+        }
+      ];
+    }
+
+    // Default international mix
+    return [
+      {
+        id: 'default1',
+        name: 'International Food Court',
+        type: 'food',
+        location: 'Highway Stop',
+        coordinates: { lat: 0, lng: 0 },
+        rating: 4.4,
+        reviews: 234,
+        priceRange: 'Varies',
+        distance: 50,
+        estimatedTime: '1h',
+        image: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400',
+        description: 'Global cuisine options for international travelers',
+        specialOffers: ['Multi-currency accepted', 'Traveler discounts'],
+        safetyRating: 4.5,
+        carbonFootprint: 'Sustainable sourcing'
+      }
+    ];
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -204,268 +454,71 @@ function RouteDiscoveryPage() {
     }));
   };
 
-  const generateRouteStops = (from: string, to: string, preferences: string[]) => {
-    const baseStops: RouteStop[] = [];
-    
-    // Generate route-specific stops based on the route
-    if (from.toLowerCase().includes('pune') && to.toLowerCase().includes('lonavala')) {
-      // Pune to Lonavala route
-      if (preferences.includes('food')) {
-        baseStops.push({
-          id: '1',
-          name: 'Sunny Da Dhaba',
-          type: 'food',
-          location: 'Khandala, Maharashtra',
-          coordinates: { lat: 18.7469, lng: 73.4831 },
-          rating: 4.5,
-          reviews: 456,
-          priceRange: '₹200-400',
-          distance: 35,
-          estimatedTime: '45m',
-          image: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400',
-          description: 'Famous roadside dhaba serving authentic Maharashtrian cuisine with stunning valley views',
-          specialOffers: ['Free chai with main course', '20% off for groups of 4+'],
-          isHiddenGem: true,
-          safetyRating: 4.8,
-          carbonFootprint: 'Low impact',
-          openingHours: '6:00 AM - 11:00 PM',
-          contactInfo: '+91 98765 43210'
-        });
-      }
-
-      if (preferences.includes('stay')) {
-        baseStops.push({
-          id: '2',
-          name: 'Hill Station Resort & Spa',
-          type: 'stay',
-          location: 'Lonavala, Maharashtra',
-          coordinates: { lat: 18.7537, lng: 73.4135 },
-          rating: 4.7,
-          reviews: 289,
-          priceRange: '₹3000-6000',
-          distance: 64,
-          estimatedTime: '1h 30m',
-          image: 'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg?auto=compress&cs=tinysrgb&w=400',
-          description: 'Luxury resort with panoramic hill views, spa services, and infinity pool',
-          specialOffers: ['Early check-in free', 'Complimentary breakfast', 'Spa discount 30%'],
-          safetyRating: 4.9,
-          carbonFootprint: 'Eco-friendly certified',
-          openingHours: '24/7',
-          contactInfo: '+91 98765 43211'
-        });
-      }
-
-      if (preferences.includes('attractions')) {
-        baseStops.push({
-          id: '3',
-          name: 'Karla Caves',
-          type: 'attraction',
-          location: 'Karla, Maharashtra',
-          coordinates: { lat: 18.7469, lng: 73.4831 },
-          rating: 4.6,
-          reviews: 567,
-          priceRange: '₹50 entry',
-          distance: 50,
-          estimatedTime: '1h 15m',
-          image: 'https://images.pexels.com/photos/3244513/pexels-photo-3244513.jpeg?auto=compress&cs=tinysrgb&w=400',
-          description: 'Ancient Buddhist rock-cut caves dating back to 2nd century BCE with intricate carvings',
-          isHiddenGem: true,
-          safetyRating: 4.5,
-          carbonFootprint: 'Zero impact',
-          openingHours: '9:00 AM - 5:30 PM',
-          contactInfo: 'Archaeological Survey of India'
-        });
-      }
-
-      if (preferences.includes('fuel')) {
-        baseStops.push({
-          id: '4',
-          name: 'Highway Fuel Station',
-          type: 'fuel',
-          location: 'Mumbai-Pune Highway',
-          coordinates: { lat: 18.7200, lng: 73.4000 },
-          rating: 4.2,
-          reviews: 123,
-          priceRange: '₹95-105/L',
-          distance: 25,
-          estimatedTime: '30m',
-          image: 'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg?auto=compress&cs=tinysrgb&w=400',
-          description: 'Modern fuel station with convenience store and clean restrooms',
-          specialOffers: ['Loyalty points', 'Free car wash with full tank'],
-          safetyRating: 4.8,
-          carbonFootprint: 'Standard',
-          openingHours: '24/7',
-          contactInfo: '+91 1800 XXX XXXX'
-        });
-      }
-
-      if (preferences.includes('camping')) {
-        baseStops.push({
-          id: '5',
-          name: 'Pawna Lake Camping',
-          type: 'camping',
-          location: 'Pawna Lake, Maharashtra',
-          coordinates: { lat: 18.7469, lng: 73.4831 },
-          rating: 4.4,
-          reviews: 234,
-          priceRange: '₹1200-2500',
-          distance: 55,
-          estimatedTime: '1h 20m',
-          image: 'https://images.pexels.com/photos/1687845/pexels-photo-1687845.jpeg?auto=compress&cs=tinysrgb&w=400',
-          description: 'Lakeside camping with tents, bonfire, barbecue, and stargazing activities',
-          specialOffers: ['Equipment included', 'Group discounts', 'Free breakfast'],
-          safetyRating: 4.3,
-          carbonFootprint: 'Minimal impact',
-          openingHours: 'Check-in: 2:00 PM, Check-out: 11:00 AM',
-          contactInfo: '+91 98765 43212'
-        });
-      }
-    } else {
-      // Generate generic stops for other routes
-      if (preferences.includes('food')) {
-        baseStops.push({
-          id: 'f1',
-          name: 'Local Food Paradise',
-          type: 'food',
-          location: `Highway near ${to}`,
-          coordinates: { lat: 19.0760, lng: 72.8777 },
-          rating: 4.6,
-          reviews: 345,
-          priceRange: '₹150-350',
-          distance: Math.floor(Math.random() * 50) + 20,
-          estimatedTime: `${Math.floor(Math.random() * 60) + 30}m`,
-          image: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400',
-          description: 'Authentic local cuisine with traditional recipes and fresh ingredients',
-          specialOffers: ['Family meals discount', 'Free dessert'],
-          isHiddenGem: Math.random() > 0.5,
-          safetyRating: 4.5,
-          carbonFootprint: 'Low impact'
-        });
-      }
-
-      if (preferences.includes('stay')) {
-        baseStops.push({
-          id: 's1',
-          name: 'Comfort Inn & Suites',
-          type: 'stay',
-          location: `${to} City Center`,
-          coordinates: { lat: 19.0760, lng: 72.8777 },
-          rating: 4.3,
-          reviews: 189,
-          priceRange: '₹2500-4500',
-          distance: Math.floor(Math.random() * 30) + 40,
-          estimatedTime: `${Math.floor(Math.random() * 30) + 60}m`,
-          image: 'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg?auto=compress&cs=tinysrgb&w=400',
-          description: 'Modern hotel with excellent amenities and convenient location',
-          specialOffers: ['Free WiFi', 'Breakfast included', 'Parking available'],
-          safetyRating: 4.7,
-          carbonFootprint: 'Eco-friendly'
-        });
-      }
-
-      if (preferences.includes('attractions')) {
-        baseStops.push({
-          id: 'a1',
-          name: 'Historic Landmark',
-          type: 'attraction',
-          location: `${to} Heritage Site`,
-          coordinates: { lat: 19.0760, lng: 72.8777 },
-          rating: 4.8,
-          reviews: 678,
-          priceRange: '₹100-200',
-          distance: Math.floor(Math.random() * 20) + 45,
-          estimatedTime: `${Math.floor(Math.random() * 45) + 75}m`,
-          image: 'https://images.pexels.com/photos/3244513/pexels-photo-3244513.jpeg?auto=compress&cs=tinysrgb&w=400',
-          description: 'Must-visit historical site with rich cultural heritage and architecture',
-          isHiddenGem: Math.random() > 0.7,
-          safetyRating: 4.4,
-          carbonFootprint: 'Zero impact'
-        });
-      }
-    }
-
-    return baseStops;
-  };
-
   const handlePlanRoute = async () => {
-    if (!routeData.from || !routeData.to) {
-      alert('Please enter both starting location and destination');
-      return;
-    }
+    if (!routeData.from || !routeData.to) return;
     
     setIsGenerating(true);
     setShowAIAssistant(true);
     
-    // Add initial AI message
-    const initialMessage: AIMessage = {
-      id: Date.now().toString(),
-      content: `🤖 Analyzing your route from ${routeData.from} to ${routeData.to}...`,
-      isUser: false,
-      timestamp: new Date(),
-      type: 'text'
-    };
-    
-    setAiMessages([initialMessage]);
-    
-    // Simulate AI processing with realistic delay
+    // Simulate AI processing
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    // Generate route stops based on preferences
-    const generatedStops = generateRouteStops(routeData.from, routeData.to, routeData.preferences);
+    // Get route-specific stops
+    const routeStops = getRouteStopsForDestination(routeData.from, routeData.to);
     
-    // Calculate route statistics
-    const totalDistance = generatedStops.reduce((sum, stop) => sum + stop.distance, 0);
-    const totalTime = Math.floor(totalDistance / 50 * 60); // Assuming average 50km/h
-    const estimatedCost = Math.floor(totalDistance * 8 + generatedStops.length * 200); // Fuel + stops
+    // Filter stops based on preferences
+    const filteredStops = routeData.preferences.length > 0 
+      ? routeStops.filter(stop => routeData.preferences.includes(stop.type))
+      : routeStops;
+
+    // Determine currency and distance unit based on route
+    const getCurrencyAndUnits = (from: string, to: string) => {
+      if (from.includes('New York') || from.includes('Los Angeles') || from.includes('Miami') || 
+          to.includes('Boston') || to.includes('San Francisco') || to.includes('Las Vegas')) {
+        return { currency: '$', distance: 'miles', cost: '280' };
+      } else if (from.includes('Paris') || from.includes('London') || from.includes('Rome') || 
+                 to.includes('Amsterdam') || to.includes('Munich') || to.includes('Barcelona')) {
+        return { currency: '€', distance: 'km', cost: '195' };
+      } else {
+        return { currency: '₹', distance: 'km', cost: '2,500' };
+      }
+    };
+
+    const { currency, distance, cost } = getCurrencyAndUnits(routeData.from, routeData.to);
     
-    const routeAnalysis: AIMessage = {
-      id: (Date.now() + 1).toString(),
-      content: `🎯 Perfect! I've analyzed your route and found ${generatedStops.length} amazing stops based on your preferences for ${routeData.preferences.join(', ')}.`,
+    const aiMessage: AIMessage = {
+      id: Date.now().toString(),
+      content: `Perfect! I've analyzed your international route from ${routeData.from} to ${routeData.to} and found some amazing stops based on your preferences. This route offers a perfect blend of ${routeData.preferences.join(', ')} experiences!`,
       isUser: false,
       timestamp: new Date(),
       type: 'route',
       data: {
-        route: generatedStops,
-        totalDistance: `${totalDistance}km`,
-        estimatedTime: `${Math.floor(totalTime / 60)}h ${totalTime % 60}m`,
-        estimatedCost: `₹${estimatedCost}`,
+        route: filteredStops,
+        totalDistance: `463 ${distance}`,
+        estimatedTime: '8h 30m',
+        estimatedCost: `${currency}${cost}`,
         highlights: [
-          `${generatedStops.filter(s => s.isHiddenGem).length} hidden gems`,
-          `${generatedStops.filter(s => s.specialOffers?.length).length} special offers`,
-          `${generatedStops.filter(s => s.rating >= 4.5).length} highly rated spots`
-        ],
-        preferences: routeData.preferences,
-        travelers: routeData.travelers,
-        departureDate: routeData.departure
+          `${filteredStops.filter(s => s.isHiddenGem).length} hidden gems`,
+          `${filteredStops.filter(s => s.carbonFootprint).length} eco-friendly stops`,
+          '1 local favorite'
+        ]
       }
     };
     
-    setAiMessages(prev => [...prev, routeAnalysis]);
-    setGeneratedRoute(generatedStops);
-    
-    // Add follow-up suggestions after a short delay
+    // Add contextual follow-up message
     setTimeout(() => {
-      const suggestionsMessage: AIMessage = {
-        id: (Date.now() + 2).toString(),
-        content: "💡 I can help you with more details about any of these stops, suggest alternative routes, find budget options, or plan timing for your journey. What would you like to explore?",
+      const followUpMessage: AIMessage = {
+        id: (Date.now() + 1).toString(),
+        content: `This route spans across beautiful landscapes! Would you like me to suggest the best time to travel, check current weather conditions, or find budget-friendly alternatives? I can also help with visa requirements for international routes! 🌍`,
         isUser: false,
         timestamp: new Date(),
-        type: 'suggestions',
-        data: {
-          suggestions: [
-            'Tell me more about hidden gems',
-            'Find budget-friendly alternatives',
-            'Optimize timing for each stop',
-            'Add more attractions nearby',
-            'Check weather conditions',
-            'Find group discounts'
-          ]
-        }
+        type: 'text'
       };
-      
-      setAiMessages(prev => [...prev, suggestionsMessage]);
-    }, 1500);
+      setAiMessages(prev => [...prev, followUpMessage]);
+    }, 3000);
     
+    setAiMessages(prev => [...prev, aiMessage]);
+    setGeneratedRoute(filteredStops);
     setIsGenerating(false);
   };
 
@@ -484,134 +537,65 @@ function RouteDiscoveryPage() {
     const currentInput = aiInput;
     setAiInput('');
     
-    // Show thinking indicator
-    const thinkingMessage: AIMessage = {
-      id: (Date.now() + 1).toString(),
-      content: '🤔 Let me help you with that...',
-      isUser: false,
-      timestamp: new Date(),
-      type: 'text'
-    };
-    
-    setAiMessages(prev => [...prev, thinkingMessage]);
-    
-    // Generate contextual AI response based on input
+    // Simulate AI thinking
     setTimeout(() => {
-      let aiResponse: AIMessage;
       const input = currentInput.toLowerCase();
-      
-      if (input.includes('hidden') || input.includes('gem')) {
-        aiResponse = {
-          id: (Date.now() + 2).toString(),
-          content: `🏆 Great question! I found ${generatedRoute?.filter(s => s.isHiddenGem).length || 2} hidden gems on your route that most travelers miss:`,
-          isUser: false,
-          timestamp: new Date(),
-          type: 'recommendations',
-          data: {
-            recommendations: generatedRoute?.filter(s => s.isHiddenGem).map(stop => ({
-              name: stop.name,
-              type: stop.type,
-              description: stop.description,
-              specialNote: 'Local favorite - not in guidebooks!'
-            })) || []
-          }
-        };
-      } else if (input.includes('budget') || input.includes('cheap') || input.includes('cost')) {
-        aiResponse = {
-          id: (Date.now() + 2).toString(),
-          content: `💰 I can help you save money! Here are budget-friendly options for your route:`,
-          isUser: false,
-          timestamp: new Date(),
-          type: 'analysis',
-          data: {
-            budgetTips: [
-              'Choose local dhabas over restaurants - save ₹200-500 per meal',
-              'Book accommodation in advance for 30% discount',
-              'Travel on weekdays to avoid weekend surcharges',
-              'Look for group packages at camping sites',
-              'Use fuel reward programs for additional savings'
-            ],
-            totalSavings: '₹800-1200'
-          }
-        };
-      } else if (input.includes('time') || input.includes('timing') || input.includes('schedule')) {
-        aiResponse = {
-          id: (Date.now() + 2).toString(),
-          content: `⏰ Perfect timing is crucial! Here's my recommended schedule for your ${routeData.from} to ${routeData.to} journey:`,
-          isUser: false,
-          timestamp: new Date(),
-          type: 'analysis',
-          data: {
-            schedule: [
-              '7:00 AM - Start journey (avoid rush hour)',
-              '9:30 AM - First food stop & fuel',
-              '12:00 PM - Lunch at scenic location',
-              '2:30 PM - Main attraction visit',
-              '5:00 PM - Reach destination/check-in',
-              '7:00 PM - Evening exploration'
-            ],
-            tips: [
-              'Start early to enjoy cooler weather',
-              'Plan lunch stops with good views',
-              'Avoid peak traffic hours (8-10 AM, 6-8 PM)'
-            ]
-          }
-        };
+      let response = '';
+
+      // International travel responses
+      if (input.includes('visa') || input.includes('passport')) {
+        response = "For international routes, I recommend checking visa requirements at least 2-3 months in advance. US routes typically need ESTA/visa, European routes may need Schengen visa. Would you like specific visa information for your destination?";
       } else if (input.includes('weather') || input.includes('climate')) {
-        aiResponse = {
-          id: (Date.now() + 2).toString(),
-          content: `🌤️ Weather update for your route! Here's what to expect:`,
-          isUser: false,
-          timestamp: new Date(),
-          type: 'analysis',
-          data: {
-            weather: {
-              departure: 'Partly cloudy, 24°C - Perfect for travel',
-              route: 'Clear skies expected, visibility excellent',
-              destination: 'Pleasant weather, 22°C - Ideal for sightseeing'
-            },
-            recommendations: [
-              'Carry light jacket for evening',
-              'Perfect weather for outdoor activities',
-              'Great visibility for scenic photography'
-            ]
-          }
-        };
+        response = "Great question! For international routes, weather varies significantly. US West Coast is mild year-round, European routes are best in spring/summer (April-September). Indian routes avoid monsoon season (June-September). Want specific weather forecasts?";
+      } else if (input.includes('currency') || input.includes('money') || input.includes('budget')) {
+        response = "Smart planning! For international routes: US trips budget $200-400/day, European routes €150-300/day, Indian routes ₹2000-5000/day. This includes accommodation, food, and attractions. Need detailed cost breakdowns?";
+      } else if (input.includes('language') || input.includes('communication')) {
+        response = "Language tips for your route: English works well in US/UK routes, basic French helps in France, German in Germany, and Hindi/English in India. I can suggest useful phrases for your destination!";
+      } else if (input.includes('food') || input.includes('restaurant')) {
+        response = "Amazing food awaits! US routes offer diverse cuisine and food trucks, European routes feature local specialties and michelin restaurants, Indian routes have incredible street food and regional dishes. Want specific food recommendations?";
+      } else if (input.includes('time') || input.includes('duration')) {
+        response = "Timing is everything! Consider jet lag for international flights, time zone changes, and local peak seasons. European summer is busy but beautiful, US has varied seasons, India's winter is perfect for travel.";
+      } else if (input.includes('hidden') || input.includes('secret')) {
+        response = "I love finding hidden gems! Each route has secret spots - US has hidden viewpoints, Europe has local taverns tourists miss, India has secret temples and villages. Want me to reveal some exclusive locations?";
       } else {
-        // Generic helpful response
         const responses = [
-          `🚗 That's a great point about your ${routeData.from} to ${routeData.to} trip! Based on your preferences for ${routeData.preferences.join(', ')}, I recommend focusing on the highest-rated stops first.`,
-          `🌟 Excellent question! For your route, I'd suggest taking the scenic path and allowing extra time at ${generatedRoute?.[0]?.name || 'the first stop'} - it's rated ${generatedRoute?.[0]?.rating || '4.5'}/5 by travelers.`,
-          `💡 Smart thinking! Given you're traveling with ${routeData.travelers} ${routeData.travelers === 1 ? 'person' : 'people'}, I can suggest group-friendly stops and family discounts along your route.`,
-          `🎯 Great insight! The route I've planned includes local favorites and traveler-tested spots. Would you like me to add more specific types of stops or adjust the timing?`
+          "Excellent question! For international routes, I always recommend checking local customs and tipping practices. Each country has unique travel etiquette that enhances your experience.",
+          "That's perfect for planning! International routes offer incredible diversity - from American road trip culture to European train journeys to Indian spiritual experiences. What interests you most?",
+          "Great thinking! For multi-country routes, consider transportation options: rental cars in US, trains in Europe, or domestic flights in India. Each has unique advantages!",
+          "Love your curiosity! International travel opens so many possibilities. I can help with everything from local SIM cards to cultural experiences. What specific aspect interests you?"
         ];
-        
-        aiResponse = {
-          id: (Date.now() + 2).toString(),
-          content: responses[Math.floor(Math.random() * responses.length)],
-          isUser: false,
-          timestamp: new Date(),
-          type: 'text'
-        };
+        response = responses[Math.floor(Math.random() * responses.length)];
       }
       
-      // Remove thinking message and add real response
-      setAiMessages(prev => {
-        const filtered = prev.filter(msg => msg.content !== '🤔 Let me help you with that...');
-        return [...filtered, aiResponse];
-      });
-    }, 1000 + Math.random() * 1000);
+      const aiResponse: AIMessage = {
+        id: (Date.now() + 1).toString(),
+        content: response,
+        isUser: false,
+        timestamp: new Date(),
+        type: 'text'
+      };
+      
+      setAiMessages(prev => [...prev, aiResponse]);
+    }, 1000);
   };
 
   const handleVoiceInput = () => {
     setIsListening(!isListening);
-    // Voice recognition simulation
     if (!isListening) {
+      // Simulate voice input with international options
       setTimeout(() => {
+        const voiceRoutes = [
+          { from: 'New York', to: 'Boston' },
+          { from: 'Paris', to: 'Amsterdam' },
+          { from: 'Mumbai', to: 'Goa' },
+          { from: 'Los Angeles', to: 'San Francisco' },
+          { from: 'London', to: 'Edinburgh' }
+        ];
+        const randomRoute = voiceRoutes[Math.floor(Math.random() * voiceRoutes.length)];
         setRouteData({
           ...routeData,
-          from: 'Mumbai',
-          to: 'Goa'
+          from: randomRoute.from,
+          to: randomRoute.to
         });
         setIsListening(false);
       }, 3000);
@@ -657,7 +641,7 @@ function RouteDiscoveryPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-white mb-1">Route Discovery</h1>
-          <p className="text-gray-400 text-sm">Plan your journey with hidden gems and perfect stops</p>
+          <p className="text-gray-400 text-sm">Plan your journey with hidden gems and perfect stops worldwide 🌍</p>
         </div>
         
         <div className="flex items-center space-x-2">
@@ -722,7 +706,7 @@ function RouteDiscoveryPage() {
         <div className="space-y-6">
           {/* Quick Route Examples */}
           <div>
-            <h3 className="text-lg font-semibold text-white mb-4">Popular Routes</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">Popular International Routes 🌍</h3>
             <div className="grid grid-cols-2 gap-3">
               {quickRoutes.map((route, index) => (
                 <button
@@ -730,19 +714,25 @@ function RouteDiscoveryPage() {
                   onClick={() => handleQuickRoute(route)}
                   className="bg-white/5 backdrop-blur-sm rounded-2xl p-3 border border-white/10 hover:border-white/20 transition-all duration-300 text-left"
                 >
-                  <div className="text-white font-medium text-sm mb-1">
-                    {route.from} → {route.to}
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="text-white font-medium text-sm">
+                      {route.from} → {route.to}
+                    </div>
+                    <span className="text-lg">{route.flag}</span>
                   </div>
-                  <div className="text-gray-400 text-xs">
+                  <div className="text-gray-400 text-xs mb-2">
                     {route.distance} • {route.time}
                   </div>
-                  <div className={`inline-block px-2 py-1 rounded-full text-xs mt-2 ${
+                  <div className={`inline-block px-2 py-1 rounded-full text-xs ${
                     route.type === 'coastal' ? 'bg-blue-500/20 text-blue-400' :
-                    route.type === 'mountain' ? 'bg-green-500/20 text-green-400' :
+                    route.type === 'mountain' || route.type === 'alpine' ? 'bg-green-500/20 text-green-400' :
                     route.type === 'nature' ? 'bg-emerald-500/20 text-emerald-400' :
-                    route.type === 'heritage' ? 'bg-purple-500/20 text-purple-400' :
-                    route.type === 'hill-station' ? 'bg-cyan-500/20 text-cyan-400' :
-                    'bg-orange-500/20 text-orange-400'
+                    route.type === 'heritage' || route.type === 'cultural' ? 'bg-purple-500/20 text-purple-400' :
+                    route.type === 'historic' || route.type === 'royal' ? 'bg-indigo-500/20 text-indigo-400' :
+                    route.type === 'scenic' ? 'bg-cyan-500/20 text-cyan-400' :
+                    route.type === 'tropical' ? 'bg-pink-500/20 text-pink-400' :
+                    route.type === 'mediterranean' ? 'bg-orange-500/20 text-orange-400' :
+                    'bg-yellow-500/20 text-yellow-400'
                   }`}>
                     {route.type}
                   </div>
@@ -753,7 +743,7 @@ function RouteDiscoveryPage() {
 
           {/* Route Planning Form */}
           <div className="bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Plan Your Journey</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">Plan Your Global Journey</h3>
             
             <div className="space-y-4">
               {/* From/To Inputs */}
@@ -766,7 +756,7 @@ function RouteDiscoveryPage() {
                     type="text"
                     value={routeData.from}
                     onChange={(e) => setRouteData({ ...routeData, from: e.target.value })}
-                    placeholder="Starting location"
+                    placeholder="Starting location (e.g., New York, Paris, Mumbai)"
                     className="w-full pl-12 pr-4 py-4 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none"
                   />
                 </div>
@@ -779,7 +769,7 @@ function RouteDiscoveryPage() {
                     type="text"
                     value={routeData.to}
                     onChange={(e) => setRouteData({ ...routeData, to: e.target.value })}
-                    placeholder="Destination"
+                    placeholder="Destination (e.g., Boston, Amsterdam, Goa)"
                     className="w-full pl-12 pr-4 py-4 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none"
                   />
                 </div>
@@ -815,7 +805,7 @@ function RouteDiscoveryPage() {
 
               {/* Preferences */}
               <div>
-                <h4 className="text-white font-medium mb-3">What would you like to discover?</h4>
+                <h4 className="text-white font-medium mb-3">What would you like to discover worldwide?</h4>
                 <div className="grid grid-cols-2 gap-2">
                   {preferences.map((pref) => (
                     <button
@@ -872,7 +862,7 @@ function RouteDiscoveryPage() {
           {generatedRoute && (
             <div className="bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white">Your AI-Generated Route</h3>
+                <h3 className="text-lg font-semibold text-white">Your AI-Generated International Route</h3>
                 <div className="flex items-center space-x-2">
                   <Heart className="h-5 w-5 text-gray-400 hover:text-pink-400 cursor-pointer transition-colors" />
                   <Share className="h-5 w-5 text-gray-400 hover:text-blue-400 cursor-pointer transition-colors" />
@@ -936,7 +926,7 @@ function RouteDiscoveryPage() {
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-2">
                               <div className="flex items-center space-x-1">
-                                <CheckCircle className="h-3 w-3 text-blue-400" />
+                                <Shield className="h-3 w-3 text-blue-400" />
                                 <span className="text-blue-400 text-xs">{stop.safetyRating}/5 Safety</span>
                               </div>
                               {stop.carbonFootprint && (
@@ -965,7 +955,7 @@ function RouteDiscoveryPage() {
       {activeTab === 'saved' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-white">Your Saved Routes</h3>
+            <h3 className="text-lg font-semibold text-white">Your Saved International Routes</h3>
             <div className="flex items-center space-x-2">
               <button className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
                 <Search className="h-4 w-4 text-gray-400" />
@@ -1043,7 +1033,7 @@ function RouteDiscoveryPage() {
       {activeTab === 'community' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-white">Community Routes</h3>
+            <h3 className="text-lg font-semibold text-white">Global Community Routes</h3>
             <div className="flex items-center space-x-2">
               <button className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
                 <Search className="h-4 w-4 text-gray-400" />
@@ -1061,7 +1051,7 @@ function RouteDiscoveryPage() {
               {route.isFeatured && (
                 <div className="flex items-center space-x-1 mb-3">
                   <Award className="h-4 w-4 text-yellow-400" />
-                  <span className="text-yellow-400 text-sm font-medium">Featured Route</span>
+                  <span className="text-yellow-400 text-sm font-medium">Featured International Route</span>
                 </div>
               )}
               
@@ -1151,7 +1141,7 @@ function RouteDiscoveryPage() {
           <div className="flex items-center justify-between p-4 border-b border-white/10">
             <div className="flex items-center space-x-2">
               <Bot className="h-5 w-5 text-purple-400" />
-              <span className="text-white font-medium">AI Route Assistant</span>
+              <span className="text-white font-medium">Global Route AI Assistant</span>
             </div>
             <button
               onClick={() => setShowAIAssistant(false)}
@@ -1165,34 +1155,43 @@ function RouteDiscoveryPage() {
             {aiMessages.length === 0 && (
               <div className="text-center text-gray-400 text-sm">
                 <Bot className="h-12 w-12 mx-auto mb-3 text-purple-400" />
-                <p>Hi! I'm your AI route assistant. I can help you find the best routes, hidden gems, and perfect stops for your journey.</p>
+                <p>Hi! I'm your Global Route AI assistant. I can help you find the best international routes, hidden gems, and perfect stops for your worldwide journey.</p>
                 <div className="mt-4 space-y-2">
                   <button
-                    onClick={() => {
-                      setAiInput("Find me hidden food spots between Mumbai and Goa");
-                      handleAISend();
-                    }}
+                    onClick={() => setAiMessages([{
+                      id: '1',
+                      content: "Find me hidden food spots on the Pacific Coast Highway",
+                      isUser: true,
+                      timestamp: new Date(),
+                      type: 'text'
+                    }])}
                     className="w-full text-left p-2 bg-white/5 rounded-lg text-xs hover:bg-white/10 transition-colors"
                   >
-                    "Find hidden food spots on my route"
+                    "Find hidden spots on international routes"
                   </button>
                   <button
-                    onClick={() => {
-                      setAiInput("What's the best time to travel to avoid traffic?");
-                      handleAISend();
-                    }}
+                    onClick={() => setAiMessages([{
+                      id: '1',
+                      content: "Help me plan a Europe road trip with visa requirements",
+                      isUser: true,
+                      timestamp: new Date(),
+                      type: 'text'
+                    }])}
                     className="w-full text-left p-2 bg-white/5 rounded-lg text-xs hover:bg-white/10 transition-colors"
                   >
-                    "Best time to avoid traffic?"
+                    "Help with visa and travel requirements"
                   </button>
                   <button
-                    onClick={() => {
-                      setAiInput("Show me budget-friendly options");
-                      handleAISend();
-                    }}
+                    onClick={() => setAiMessages([{
+                      id: '1',
+                      content: "What's the best season for a USA cross-country road trip?",
+                      isUser: true,
+                      timestamp: new Date(),
+                      type: 'text'
+                    }])}
                     className="w-full text-left p-2 bg-white/5 rounded-lg text-xs hover:bg-white/10 transition-colors"
                   >
-                    "Show me budget-friendly options"
+                    "Best travel seasons for different countries"
                   </button>
                 </div>
               </div>
@@ -1206,83 +1205,14 @@ function RouteDiscoveryPage() {
                     : 'bg-white/10 text-white'
                 }`}>
                   <p className="text-sm">{message.content}</p>
-                  
                   {message.type === 'route' && message.data && (
                     <div className="mt-3 pt-3 border-t border-white/20">
-                      <div className="text-xs text-white/80 mb-2">Route Summary:</div>
+                      <div className="text-xs text-white/80 mb-2">International Route Summary:</div>
                       <div className="space-y-1 text-xs">
-                        <div>📍 Distance: {message.data.totalDistance}</div>
-                        <div>⏱️ Time: {message.data.estimatedTime}</div>
-                        <div>💰 Cost: {message.data.estimatedCost}</div>
-                        <div className="text-cyan-300">✨ {message.data.highlights.join(', ')}</div>
-                      </div>
-                    </div>
-                  )}
-
-                  {message.type === 'recommendations' && message.data && (
-                    <div className="mt-3 pt-3 border-t border-white/20">
-                      <div className="space-y-2">
-                        {message.data.recommendations.map((rec: any, idx: number) => (
-                          <div key={idx} className="bg-black/20 rounded-lg p-2">
-                            <div className="text-xs font-medium text-cyan-300">{rec.name}</div>
-                            <div className="text-xs text-gray-300">{rec.description}</div>
-                            {rec.specialNote && (
-                              <div className="text-xs text-orange-300 mt-1">💎 {rec.specialNote}</div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {message.type === 'analysis' && message.data && (
-                    <div className="mt-3 pt-3 border-t border-white/20">
-                      {message.data.budgetTips && (
-                        <div className="space-y-1">
-                          {message.data.budgetTips.map((tip: string, idx: number) => (
-                            <div key={idx} className="text-xs text-green-300">💡 {tip}</div>
-                          ))}
-                          {message.data.totalSavings && (
-                            <div className="text-xs text-green-400 font-medium mt-2">
-                              💰 Total Savings: {message.data.totalSavings}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      
-                      {message.data.schedule && (
-                        <div className="space-y-1">
-                          {message.data.schedule.map((item: string, idx: number) => (
-                            <div key={idx} className="text-xs text-blue-300">🕐 {item}</div>
-                          ))}
-                        </div>
-                      )}
-
-                      {message.data.weather && (
-                        <div className="space-y-1">
-                          <div className="text-xs text-blue-300">🌤️ Start: {message.data.weather.departure}</div>
-                          <div className="text-xs text-blue-300">🛣️ Route: {message.data.weather.route}</div>
-                          <div className="text-xs text-blue-300">🎯 Destination: {message.data.weather.destination}</div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {message.type === 'suggestions' && message.data && (
-                    <div className="mt-3 pt-3 border-t border-white/20">
-                      <div className="grid grid-cols-1 gap-1">
-                        {message.data.suggestions.map((suggestion: string, idx: number) => (
-                          <button
-                            key={idx}
-                            onClick={() => {
-                              setAiInput(suggestion);
-                              handleAISend();
-                            }}
-                            className="text-left p-2 bg-black/20 rounded-lg text-xs hover:bg-black/40 transition-colors text-cyan-300"
-                          >
-                            💭 {suggestion}
-                          </button>
-                        ))}
+                        <div>Distance: {message.data.totalDistance}</div>
+                        <div>Time: {message.data.estimatedTime}</div>
+                        <div>Cost: {message.data.estimatedCost}</div>
+                        <div className="text-cyan-300">{message.data.highlights.join(', ')}</div>
                       </div>
                     </div>
                   )}
@@ -1299,13 +1229,12 @@ function RouteDiscoveryPage() {
                 value={aiInput}
                 onChange={(e) => setAiInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleAISend()}
-                placeholder="Ask me about routes..."
+                placeholder="Ask about international routes..."
                 className="flex-1 px-3 py-2 bg-black/20 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none text-sm"
               />
               <button
                 onClick={handleAISend}
-                disabled={!aiInput.trim()}
-                className="p-2 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
+                className="p-2 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 <Send className="h-4 w-4 text-white" />
               </button>
@@ -1319,7 +1248,7 @@ function RouteDiscoveryPage() {
         <div className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-slate-900/95 backdrop-blur-md rounded-3xl border border-white/20 w-full max-w-4xl h-96">
             <div className="flex items-center justify-between p-4 border-b border-white/10">
-              <h3 className="text-white font-medium">Route Map</h3>
+              <h3 className="text-white font-medium">Global Route Map 🌍</h3>
               <button
                 onClick={() => setShowMap(false)}
                 className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
@@ -1329,12 +1258,23 @@ function RouteDiscoveryPage() {
             </div>
             <div className="p-4 h-80 bg-gradient-to-br from-slate-800 to-slate-700 rounded-b-3xl flex items-center justify-center">
               <div className="text-center text-gray-400">
-                <Map className="h-16 w-16 mx-auto mb-4" />
-                <p>Interactive map would be displayed here</p>
-                <p className="text-sm mt-2">Showing route: {routeData.from} → {routeData.to}</p>
-                {generatedRoute && (
-                  <p className="text-sm mt-1">With {generatedRoute.length} discovered stops</p>
-                )}
+                <Globe className="h-16 w-16 mx-auto mb-4 animate-spin" />
+                <p>Interactive world map would be displayed here</p>
+                <p className="text-sm mt-2">Showing your international route with all discovered stops</p>
+                <div className="mt-4 flex items-center justify-center space-x-4 text-xs">
+                  <span className="flex items-center space-x-1">
+                    <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
+                    <span>USA Routes</span>
+                  </span>
+                  <span className="flex items-center space-x-1">
+                    <span className="w-2 h-2 bg-purple-400 rounded-full"></span>
+                    <span>Europe Routes</span>
+                  </span>
+                  <span className="flex items-center space-x-1">
+                    <span className="w-2 h-2 bg-orange-400 rounded-full"></span>
+                    <span>India Routes</span>
+                  </span>
+                </div>
               </div>
             </div>
           </div>
