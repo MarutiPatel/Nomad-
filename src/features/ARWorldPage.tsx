@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Camera, MapPin, Eye, MessageCircle, Star, Plus, Filter, Search, Layers, Zap, Gift, Heart, Users, Clock, Navigation, Share, Bookmark, Headphones, Headset as VrHeadset, Globe, Mountain, Plane, Gamepad2, Monitor, Smartphone, Wifi, Play, Volume2, Calendar, Trophy, Target, Compass, Map } from 'lucide-react';
+import { Camera, MapPin, Eye, MessageCircle, Star, Plus, Filter, Search, Layers, Zap, Gift, Heart, Users, Clock, Navigation, Share, Bookmark, Headphones, Headset as VrHeadset, Globe, Mountain, Plane, Gamepad2, Monitor, Smartphone, Wifi, Play, Volume2, Calendar, Trophy, Target, Compass, Map, X, Mic, Send, Upload, Video } from 'lucide-react';
 
 interface ARTag {
   id: string;
@@ -40,6 +40,9 @@ function ARWorldPage() {
   const [activeTab, setActiveTab] = useState<'ar-tags' | 'vr-experiences' | 'live-experiences' | 'create'>('ar-tags');
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
   const [selectedExperience, setSelectedExperience] = useState<VRExperience | null>(null);
+  const [showCreateARModal, setShowCreateARModal] = useState(false);
+  const [showCreateVRModal, setShowCreateVRModal] = useState(false);
+  const [showGoLiveModal, setShowGoLiveModal] = useState(false);
 
   const mockARTags: ARTag[] = [
     {
@@ -641,7 +644,10 @@ function ARWorldPage() {
               <p className="text-gray-400 text-sm">Leave an augmented reality message for future travelers</p>
             </div>
             
-            <button className="w-full bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-4 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex items-center justify-center space-x-2">
+            <button 
+              onClick={() => setShowCreateARModal(true)}
+              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-4 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex items-center justify-center space-x-2"
+            >
               <Plus className="h-6 w-6" />
               <span>Create AR Tag</span>
             </button>
@@ -655,7 +661,10 @@ function ARWorldPage() {
               <p className="text-gray-400 text-sm">Design immersive virtual reality experiences for the community</p>
             </div>
             
-            <button className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-4 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex items-center justify-center space-x-2">
+            <button 
+              onClick={() => setShowCreateVRModal(true)}
+              className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-4 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex items-center justify-center space-x-2"
+            >
               <Camera className="h-6 w-6" />
               <span>Create VR Experience</span>
             </button>
@@ -672,7 +681,10 @@ function ARWorldPage() {
               <p className="text-gray-400 text-sm">Host real-time experiences for the global nomad community</p>
             </div>
             
-            <button className="w-full bg-gradient-to-r from-red-500 to-orange-500 px-6 py-4 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex items-center justify-center space-x-2">
+            <button 
+              onClick={() => setShowGoLiveModal(true)}
+              className="w-full bg-gradient-to-r from-red-500 to-orange-500 px-6 py-4 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex items-center justify-center space-x-2"
+            >
               <Play className="h-6 w-6" />
               <span>Go Live Now</span>
             </button>
@@ -686,6 +698,21 @@ function ARWorldPage() {
           experience={selectedExperience}
           onClose={() => setSelectedExperience(null)}
         />
+      )}
+
+      {/* Create AR Tag Modal */}
+      {showCreateARModal && (
+        <CreateARTagModal onClose={() => setShowCreateARModal(false)} />
+      )}
+
+      {/* Create VR Experience Modal */}
+      {showCreateVRModal && (
+        <CreateVRExperienceModal onClose={() => setShowCreateVRModal(false)} />
+      )}
+
+      {/* Go Live Modal */}
+      {showGoLiveModal && (
+        <GoLiveModal onClose={() => setShowGoLiveModal(false)} />
       )}
     </div>
   );
@@ -711,7 +738,7 @@ function VRExperienceModal({
               onClick={onClose}
               className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
             >
-              ✕
+              <X className="h-5 w-5 text-white" />
             </button>
           </div>
 
@@ -795,6 +822,506 @@ function VRExperienceModal({
               <span>Enter VR Experience</span>
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CreateARTagModal({ onClose }: { onClose: () => void }) {
+  const [formData, setFormData] = useState({
+    title: '',
+    content: '',
+    type: 'tip' as 'tip' | 'secret' | 'warning' | 'review' | 'fun',
+    location: '',
+    tags: ''
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('Creating AR tag:', formData);
+    // Add success message or redirect
+    alert('AR Tag created successfully! Other travelers can now discover your message.');
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-slate-900/95 backdrop-blur-md rounded-3xl border border-white/20 max-w-md w-full max-h-[80vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-white">Create AR Tag</h2>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+            >
+              <X className="h-5 w-5 text-white" />
+            </button>
+          </div>
+          
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Title</label>
+              <input
+                type="text"
+                value={formData.title}
+                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none"
+                placeholder="What's this about?"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Type</label>
+              <select
+                value={formData.type}
+                onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as any }))}
+                className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white focus:border-cyan-400 focus:outline-none"
+              >
+                <option value="tip">Travel Tip</option>
+                <option value="secret">Secret Spot</option>
+                <option value="warning">Warning</option>
+                <option value="review">Review</option>
+                <option value="fun">Fun Fact</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Message</label>
+              <textarea
+                value={formData.content}
+                onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
+                className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none resize-none"
+                rows={3}
+                placeholder="Share your knowledge..."
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Location</label>
+              <input
+                type="text"
+                value={formData.location}
+                onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none"
+                placeholder="Where is this?"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Tags (Optional)</label>
+              <input
+                type="text"
+                value={formData.tags}
+                onChange={(e) => setFormData(prev => ({ ...prev, tags: e.target.value }))}
+                className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none"
+                placeholder="food, hidden, local (comma separated)"
+              />
+            </div>
+
+            <div className="flex space-x-3 pt-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 px-6 py-3 border border-white/20 rounded-2xl text-gray-300 hover:bg-white/5 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-3 rounded-2xl font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                Create AR Tag
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CreateVRExperienceModal({ onClose }: { onClose: () => void }) {
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    type: 'tour' as 'tour' | 'adventure' | 'cultural' | 'educational' | 'entertainment',
+    location: '',
+    duration: '',
+    equipment: 'mobile' as 'mobile' | 'headset' | 'computer',
+    difficulty: 'easy' as 'easy' | 'medium' | 'hard',
+    price: 'free' as 'free' | 'premium',
+    tags: ''
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('Creating VR experience:', formData);
+    alert('VR Experience created successfully! The community can now explore your virtual world.');
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-slate-900/95 backdrop-blur-md rounded-3xl border border-white/20 max-w-md w-full max-h-[80vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-white">Create VR Experience</h2>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+            >
+              <X className="h-5 w-5 text-white" />
+            </button>
+          </div>
+          
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Experience Title</label>
+              <input
+                type="text"
+                value={formData.title}
+                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none"
+                placeholder="Name your VR experience"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Type</label>
+                <select
+                  value={formData.type}
+                  onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as any }))}
+                  className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white focus:border-cyan-400 focus:outline-none"
+                >
+                  <option value="tour">Virtual Tour</option>
+                  <option value="adventure">Adventure</option>
+                  <option value="cultural">Cultural</option>
+                  <option value="educational">Educational</option>
+                  <option value="entertainment">Entertainment</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Equipment</label>
+                <select
+                  value={formData.equipment}
+                  onChange={(e) => setFormData(prev => ({ ...prev, equipment: e.target.value as any }))}
+                  className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white focus:border-cyan-400 focus:outline-none"
+                >
+                  <option value="mobile">Mobile Phone</option>
+                  <option value="headset">VR Headset</option>
+                  <option value="computer">Computer</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none resize-none"
+                rows={3}
+                placeholder="Describe the VR experience..."
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Location</label>
+                <input
+                  type="text"
+                  value={formData.location}
+                  onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                  className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none"
+                  placeholder="Virtual location"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Duration (min)</label>
+                <input
+                  type="number"
+                  value={formData.duration}
+                  onChange={(e) => setFormData(prev => ({ ...prev, duration: e.target.value }))}
+                  className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none"
+                  placeholder="30"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Difficulty</label>
+                <select
+                  value={formData.difficulty}
+                  onChange={(e) => setFormData(prev => ({ ...prev, difficulty: e.target.value as any }))}
+                  className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white focus:border-cyan-400 focus:outline-none"
+                >
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Price</label>
+                <select
+                  value={formData.price}
+                  onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value as any }))}
+                  className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white focus:border-cyan-400 focus:outline-none"
+                >
+                  <option value="free">Free</option>
+                  <option value="premium">Premium</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Tags</label>
+              <input
+                type="text"
+                value={formData.tags}
+                onChange={(e) => setFormData(prev => ({ ...prev, tags: e.target.value }))}
+                className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none"
+                placeholder="adventure, nature, history (comma separated)"
+              />
+            </div>
+
+            <div className="flex space-x-3 pt-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 px-6 py-3 border border-white/20 rounded-2xl text-gray-300 hover:bg-white/5 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-3 rounded-2xl font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                Create Experience
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GoLiveModal({ onClose }: { onClose: () => void }) {
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    type: 'ar-tour' as 'ar-tour' | 'vr-experience' | 'mixed-reality' | 'virtual-meetup',
+    maxParticipants: '',
+    equipment: [] as string[],
+    features: [] as string[]
+  });
+
+  const [isLive, setIsLive] = useState(false);
+
+  const equipmentOptions = ['Smartphone', 'VR Headset', 'Computer', 'Microphone', 'Webcam'];
+  const featureOptions = ['Voice Chat', 'Screen Sharing', 'AR Overlays', 'Real-time Chat', 'Interactive Elements'];
+
+  const toggleEquipment = (equipment: string) => {
+    setFormData(prev => ({
+      ...prev,
+      equipment: prev.equipment.includes(equipment)
+        ? prev.equipment.filter(e => e !== equipment)
+        : [...prev.equipment, equipment]
+    }));
+  };
+
+  const toggleFeature = (feature: string) => {
+    setFormData(prev => ({
+      ...prev,
+      features: prev.features.includes(feature)
+        ? prev.features.filter(f => f !== feature)
+        : [...prev.features, feature]
+    }));
+  };
+
+  const handleGoLive = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('Going live with:', formData);
+    setIsLive(true);
+    // Simulate live session start
+    setTimeout(() => {
+      alert('🔴 You are now LIVE! Share your experience with the global nomad community.');
+      onClose();
+    }, 2000);
+  };
+
+  if (isLive) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="bg-slate-900/95 backdrop-blur-md rounded-3xl border border-red-400/30 max-w-md w-full p-8 text-center">
+          <div className="animate-pulse mb-6">
+            <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Play className="h-8 w-8 text-white" />
+            </div>
+            <div className="flex items-center justify-center space-x-2 mb-2">
+              <div className="w-3 h-3 rounded-full bg-red-400 animate-pulse"></div>
+              <span className="text-red-400 font-bold text-lg">GOING LIVE...</span>
+            </div>
+          </div>
+          <h2 className="text-xl font-bold text-white mb-2">Starting Your Session</h2>
+          <p className="text-gray-400 text-sm">
+            Preparing your live AR/VR experience for the community...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-slate-900/95 backdrop-blur-md rounded-3xl border border-white/20 max-w-md w-full max-h-[80vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 rounded-full bg-red-400 animate-pulse"></div>
+              <h2 className="text-xl font-bold text-white">Go Live</h2>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+            >
+              <X className="h-5 w-5 text-white" />
+            </button>
+          </div>
+          
+          <form onSubmit={handleGoLive} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Session Title</label>
+              <input
+                type="text"
+                value={formData.title}
+                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-red-400 focus:outline-none"
+                placeholder="What's your live session about?"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Session Type</label>
+              <select
+                value={formData.type}
+                onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as any }))}
+                className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white focus:border-red-400 focus:outline-none"
+              >
+                <option value="ar-tour">AR Tour</option>
+                <option value="vr-experience">VR Experience</option>
+                <option value="mixed-reality">Mixed Reality</option>
+                <option value="virtual-meetup">Virtual Meetup</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-red-400 focus:outline-none resize-none"
+                rows={3}
+                placeholder="Describe your live session..."
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Max Participants</label>
+              <input
+                type="number"
+                value={formData.maxParticipants}
+                onChange={(e) => setFormData(prev => ({ ...prev, maxParticipants: e.target.value }))}
+                className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-red-400 focus:outline-none"
+                placeholder="50"
+                min="1"
+                max="1000"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-3">Required Equipment</label>
+              <div className="grid grid-cols-2 gap-2">
+                {equipmentOptions.map((equipment) => (
+                  <button
+                    key={equipment}
+                    type="button"
+                    onClick={() => toggleEquipment(equipment)}
+                    className={`p-2 rounded-xl text-sm transition-colors ${
+                      formData.equipment.includes(equipment)
+                        ? 'bg-red-500/20 text-red-400 border border-red-400/30'
+                        : 'bg-white/5 text-gray-400 border border-white/10 hover:border-white/20'
+                    }`}
+                  >
+                    {equipment}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-3">Session Features</label>
+              <div className="grid grid-cols-1 gap-2">
+                {featureOptions.map((feature) => (
+                  <button
+                    key={feature}
+                    type="button"
+                    onClick={() => toggleFeature(feature)}
+                    className={`p-2 rounded-xl text-sm transition-colors text-left ${
+                      formData.features.includes(feature)
+                        ? 'bg-red-500/20 text-red-400 border border-red-400/30'
+                        : 'bg-white/5 text-gray-400 border border-white/10 hover:border-white/20'
+                    }`}
+                  >
+                    {feature}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-red-500/10 border border-red-400/30 rounded-2xl p-4">
+              <div className="flex items-center space-x-2 mb-2">
+                <div className="w-2 h-2 rounded-full bg-red-400 animate-pulse"></div>
+                <span className="text-red-400 text-sm font-medium">Live Session Notice</span>
+              </div>
+              <p className="text-red-300 text-xs">
+                Your session will be visible to the global community. Make sure you're ready to host!
+              </p>
+            </div>
+
+            <div className="flex space-x-3 pt-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 px-6 py-3 border border-white/20 rounded-2xl text-gray-300 hover:bg-white/5 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="flex-1 bg-gradient-to-r from-red-500 to-orange-500 px-6 py-3 rounded-2xl font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center space-x-2"
+              >
+                <Play className="h-5 w-5" />
+                <span>Go Live Now</span>
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
