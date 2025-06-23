@@ -1,14 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Map, MapPin, Navigation, Route, Compass, Search, Filter, 
-  Car, Tent, Utensils, Home, Fuel, Hotel, Camera, Star, 
-  Clock, DollarSign, Wifi, Phone, Zap, Shield, Eye,
-  Plus, Bookmark, Share, Download, RefreshCw, Target,
-  Mountain, Coffee, Parking, AlertTriangle, Heart, Users,
-  CloudSnow, Sun, Wind, Droplets, Calendar, Settings,
-  ChevronDown, ChevronUp, Play, Pause, MoreHorizontal,
-  ThumbsUp, MessageCircle, Flag, Globe, TreePine, Waves
-} from 'lucide-react';
+import { Map, MapPin, Navigation, Route, Compass, Search, Filter, Car, Tent, Utensils, Home, Fuel, Hotel, Camera, Star, Clock, DollarSign, Wifi, Phone, Zap, Shield, Eye, Plus, Bookmark, Share, Download, RefreshCw, Target, Mountain, Coffee, ParkingMeter as Parking, AlertTriangle, Heart, Users, CloudSnow, Sun, Wind, Droplets, Calendar, Settings, ChevronDown, ChevronUp, Play, Pause, MoreHorizontal, ThumbsUp, MessageCircle, Flag, Globe, TreePine, Waves } from 'lucide-react';
 
 interface RouteStop {
   id: string;
