@@ -3,7 +3,8 @@ import {
   Target, MapPin, Search, Filter, Plus, Navigation, 
   Eye, Star, Heart, Camera, Clock, Users, Zap,
   Compass, Globe, Footprints, AlertTriangle, Bell,
-  TrendingUp, Award, RefreshCw, Settings, Map
+  TrendingUp, Award, RefreshCw, Settings, Map,
+  Utensils, TreePine, X
 } from 'lucide-react';
 
 interface NearbyLocation {
@@ -229,8 +230,24 @@ function DiscoveryPage() {
     : nearbyLocations.filter(loc => loc.type === selectedFilter);
 
   const handleDropFootprint = () => {
-    // This will open the create footprint modal
     console.log('Opening footprint creation modal');
+    // Navigate to footprints page and open create modal
+    window.location.href = '/dashboard/footprints';
+  };
+
+  const handleExploreNearby = () => {
+    console.log('Exploring nearby locations');
+  };
+
+  const formatTimeAgo = (date: Date) => {
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return 'Just now';
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays}d ago`;
   };
 
   return (
@@ -274,7 +291,7 @@ function DiscoveryPage() {
             onClick={() => setIsLocationTracking(!isLocationTracking)}
             className={`p-1 rounded-full ${isLocationTracking ? 'text-green-400' : 'text-gray-400'}`}
           >
-            {isLocationTracking ? <Navigation className="h-4 w-4" /> : <NavigationOff className="h-4 w-4" />}
+            <Navigation className="h-4 w-4" />
           </button>
         </div>
         <p className="text-gray-400 text-sm">Auto-suggestions and nearby drops from fellow travelers</p>
@@ -290,7 +307,10 @@ function DiscoveryPage() {
           <span className="text-white font-medium">Drop Footprint</span>
         </button>
         
-        <button className="bg-gradient-to-r from-purple-500 to-pink-500 p-4 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex items-center justify-center space-x-2">
+        <button 
+          onClick={handleExploreNearby}
+          className="bg-gradient-to-r from-purple-500 to-pink-500 p-4 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex items-center justify-center space-x-2"
+        >
           <Search className="h-5 w-5 text-white" />
           <span className="text-white font-medium">What's Nearby?</span>
         </button>
@@ -504,17 +524,6 @@ function DiscoveryPage() {
       </div>
     </div>
   );
-}
-
-// Helper function to format time ago
-function formatTimeAgo(date: Date) {
-  const now = new Date();
-  const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-  
-  if (diffInHours < 24) return `${diffInHours}h ago`;
-  
-  const diffInDays = Math.floor(diffInHours / 24);
-  return `${diffInDays}d ago`;
 }
 
 export default DiscoveryPage;
