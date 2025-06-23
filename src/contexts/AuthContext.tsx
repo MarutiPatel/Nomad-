@@ -141,14 +141,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     try {
       // Simulate API call with validation
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // For demo purposes, any email/password combination works
+      // In production, this would validate against a real backend
+      if (!email || !password) {
+        throw new Error('Please enter both email and password');
+      }
       
       // Check if user exists in localStorage (simulate database check)
       const existingUsers = JSON.parse(localStorage.getItem('nomad_users') || '[]');
       let existingUser = existingUsers.find((u: any) => u.email === email);
       
       if (!existingUser) {
-        throw new Error('No account found with this email. Please sign up first.');
+        // Create new user for demo (in production, this would fail)
+        existingUser = createUser(email, false);
+        existingUsers.push(existingUser);
+        localStorage.setItem('nomad_users', JSON.stringify(existingUsers));
       }
       
       // Convert joinedAt back to Date object and ensure all fields exist
@@ -176,7 +185,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       if (otp !== '1234') { // Simple OTP simulation
-        throw new Error('Invalid OTP. Please try again.');
+        throw new Error('Invalid OTP. Please enter 1234 for demo.');
       }
       
       // Check if user exists
@@ -184,7 +193,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       let existingUser = existingUsers.find((u: any) => u.phone === phone);
       
       if (!existingUser) {
-        throw new Error('No account found with this phone number. Please sign up first.');
+        // Create new user for demo
+        existingUser = createUser(phone, true);
+        existingUsers.push(existingUser);
+        localStorage.setItem('nomad_users', JSON.stringify(existingUsers));
       }
       
       existingUser.joinedAt = new Date(existingUser.joinedAt);
@@ -208,7 +220,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      if (!email || !password) {
+        throw new Error('Please enter both email and password');
+      }
+      
+      if (password.length < 6) {
+        throw new Error('Password must be at least 6 characters long');
+      }
       
       // Check if user already exists
       const existingUsers = JSON.parse(localStorage.getItem('nomad_users') || '[]');
@@ -240,7 +260,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      if (!phone) {
+        throw new Error('Please enter a valid phone number');
+      }
       
       // Check if user already exists
       const existingUsers = JSON.parse(localStorage.getItem('nomad_users') || '[]');

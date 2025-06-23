@@ -113,7 +113,11 @@ function LoginPage() {
         }
       } else {
         if (!otpSent) {
-          // Send OTP
+          // Send OTP (simulation)
+          if (!formData.phone) {
+            setFormErrors(prev => ({ ...prev, phone: 'Phone number is required' }));
+            return;
+          }
           setOtpSent(true);
           setCountdown(60);
         } else {
@@ -126,6 +130,7 @@ function LoginPage() {
       }
     } catch (err) {
       // Error is handled by the context
+      console.error('Authentication error:', err);
     }
   };
 
@@ -294,7 +299,7 @@ function LoginPage() {
                         name="email"
                         value={formData.email}
                         onChange={handleInputChange}
-                        placeholder="Enter your email"
+                        placeholder="Enter your email (demo: any email works)"
                         className={`w-full pl-12 pr-4 py-4 bg-black/20 border rounded-2xl text-white placeholder-gray-400 focus:outline-none transition-all duration-300 ${
                           formErrors.email 
                             ? 'border-red-400 focus:border-red-400' 
@@ -319,7 +324,7 @@ function LoginPage() {
                         name="password"
                         value={formData.password}
                         onChange={handleInputChange}
-                        placeholder="Enter your password"
+                        placeholder="Enter your password (demo: any password works)"
                         className={`w-full pl-12 pr-12 py-4 bg-black/20 border rounded-2xl text-white placeholder-gray-400 focus:outline-none transition-all duration-300 ${
                           formErrors.password 
                             ? 'border-red-400 focus:border-red-400' 
@@ -380,7 +385,7 @@ function LoginPage() {
                         name="phone"
                         value={formData.phone}
                         onChange={handleInputChange}
-                        placeholder="Enter your phone number"
+                        placeholder="Enter your phone number (demo: any number works)"
                         className={`w-full pl-12 pr-4 py-4 bg-black/20 border rounded-2xl text-white placeholder-gray-400 focus:outline-none transition-all duration-300 ${
                           formErrors.phone 
                             ? 'border-red-400 focus:border-red-400' 
@@ -521,32 +526,18 @@ function LoginPage() {
             </div>
           </div>
 
-          {/* Features Preview */}
-          <div className="mt-8 grid grid-cols-2 gap-3">
-            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10 text-center group hover:border-white/20 transition-all duration-300">
-              <Users className="h-6 w-6 text-cyan-400 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-              <span className="text-xs text-gray-300">Find Travel Souls</span>
-            </div>
-            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10 text-center group hover:border-white/20 transition-all duration-300">
-              <Globe className="h-6 w-6 text-purple-400 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-              <span className="text-xs text-gray-300">Global Network</span>
-            </div>
-          </div>
-
           {/* Demo Information */}
           <div className="mt-6 bg-orange-500/10 backdrop-blur-sm rounded-2xl p-4 border border-orange-400/30 text-center">
             <div className="flex items-center justify-center space-x-2 mb-2">
               <Zap className="h-4 w-4 text-orange-400" />
-              <span className="text-orange-400 text-sm font-medium">Demo Mode</span>
+              <span className="text-orange-400 text-sm font-medium">Demo Mode Active</span>
             </div>
-            <p className="text-orange-300 text-xs">
-              This is a demo app. All data is stored locally in your browser.
-            </p>
-            {loginMethod === 'phone' && (
-              <p className="text-orange-300 text-xs mt-1">
-                Use OTP: <span className="font-bold">1234</span> for phone verification
-              </p>
-            )}
+            <div className="space-y-1 text-orange-300 text-xs">
+              <p><strong>Email:</strong> Any email works (e.g., test@example.com)</p>
+              <p><strong>Password:</strong> Any password works (min 6 characters)</p>
+              <p><strong>Phone OTP:</strong> Use 1234 for verification</p>
+              <p className="mt-2 text-orange-400">All data is stored locally in your browser</p>
+            </div>
           </div>
         </div>
       </div>
