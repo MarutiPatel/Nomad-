@@ -1,598 +1,424 @@
-import React, { useState, useEffect } from 'react';
-import { Map, MapPin, Navigation, Route, Compass, Search, Filter, Car, Tent, Utensils, Home, Fuel, Hotel, Camera, Star, Clock, DollarSign, Wifi, Phone, Zap, Shield, Eye, Plus, Bookmark, Share, Download, RefreshCw, Target, Mountain, Coffee, ParkingMeter as Parking, AlertTriangle, Heart, Users, CloudSnow, Sun, Wind, Droplets, Calendar, Settings, ChevronDown, ChevronUp, Play, Pause, MoreHorizontal, ThumbsUp, MessageCircle, Flag, Globe, TreePine, Waves, Mic, Bot, Brain, Sparkles, TrendingUp, Award, CheckCircle, X, Send, Volume2, VolumeX, Headphones, Smartphone } from 'lucide-react';
-
-interface AIRecommendation {
-  id: string;
-  type: 'route-optimization' | 'weather-alert' | 'traffic-update' | 'hidden-gem' | 'cost-saving' | 'safety-tip';
-  title: string;
-  description: string;
-  action?: string;
-  priority: 'high' | 'medium' | 'low';
-  icon: React.ComponentType<any>;
-}
+import React, { useState, useRef, useEffect } from 'react';
+import { 
+  Navigation, MapPin, Clock, Star, Heart, Share, Plus, Filter, 
+  Search, Bot, Mic, Send, Car, Train, Plane, Footprints,
+  Utensils, Coffee, Bed, Camera, Fuel, TreePine, AlertTriangle,
+  Users, Calendar, DollarSign, Map, Eye, Play, Bookmark,
+  ThumbsUp, MessageCircle, Award, Zap, Route as RouteIcon,
+  Volume2, VolumeX, Settings, Target, Compass, Globe,
+  TrendingUp, CheckCircle, Info, ArrowRight, RefreshCw
+} from 'lucide-react';
 
 interface RouteStop {
   id: string;
   name: string;
-  type: 'food' | 'camping' | 'parking' | 'stay' | 'fuel' | 'hidden-gem' | 'attraction' | 'emergency';
+  type: 'food' | 'stay' | 'attraction' | 'fuel' | 'parking' | 'camping';
   location: string;
   coordinates: { lat: number; lng: number };
-  distanceFromRoute: number;
   rating: number;
   reviews: number;
-  price: 'free' | '$' | '$$' | '$$$';
-  description: string;
-  amenities: string[];
+  priceRange: string;
+  distance: number;
+  estimatedTime: string;
   image: string;
-  isOpen: boolean;
-  hours: string;
-  contact?: string;
-  website?: string;
-  isBookmarked: boolean;
-  isLiked: boolean;
-  likes: number;
-  isTravelerRecommended: boolean;
-  isAIRecommended: boolean;
-  safetyRating: number;
-  tags: string[];
+  description: string;
   specialOffers?: string[];
-  peakHours?: string;
-  averageSpend?: number;
+  isHiddenGem?: boolean;
+  safetyRating: number;
+  carbonFootprint?: string;
 }
 
-interface TravelRoute {
+interface SavedRoute {
   id: string;
   name: string;
   from: string;
   to: string;
   distance: number;
-  estimatedTime: number;
-  routeType: 'fastest' | 'scenic' | 'economical';
-  stops: RouteStop[];
-  totalCost: number;
-  weatherConditions: string[];
-  safetyAlerts: number;
-  createdAt: Date;
-  isShared: boolean;
+  duration: string;
+  stops: number;
+  lastUsed: Date;
+  timesUsed: number;
+  estimatedCost: string;
   difficulty: 'easy' | 'moderate' | 'challenging';
-  bestTimeToTravel: string;
-  popularWith: string[];
-  aiOptimized: boolean;
-  carbonFootprint: number;
-  fuelEfficiency: number;
+  tags: string[];
 }
 
-interface RoutePreferences {
-  showFood: boolean;
-  showCamping: boolean;
-  showParking: boolean;
-  showStays: boolean;
-  showFuel: boolean;
-  showHiddenGems: boolean;
-  showAttractions: boolean;
-  showEmergency: boolean;
-  maxDetourDistance: number;
-  budgetRange: 'budget' | 'mid' | 'luxury';
-  travelStyle: 'comfort' | 'adventure' | 'cultural' | 'nature';
-  aiAssistanceLevel: 'minimal' | 'moderate' | 'maximum';
-  prioritizeEco: boolean;
-  avoidCrowds: boolean;
+interface CommunityRoute {
+  id: string;
+  title: string;
+  author: string;
+  authorAvatar: string;
+  from: string;
+  to: string;
+  distance: number;
+  duration: string;
+  stops: number;
+  rating: number;
+  reviews: number;
+  likes: number;
+  isLiked: boolean;
+  difficulty: 'easy' | 'moderate' | 'challenging';
+  tags: string[];
+  description: string;
+  estimatedCost: string;
+  isFeatured?: boolean;
+  createdAt: Date;
+}
+
+interface AIMessage {
+  id: string;
+  content: string;
+  isUser: boolean;
+  timestamp: Date;
+  type: 'text' | 'route' | 'recommendations';
+  data?: any;
 }
 
 function RouteDiscoveryPage() {
-  const [activeTab, setActiveTab] = useState<'planner' | 'saved-routes' | 'community-routes' | 'ai-assistant'>('planner');
-  const [routePreferences, setRoutePreferences] = useState<RoutePreferences>({
-    showFood: true,
-    showCamping: true,
-    showParking: false,
-    showStays: true,
-    showFuel: false,
-    showHiddenGems: true,
-    showAttractions: true,
-    showEmergency: false,
-    maxDetourDistance: 10,
-    budgetRange: 'mid',
-    travelStyle: 'adventure',
-    aiAssistanceLevel: 'moderate',
-    prioritizeEco: false,
-    avoidCrowds: false
-  });
-  
-  const [routeForm, setRouteForm] = useState({
+  const [activeTab, setActiveTab] = useState<'planner' | 'saved' | 'community'>('planner');
+  const [routeData, setRouteData] = useState({
     from: '',
     to: '',
-    departureDate: '',
+    departure: '',
     travelers: 1,
-    vehicleType: 'car'
+    preferences: [] as string[]
   });
+  const [showAIAssistant, setShowAIAssistant] = useState(false);
+  const [aiMessages, setAiMessages] = useState<AIMessage[]>([]);
+  const [aiInput, setAiInput] = useState('');
+  const [isListening, setIsListening] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedRoute, setGeneratedRoute] = useState<RouteStop[] | null>(null);
+  const [showMap, setShowMap] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const [currentRoute, setCurrentRoute] = useState<TravelRoute | null>(null);
-  const [isPlanning, setIsPlanning] = useState(false);
-  const [showPreferences, setShowPreferences] = useState(false);
-  const [selectedStop, setSelectedStop] = useState<RouteStop | null>(null);
-  const [aiRecommendations, setAiRecommendations] = useState<AIRecommendation[]>([]);
-  const [isVoiceInput, setIsVoiceInput] = useState(false);
-  const [voiceCommand, setVoiceCommand] = useState('');
-  const [showAIChat, setShowAIChat] = useState(false);
-  const [aiChatInput, setAiChatInput] = useState('');
+  const preferences = [
+    { id: 'food', label: 'Food Spots', icon: Utensils, color: 'from-orange-400 to-red-500' },
+    { id: 'stay', label: 'Accommodation', icon: Bed, color: 'from-blue-400 to-cyan-500' },
+    { id: 'attractions', label: 'Attractions', icon: Camera, color: 'from-purple-400 to-pink-500' },
+    { id: 'fuel', label: 'Fuel Stations', icon: Fuel, color: 'from-green-400 to-teal-500' },
+    { id: 'parking', label: 'Parking', icon: Car, color: 'from-gray-400 to-gray-600' },
+    { id: 'camping', label: 'Camping', icon: TreePine, color: 'from-emerald-400 to-green-500' }
+  ];
 
-  // Enhanced mock data with more examples
-  const mockRoutes: TravelRoute[] = [
+  const quickRoutes = [
+    { from: 'Mumbai', to: 'Goa', distance: '463 km', time: '8h 30m', type: 'coastal' },
+    { from: 'Delhi', to: 'Manali', distance: '570 km', time: '12h', type: 'mountain' },
+    { from: 'Bangalore', to: 'Coorg', distance: '252 km', time: '5h 30m', type: 'nature' },
+    { from: 'Chennai', to: 'Pondicherry', distance: '160 km', time: '3h 30m', type: 'heritage' },
+    { from: 'Kolkata', to: 'Darjeeling', distance: '680 km', time: '14h', type: 'hill-station' },
+    { from: 'Pune', to: 'Lonavala', distance: '64 km', time: '1h 30m', type: 'weekend' }
+  ];
+
+  const mockSavedRoutes: SavedRoute[] = [
     {
       id: '1',
-      name: 'Mumbai to Goa Coastal Highway',
-      from: 'Mumbai, Maharashtra',
-      to: 'Goa, India',
-      distance: 450,
-      estimatedTime: 8.5,
-      routeType: 'scenic',
-      totalCost: 3500,
-      weatherConditions: ['Sunny', 'Partly Cloudy'],
-      safetyAlerts: 1,
-      createdAt: new Date(),
-      isShared: false,
+      name: 'Mumbai to Goa Beach Route',
+      from: 'Mumbai',
+      to: 'Goa',
+      distance: 463,
+      duration: '8h 30m',
+      stops: 12,
+      lastUsed: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+      timesUsed: 3,
+      estimatedCost: '₹2,500',
       difficulty: 'easy',
-      bestTimeToTravel: 'October to March',
-      popularWith: ['Beach Lovers', 'Food Enthusiasts', 'Cultural Explorers'],
-      aiOptimized: true,
-      carbonFootprint: 2.5,
-      fuelEfficiency: 15.8,
-      stops: [
-        {
-          id: '1',
-          name: 'Authentic Konkani Kitchen',
-          type: 'food',
-          location: 'Ratnagiri, Maharashtra',
-          coordinates: { lat: 16.9902, lng: 73.3120 },
-          distanceFromRoute: 2.5,
-          rating: 4.8,
-          reviews: 156,
-          price: '$',
-          description: 'Hidden gem serving traditional Konkani seafood. Family-run restaurant for 3 generations with secret recipes.',
-          amenities: ['Parking', 'Clean Restrooms', 'AC', 'Seafood Specialist', 'Takeaway'],
-          image: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400',
-          isOpen: true,
-          hours: '11:00 AM - 10:00 PM',
-          contact: '+91 98765 43210',
-          isBookmarked: false,
-          isLiked: true,
-          likes: 89,
-          isTravelerRecommended: true,
-          isAIRecommended: true,
-          safetyRating: 4.9,
-          tags: ['local-cuisine', 'seafood', 'family-run', 'authentic', 'must-try'],
-          specialOffers: ['20% off for travelers', 'Free dessert on weekends'],
-          peakHours: '7:00 PM - 9:00 PM',
-          averageSpend: 400
-        },
-        {
-          id: '2',
-          name: 'Sunset Point Camping',
-          type: 'camping',
-          location: 'Kashid Beach, Maharashtra',
-          coordinates: { lat: 18.4031, lng: 72.9734 },
-          distanceFromRoute: 5.0,
-          rating: 4.6,
-          reviews: 89,
-          price: '$$',
-          description: 'Beachside camping with stunning sunset views. Tents and basic amenities provided. Perfect for stargazing.',
-          amenities: ['Beach Access', 'Bonfire', 'Clean Toilets', 'Security', 'Food Stall', 'Shower'],
-          image: 'https://images.pexels.com/photos/1687845/pexels-photo-1687845.jpeg?auto=compress&cs=tinysrgb&w=400',
-          isOpen: true,
-          hours: '24/7',
-          contact: '+91 87654 32109',
-          isBookmarked: true,
-          isLiked: false,
-          likes: 134,
-          isTravelerRecommended: true,
-          isAIRecommended: true,
-          safetyRating: 4.7,
-          tags: ['beach-camping', 'sunset', 'bonfire', 'photography', 'stargazing'],
-          specialOffers: ['Early bird discount', 'Group bookings 15% off'],
-          averageSpend: 800
-        },
-        {
-          id: '3',
-          name: 'Heritage Homestay Villa',
-          type: 'stay',
-          location: 'Chiplun, Maharashtra',
-          coordinates: { lat: 17.5317, lng: 73.5126 },
-          distanceFromRoute: 1.2,
-          rating: 4.9,
-          reviews: 67,
-          price: '$$',
-          description: 'Traditional Konkani house converted to homestay. Experience local culture, home-cooked meals, and authentic village life.',
-          amenities: ['WiFi', 'AC', 'Home-cooked Meals', 'Cultural Experience', 'Garden', 'Parking'],
-          image: 'https://images.pexels.com/photos/1080721/pexels-photo-1080721.jpeg?auto=compress&cs=tinysrgb&w=400',
-          isOpen: true,
-          hours: 'Check-in: 2 PM',
-          contact: '+91 76543 21098',
-          website: 'konkanistay.com',
-          isBookmarked: false,
-          isLiked: true,
-          likes: 203,
-          isTravelerRecommended: true,
-          isAIRecommended: true,
-          safetyRating: 4.8,
-          tags: ['heritage', 'cultural-experience', 'home-cooked', 'traditional', 'peaceful'],
-          specialOffers: ['Welcome drink', 'Cooking class included'],
-          averageSpend: 1200
-        },
-        {
-          id: '4',
-          name: 'Secret Waterfall Trek',
-          type: 'hidden-gem',
-          location: 'Khed, Maharashtra',
-          coordinates: { lat: 17.7167, lng: 73.3667 },
-          distanceFromRoute: 8.5,
-          rating: 4.7,
-          reviews: 45,
-          price: 'free',
-          description: 'Hidden waterfall accessible via 2km trek through dense forest. Crystal clear natural pool perfect for swimming. Best kept secret of locals.',
-          amenities: ['Trek Path', 'Natural Pool', 'Photography Spot', 'Picnic Area', 'Wildlife Watching'],
-          image: 'https://images.pexels.com/photos/1366919/pexels-photo-1366919.jpeg?auto=compress&cs=tinysrgb&w=400',
-          isOpen: true,
-          hours: 'Daylight hours only',
-          isBookmarked: true,
-          isLiked: true,
-          likes: 312,
-          isTravelerRecommended: true,
-          isAIRecommended: true,
-          safetyRating: 4.2,
-          tags: ['waterfall', 'trekking', 'adventure', 'photography', 'secret-spot', 'swimming'],
-          specialOffers: ['Free local guide on weekends'],
-          averageSpend: 0
-        }
-      ]
-    }
-  ];
-
-  const [savedRoutes, setSavedRoutes] = useState([
-    { 
-      id: '1',
-      name: 'Mumbai to Goa Coastal Explorer', 
-      distance: '450 km', 
-      stops: 12, 
-      likes: 245,
-      difficulty: 'Easy',
-      bestFor: 'Beach lovers',
-      estimatedCost: '₹3,500',
-      duration: '2-3 days',
-      isAIOptimized: true,
-      lastUsed: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+      tags: ['coastal', 'scenic', 'food']
     },
-    { 
+    {
       id: '2',
-      name: 'Delhi to Manali Mountain Adventure', 
-      distance: '570 km', 
-      stops: 18, 
-      likes: 189,
-      difficulty: 'Moderate',
-      bestFor: 'Adventure seekers',
+      name: 'Delhi Mountain Adventure',
+      from: 'Delhi',
+      to: 'Manali',
+      distance: 570,
+      duration: '12h',
+      stops: 8,
+      lastUsed: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
+      timesUsed: 1,
       estimatedCost: '₹4,200',
-      duration: '3-4 days',
-      isAIOptimized: false,
-      lastUsed: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)
-    },
-    { 
-      id: '3',
-      name: 'Bangalore to Mysore Heritage Trail', 
-      distance: '150 km', 
-      stops: 8, 
-      likes: 167,
-      difficulty: 'Easy',
-      bestFor: 'Culture enthusiasts',
-      estimatedCost: '₹1,800',
-      duration: '1-2 days',
-      isAIOptimized: true,
-      lastUsed: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000)
-    }
-  ]);
-
-  const [communityRoutes, setCommunityRoutes] = useState([
-    { 
-      id: '1',
-      name: 'Kerala Backwaters Food Trail', 
-      author: 'FoodieNomad99', 
-      authorAvatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=100',
-      distance: '380 km', 
-      stops: 15, 
-      likes: 534,
-      difficulty: 'Easy',
-      category: 'Food & Culture',
-      estimatedCost: '₹5,200',
-      duration: '4-5 days',
-      featured: true,
-      rating: 4.9,
-      reviews: 89,
-      tags: ['Food', 'Backwaters', 'Culture', 'Kerala'],
-      createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
-    },
-    { 
-      id: '2',
-      name: 'Rajasthan Hidden Gems Circuit', 
-      author: 'DesertExplorer', 
-      authorAvatar: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=100',
-      distance: '720 km', 
-      stops: 20, 
-      likes: 389,
-      difficulty: 'Challenging',
-      category: 'Adventure',
-      estimatedCost: '₹8,500',
-      duration: '7-8 days',
-      featured: false,
-      rating: 4.7,
-      reviews: 156,
-      tags: ['Desert', 'Heritage', 'Adventure', 'Photography'],
-      createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-    },
-    { 
-      id: '3',
-      name: 'Himachal Spiritual Journey', 
-      author: 'MountainSoul', 
-      authorAvatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=100',
-      distance: '650 km', 
-      stops: 12, 
-      likes: 356,
-      difficulty: 'Moderate',
-      category: 'Spiritual',
-      estimatedCost: '₹6,800',
-      duration: '5-6 days',
-      featured: true,
-      rating: 4.8,
-      reviews: 203,
-      tags: ['Mountains', 'Spiritual', 'Peaceful', 'Meditation'],
-      createdAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000)
-    },
-    { 
-      id: '4',
-      name: 'Tamil Nadu Temple Hopping', 
-      author: 'TempleSeeker', 
-      authorAvatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=100',
-      distance: '450 km', 
-      stops: 25, 
-      likes: 298,
-      difficulty: 'Easy',
-      category: 'Religious',
-      estimatedCost: '₹4,500',
-      duration: '3-4 days',
-      featured: false,
-      rating: 4.6,
-      reviews: 134,
-      tags: ['Temples', 'Culture', 'Heritage', 'Architecture'],
-      createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
-    }
-  ]);
-
-  // AI Recommendations
-  const mockAIRecommendations: AIRecommendation[] = [
-    {
-      id: '1',
-      type: 'weather-alert',
-      title: 'Weather Update for Your Route',
-      description: 'Light rain expected on Day 2. I suggest indoor activities and covered stops.',
-      action: 'View weather-safe alternatives',
-      priority: 'medium',
-      icon: CloudSnow
-    },
-    {
-      id: '2',
-      type: 'hidden-gem',
-      title: 'Secret Waterfall Discovered',
-      description: 'Based on your adventure preferences, found an amazing hidden waterfall 8km from your route.',
-      action: 'Add to itinerary',
-      priority: 'high',
-      icon: Star
-    },
-    {
-      id: '3',
-      type: 'cost-saving',
-      title: 'Save ₹800 on Accommodation',
-      description: 'Found a highly-rated homestay that\'s 25% cheaper than your current selection.',
-      action: 'Compare options',
-      priority: 'medium',
-      icon: DollarSign
-    },
-    {
-      id: '4',
-      type: 'traffic-update',
-      title: 'Route Optimization Available',
-      description: 'I can save you 45 minutes by taking a scenic detour that avoids peak traffic.',
-      action: 'Optimize route',
-      priority: 'high',
-      icon: Navigation
+      difficulty: 'moderate',
+      tags: ['mountains', 'adventure', 'scenic']
     }
   ];
 
-  const quickRouteExamples = [
-    { from: 'Mumbai', to: 'Goa', icon: '🏖️', category: 'Beach' },
-    { from: 'Delhi', to: 'Manali', icon: '🏔️', category: 'Mountains' },
-    { from: 'Bangalore', to: 'Mysore', icon: '🏛️', category: 'Heritage' },
-    { from: 'Chennai', to: 'Pondicherry', icon: '🌊', category: 'Coastal' },
-    { from: 'Pune', to: 'Lonavala', icon: '🌧️', category: 'Monsoon' },
-    { from: 'Kolkata', to: 'Darjeeling', icon: '🚂', category: 'Hills' }
+  const mockCommunityRoutes: CommunityRoute[] = [
+    {
+      id: '1',
+      title: 'Ultimate Goa Beach Hopping Experience',
+      author: 'BeachExplorer99',
+      authorAvatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=100',
+      from: 'Mumbai',
+      to: 'Goa',
+      distance: 463,
+      duration: '8h 30m',
+      stops: 15,
+      rating: 4.8,
+      reviews: 124,
+      likes: 89,
+      isLiked: false,
+      difficulty: 'easy',
+      tags: ['beaches', 'nightlife', 'food'],
+      description: 'Perfect coastal route with hidden beach shacks and sunset spots',
+      estimatedCost: '₹3,000',
+      isFeatured: true,
+      createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
+    },
+    {
+      id: '2',
+      title: 'Himalayan Heights Adventure',
+      author: 'MountainSoul42',
+      authorAvatar: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=100',
+      from: 'Delhi',
+      to: 'Leh',
+      distance: 1150,
+      duration: '2 days',
+      stops: 20,
+      rating: 4.9,
+      reviews: 67,
+      likes: 156,
+      isLiked: true,
+      difficulty: 'challenging',
+      tags: ['mountains', 'adventure', 'camping'],
+      description: 'Epic mountain journey through high altitude passes',
+      estimatedCost: '₹8,500',
+      isFeatured: true,
+      createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000)
+    }
+  ];
+
+  const mockRouteStops: RouteStop[] = [
+    {
+      id: '1',
+      name: 'Highway Dhaba Delight',
+      type: 'food',
+      location: 'Panvel, Maharashtra',
+      coordinates: { lat: 18.9894, lng: 73.1267 },
+      rating: 4.5,
+      reviews: 234,
+      priceRange: '₹150-300',
+      distance: 45,
+      estimatedTime: '1h',
+      image: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400',
+      description: 'Authentic Punjabi food with truck driver vibes',
+      specialOffers: ['Free chai with meal', '20% off for groups'],
+      isHiddenGem: true,
+      safetyRating: 4.8,
+      carbonFootprint: 'Low impact'
+    },
+    {
+      id: '2',
+      name: 'Sunset Point Resort',
+      type: 'stay',
+      location: 'Mahabaleshwar, Maharashtra',
+      coordinates: { lat: 17.9242, lng: 73.6582 },
+      rating: 4.7,
+      reviews: 89,
+      priceRange: '₹2000-4000',
+      distance: 120,
+      estimatedTime: '3h',
+      image: 'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg?auto=compress&cs=tinysrgb&w=400',
+      description: 'Hillside resort with panoramic valley views',
+      specialOffers: ['Early check-in free', 'Complimentary breakfast'],
+      safetyRating: 4.9,
+      carbonFootprint: 'Eco-friendly'
+    },
+    {
+      id: '3',
+      name: 'Ancient Cave Temples',
+      type: 'attraction',
+      location: 'Karla, Maharashtra',
+      coordinates: { lat: 18.7469, lng: 73.4831 },
+      rating: 4.6,
+      reviews: 156,
+      priceRange: 'Free',
+      distance: 85,
+      estimatedTime: '2h 30m',
+      image: 'https://images.pexels.com/photos/3244513/pexels-photo-3244513.jpeg?auto=compress&cs=tinysrgb&w=400',
+      description: '2000-year-old Buddhist cave temples with intricate carvings',
+      isHiddenGem: true,
+      safetyRating: 4.5,
+      carbonFootprint: 'Zero impact'
+    },
+    {
+      id: '4',
+      name: 'Green Valley Camping',
+      type: 'camping',
+      location: 'Pawna Lake, Maharashtra',
+      coordinates: { lat: 18.7469, lng: 73.4831 },
+      rating: 4.4,
+      reviews: 78,
+      priceRange: '₹800-1500',
+      distance: 95,
+      estimatedTime: '2h 45m',
+      image: 'https://images.pexels.com/photos/1687845/pexels-photo-1687845.jpeg?auto=compress&cs=tinysrgb&w=400',
+      description: 'Lakeside camping with bonfire and stargazing',
+      specialOffers: ['Equipment rental included', 'Group discounts'],
+      safetyRating: 4.3,
+      carbonFootprint: 'Minimal impact'
+    }
   ];
 
   useEffect(() => {
-    setAiRecommendations(mockAIRecommendations);
-  }, []);
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [aiMessages]);
 
-  const handlePlanRoute = async () => {
-    if (!routeForm.from || !routeForm.to) return;
-    
-    setIsPlanning(true);
-    
-    // Simulate AI-powered route planning
-    await new Promise(resolve => setTimeout(resolve, 4000));
-    
-    setCurrentRoute(mockRoutes[0]);
-    setIsPlanning(false);
-    
-    // Generate new AI recommendations based on the route
-    setTimeout(() => {
-      setAiRecommendations(mockAIRecommendations);
-    }, 1000);
+  const handleQuickRoute = (route: any) => {
+    setRouteData({
+      ...routeData,
+      from: route.from,
+      to: route.to
+    });
   };
 
-  const handleQuickExample = (example: any) => {
-    setRouteForm(prev => ({
+  const togglePreference = (prefId: string) => {
+    setRouteData(prev => ({
       ...prev,
-      from: example.from,
-      to: example.to
+      preferences: prev.preferences.includes(prefId)
+        ? prev.preferences.filter(p => p !== prefId)
+        : [...prev.preferences, prefId]
     }));
   };
 
+  const handlePlanRoute = async () => {
+    if (!routeData.from || !routeData.to) return;
+    
+    setIsGenerating(true);
+    setShowAIAssistant(true);
+    
+    // Simulate AI processing
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    const aiMessage: AIMessage = {
+      id: Date.now().toString(),
+      content: `Perfect! I've analyzed your route from ${routeData.from} to ${routeData.to} and found some amazing stops based on your preferences.`,
+      isUser: false,
+      timestamp: new Date(),
+      type: 'route',
+      data: {
+        route: mockRouteStops,
+        totalDistance: '463 km',
+        estimatedTime: '8h 30m',
+        estimatedCost: '₹2,500',
+        highlights: ['3 hidden gems', '2 eco-friendly stops', '1 local favorite']
+      }
+    };
+    
+    setAiMessages(prev => [...prev, aiMessage]);
+    setGeneratedRoute(mockRouteStops);
+    setIsGenerating(false);
+  };
+
+  const handleAISend = async () => {
+    if (!aiInput.trim()) return;
+    
+    const userMessage: AIMessage = {
+      id: Date.now().toString(),
+      content: aiInput,
+      isUser: true,
+      timestamp: new Date(),
+      type: 'text'
+    };
+    
+    setAiMessages(prev => [...prev, userMessage]);
+    setAiInput('');
+    
+    // Simulate AI response
+    setTimeout(() => {
+      const responses = [
+        "I can help you find the best routes! Would you like me to suggest some hidden food spots along the way?",
+        "Great question! Based on your travel style, I recommend taking the scenic route with 3 extra stops for photography.",
+        "I've found some amazing camping spots that other travelers have rated 4.8+ stars. Shall I add them to your route?",
+        "Perfect timing! There's a local festival happening in that area next week. Want me to plan your route around it?"
+      ];
+      
+      const aiResponse: AIMessage = {
+        id: (Date.now() + 1).toString(),
+        content: responses[Math.floor(Math.random() * responses.length)],
+        isUser: false,
+        timestamp: new Date(),
+        type: 'text'
+      };
+      
+      setAiMessages(prev => [...prev, aiResponse]);
+    }, 1000);
+  };
+
   const handleVoiceInput = () => {
-    setIsVoiceInput(!isVoiceInput);
-    if (!isVoiceInput) {
-      // Simulate voice recognition
+    setIsListening(!isListening);
+    if (!isListening) {
+      // Simulate voice input
       setTimeout(() => {
-        setVoiceCommand('Mumbai to Goa scenic route');
-        setRouteForm(prev => ({
-          ...prev,
+        setRouteData({
+          ...routeData,
           from: 'Mumbai',
           to: 'Goa'
-        }));
-        setIsVoiceInput(false);
+        });
+        setIsListening(false);
       }, 3000);
     }
   };
 
-  const sendAIMessage = () => {
-    if (!aiChatInput.trim()) return;
-    
-    // Simulate AI response
-    setTimeout(() => {
-      setAiChatInput('');
-    }, 500);
-  };
-
-  const togglePreference = (key: keyof RoutePreferences) => {
-    setRoutePreferences(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
-  };
-
-  const getStopIcon = (type: string) => {
+  const getTypeIcon = (type: string) => {
     switch (type) {
       case 'food': return Utensils;
-      case 'camping': return Tent;
-      case 'parking': return Parking;
-      case 'stay': return Home;
-      case 'fuel': return Fuel;
-      case 'hidden-gem': return Star;
+      case 'stay': return Bed;
       case 'attraction': return Camera;
-      case 'emergency': return AlertTriangle;
+      case 'fuel': return Fuel;
+      case 'parking': return Car;
+      case 'camping': return TreePine;
       default: return MapPin;
     }
   };
 
-  const getStopColor = (type: string) => {
+  const getTypeColor = (type: string) => {
     switch (type) {
       case 'food': return 'from-orange-400 to-red-500';
-      case 'camping': return 'from-green-400 to-teal-500';
-      case 'parking': return 'from-blue-400 to-cyan-500';
-      case 'stay': return 'from-purple-400 to-pink-500';
-      case 'fuel': return 'from-yellow-400 to-orange-500';
-      case 'hidden-gem': return 'from-pink-400 to-rose-500';
-      case 'attraction': return 'from-indigo-400 to-purple-500';
-      case 'emergency': return 'from-red-500 to-pink-500';
+      case 'stay': return 'from-blue-400 to-cyan-500';
+      case 'attraction': return 'from-purple-400 to-pink-500';
+      case 'fuel': return 'from-green-400 to-teal-500';
+      case 'parking': return 'from-gray-400 to-gray-600';
+      case 'camping': return 'from-emerald-400 to-green-500';
       default: return 'from-gray-400 to-gray-500';
     }
   };
 
-  const filteredStops = currentRoute?.stops.filter(stop => {
-    if (stop.type === 'food' && !routePreferences.showFood) return false;
-    if (stop.type === 'camping' && !routePreferences.showCamping) return false;
-    if (stop.type === 'parking' && !routePreferences.showParking) return false;
-    if (stop.type === 'stay' && !routePreferences.showStays) return false;
-    if (stop.type === 'fuel' && !routePreferences.showFuel) return false;
-    if (stop.type === 'hidden-gem' && !routePreferences.showHiddenGems) return false;
-    if (stop.type === 'attraction' && !routePreferences.showAttractions) return false;
-    if (stop.type === 'emergency' && !routePreferences.showEmergency) return false;
-    return true;
-  });
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'easy': return 'from-green-400 to-emerald-500';
+      case 'moderate': return 'from-yellow-400 to-orange-500';
+      case 'challenging': return 'from-red-400 to-pink-500';
+      default: return 'from-gray-400 to-gray-500';
+    }
+  };
 
   return (
     <div className="p-4 pb-20 lg:pb-4">
-      {/* Header with AI Assistant */}
+      {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <div className="text-center flex-1">
-          <h1 className="text-2xl font-bold text-white mb-2">Route Discovery</h1>
-          <p className="text-gray-400 text-sm">AI-powered journey planning with hidden gems and perfect stops</p>
+        <div>
+          <h1 className="text-2xl font-bold text-white mb-1">Route Discovery</h1>
+          <p className="text-gray-400 text-sm">Plan your journey with hidden gems and perfect stops</p>
         </div>
         
-        <button
-          onClick={() => setShowAIChat(!showAIChat)}
-          className="bg-gradient-to-r from-purple-500 to-pink-500 p-3 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-        >
-          <Bot className="h-5 w-5 text-white" />
-        </button>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => setShowMap(!showMap)}
+            className={`p-2 rounded-xl transition-colors ${
+              showMap ? 'bg-cyan-500 text-white' : 'bg-white/10 text-gray-400 hover:text-white'
+            }`}
+          >
+            <Map className="h-5 w-5" />
+          </button>
+          <button
+            onClick={() => setShowAIAssistant(!showAIAssistant)}
+            className={`p-2 rounded-xl transition-colors ${
+              showAIAssistant ? 'bg-purple-500 text-white' : 'bg-white/10 text-gray-400 hover:text-white'
+            }`}
+          >
+            <Bot className="h-5 w-5" />
+          </button>
+        </div>
       </div>
-
-      {/* AI Assistant Panel */}
-      {showAIChat && (
-        <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 backdrop-blur-sm rounded-3xl border border-purple-400/30 p-4 mb-6">
-          <div className="flex items-center space-x-2 mb-4">
-            <Bot className="h-5 w-5 text-purple-400" />
-            <h3 className="text-purple-400 font-medium">AI Travel Assistant</h3>
-            <Sparkles className="h-4 w-4 text-purple-400 animate-pulse" />
-          </div>
-          
-          <div className="flex items-center space-x-3">
-            <input
-              type="text"
-              value={aiChatInput}
-              onChange={(e) => setAiChatInput(e.target.value)}
-              placeholder="Ask me about routes, hidden gems, or travel tips..."
-              className="flex-1 px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-purple-400 focus:outline-none"
-              onKeyPress={(e) => e.key === 'Enter' && sendAIMessage()}
-            />
-            <button
-              onClick={sendAIMessage}
-              className="bg-gradient-to-r from-purple-500 to-pink-500 p-3 rounded-2xl text-white shadow-lg hover:shadow-xl transition-all duration-300"
-            >
-              <Send className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* AI Recommendations */}
-      {aiRecommendations.length > 0 && (
-        <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 backdrop-blur-sm rounded-3xl border border-blue-400/30 p-4 mb-6">
-          <div className="flex items-center space-x-2 mb-4">
-            <Brain className="h-5 w-5 text-blue-400" />
-            <h3 className="text-blue-400 font-medium">AI Recommendations</h3>
-          </div>
-          
-          <div className="space-y-3">
-            {aiRecommendations.slice(0, 3).map((rec) => (
-              <div key={rec.id} className="flex items-center space-x-3 p-3 bg-white/5 rounded-xl">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  rec.priority === 'high' ? 'bg-red-500/20' :
-                  rec.priority === 'medium' ? 'bg-yellow-500/20' : 'bg-green-500/20'
-                }`}>
-                  <rec.icon className={`h-4 w-4 ${
-                    rec.priority === 'high' ? 'text-red-400' :
-                    rec.priority === 'medium' ? 'text-yellow-400' : 'text-green-400'
-                  }`} />
-                </div>
-                <div className="flex-1">
-                  <h4 className="text-white text-sm font-medium">{rec.title}</h4>
-                  <p className="text-gray-400 text-xs">{rec.description}</p>
-                </div>
-                {rec.action && (
-                  <button className="text-blue-400 text-xs hover:text-blue-300 transition-colors">
-                    {rec.action}
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Tab Navigation */}
       <div className="flex overflow-x-auto space-x-1 bg-black/20 rounded-2xl p-1 mb-6">
@@ -604,585 +430,265 @@ function RouteDiscoveryPage() {
               : 'text-gray-400 hover:text-white'
           }`}
         >
-          <Route className="h-4 w-4" />
-          <span className="text-sm font-medium">AI Planner</span>
+          <RouteIcon className="h-4 w-4" />
+          <span className="text-sm font-medium">Route Planner</span>
         </button>
         <button
-          onClick={() => setActiveTab('saved-routes')}
+          onClick={() => setActiveTab('saved')}
           className={`flex items-center space-x-2 py-3 px-4 rounded-xl transition-all duration-300 whitespace-nowrap ${
-            activeTab === 'saved-routes'
+            activeTab === 'saved'
               ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
               : 'text-gray-400 hover:text-white'
           }`}
         >
           <Bookmark className="h-4 w-4" />
-          <span className="text-sm font-medium">My Routes</span>
+          <span className="text-sm font-medium">Saved Routes</span>
         </button>
         <button
-          onClick={() => setActiveTab('community-routes')}
+          onClick={() => setActiveTab('community')}
           className={`flex items-center space-x-2 py-3 px-4 rounded-xl transition-all duration-300 whitespace-nowrap ${
-            activeTab === 'community-routes'
-              ? 'bg-gradient-to-r from-green-500 to-teal-500 text-white shadow-lg'
+            activeTab === 'community'
+              ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg'
               : 'text-gray-400 hover:text-white'
           }`}
         >
           <Users className="h-4 w-4" />
-          <span className="text-sm font-medium">Community</span>
+          <span className="text-sm font-medium">Community Routes</span>
         </button>
       </div>
 
-      {/* Route Planner Tab */}
+      {/* Content */}
       {activeTab === 'planner' && (
         <div className="space-y-6">
-          {/* Quick Examples */}
-          <div className="bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 p-4">
-            <h3 className="text-white font-medium mb-4">Popular Routes</h3>
+          {/* Quick Route Examples */}
+          <div>
+            <h3 className="text-lg font-semibold text-white mb-4">Popular Routes</h3>
             <div className="grid grid-cols-2 gap-3">
-              {quickRouteExamples.map((example, index) => (
+              {quickRoutes.map((route, index) => (
                 <button
                   key={index}
-                  onClick={() => handleQuickExample(example)}
-                  className="flex items-center space-x-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors text-left"
+                  onClick={() => handleQuickRoute(route)}
+                  className="bg-white/5 backdrop-blur-sm rounded-2xl p-3 border border-white/10 hover:border-white/20 transition-all duration-300 text-left"
                 >
-                  <span className="text-2xl">{example.icon}</span>
-                  <div>
-                    <div className="text-white text-sm font-medium">
-                      {example.from} → {example.to}
-                    </div>
-                    <div className="text-gray-400 text-xs">{example.category}</div>
+                  <div className="text-white font-medium text-sm mb-1">
+                    {route.from} → {route.to}
+                  </div>
+                  <div className="text-gray-400 text-xs">
+                    {route.distance} • {route.time}
+                  </div>
+                  <div className={`inline-block px-2 py-1 rounded-full text-xs mt-2 ${
+                    route.type === 'coastal' ? 'bg-blue-500/20 text-blue-400' :
+                    route.type === 'mountain' ? 'bg-green-500/20 text-green-400' :
+                    route.type === 'nature' ? 'bg-emerald-500/20 text-emerald-400' :
+                    route.type === 'heritage' ? 'bg-purple-500/20 text-purple-400' :
+                    route.type === 'hill-station' ? 'bg-cyan-500/20 text-cyan-400' :
+                    'bg-orange-500/20 text-orange-400'
+                  }`}>
+                    {route.type}
                   </div>
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Route Input Form */}
+          {/* Route Planning Form */}
           <div className="bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-white">Plan Your Journey</h2>
-              <button
-                onClick={handleVoiceInput}
-                className={`p-2 rounded-full transition-colors ${
-                  isVoiceInput ? 'bg-red-500/20 text-red-400 animate-pulse' : 'bg-white/10 text-gray-400 hover:text-white'
-                }`}
-              >
-                <Mic className="h-4 w-4" />
-              </button>
-            </div>
-            
-            {isVoiceInput && (
-              <div className="bg-red-500/10 border border-red-400/30 rounded-2xl p-4 mb-4">
-                <div className="flex items-center space-x-2 mb-2">
-                  <Volume2 className="h-4 w-4 text-red-400 animate-pulse" />
-                  <span className="text-red-400 text-sm font-medium">Listening...</span>
-                </div>
-                <p className="text-red-300 text-xs">Say something like "Mumbai to Goa scenic route"</p>
-              </div>
-            )}
+            <h3 className="text-lg font-semibold text-white mb-4">Plan Your Journey</h3>
             
             <div className="space-y-4">
+              {/* From/To Inputs */}
               <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">From</label>
-                  <div className="relative">
-                    <Navigation className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <input
-                      type="text"
-                      value={routeForm.from}
-                      onChange={(e) => setRouteForm(prev => ({ ...prev, from: e.target.value }))}
-                      placeholder="Starting location"
-                      className="w-full pl-10 pr-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none"
-                    />
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
+                    <div className="w-3 h-3 rounded-full bg-green-400"></div>
                   </div>
+                  <input
+                    type="text"
+                    value={routeData.from}
+                    onChange={(e) => setRouteData({ ...routeData, from: e.target.value })}
+                    placeholder="Starting location"
+                    className="w-full pl-12 pr-4 py-4 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none"
+                  />
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">To</label>
-                  <div className="relative">
-                    <Target className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <input
-                      type="text"
-                      value={routeForm.to}
-                      onChange={(e) => setRouteForm(prev => ({ ...prev, to: e.target.value }))}
-                      placeholder="Destination"
-                      className="w-full pl-10 pr-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none"
-                    />
+                
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
+                    <div className="w-3 h-3 rounded-full bg-red-400"></div>
                   </div>
+                  <input
+                    type="text"
+                    value={routeData.to}
+                    onChange={(e) => setRouteData({ ...routeData, to: e.target.value })}
+                    placeholder="Destination"
+                    className="w-full pl-12 pr-4 py-4 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none"
+                  />
                 </div>
               </div>
 
+              {/* Date and Travelers */}
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Departure</label>
+                <div className="relative">
+                  <Calendar className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <input
                     type="date"
-                    value={routeForm.departureDate}
-                    onChange={(e) => setRouteForm(prev => ({ ...prev, departureDate: e.target.value }))}
-                    className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white focus:border-cyan-400 focus:outline-none"
+                    value={routeData.departure}
+                    onChange={(e) => setRouteData({ ...routeData, departure: e.target.value })}
+                    className="w-full pl-12 pr-4 py-4 bg-black/20 border border-white/10 rounded-2xl text-white focus:border-cyan-400 focus:outline-none"
                   />
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Travelers</label>
+                
+                <div className="relative">
+                  <Users className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <select
-                    value={routeForm.travelers}
-                    onChange={(e) => setRouteForm(prev => ({ ...prev, travelers: Number(e.target.value) }))}
-                    className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white focus:border-cyan-400 focus:outline-none"
+                    value={routeData.travelers}
+                    onChange={(e) => setRouteData({ ...routeData, travelers: Number(e.target.value) })}
+                    className="w-full pl-12 pr-4 py-4 bg-black/20 border border-white/10 rounded-2xl text-white focus:border-cyan-400 focus:outline-none"
                   >
-                    <option value={1}>1 Traveler</option>
-                    <option value={2}>2 Travelers</option>
-                    <option value={3}>3 Travelers</option>
-                    <option value={4}>4+ Travelers</option>
+                    {[1,2,3,4,5,6].map(num => (
+                      <option key={num} value={num} className="bg-slate-800">
+                        {num} Traveler{num > 1 ? 's' : ''}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
 
-              {/* Enhanced Preferences Toggle */}
-              <button
-                onClick={() => setShowPreferences(!showPreferences)}
-                className="flex items-center justify-between w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white hover:border-white/20 transition-colors"
-              >
-                <span className="flex items-center space-x-2">
-                  <Brain className="h-4 w-4" />
-                  <span>AI Route Preferences</span>
-                </span>
-                {showPreferences ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              </button>
-
-              {/* Enhanced Preferences Panel */}
-              {showPreferences && (
-                <div className="bg-black/20 rounded-2xl p-4 border border-white/10 space-y-4">
-                  <div>
-                    <h3 className="text-white font-medium mb-3">What to discover along your route:</h3>
-                    <div className="grid grid-cols-2 gap-3">
-                      {[
-                        { key: 'showFood', label: 'Food Spots', icon: Utensils },
-                        { key: 'showCamping', label: 'Camping', icon: Tent },
-                        { key: 'showParking', label: 'Parking', icon: Parking },
-                        { key: 'showStays', label: 'Stays', icon: Home },
-                        { key: 'showFuel', label: 'Fuel Stations', icon: Fuel },
-                        { key: 'showHiddenGems', label: 'Hidden Gems', icon: Star },
-                        { key: 'showAttractions', label: 'Attractions', icon: Camera },
-                        { key: 'showEmergency', label: 'Emergency', icon: AlertTriangle }
-                      ].map((pref) => (
-                        <button
-                          key={pref.key}
-                          onClick={() => togglePreference(pref.key as keyof RoutePreferences)}
-                          className={`flex items-center space-x-2 px-3 py-2 rounded-xl transition-all duration-300 ${
-                            routePreferences[pref.key as keyof RoutePreferences]
-                              ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-400/30 text-cyan-400'
-                              : 'bg-white/5 border border-white/10 text-gray-400 hover:text-white'
-                          }`}
-                        >
-                          <pref.icon className="h-4 w-4" />
-                          <span className="text-sm">{pref.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="text-white font-medium mb-3">AI Enhancement Options:</h3>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-300">AI Assistance Level</span>
-                        <select
-                          value={routePreferences.aiAssistanceLevel}
-                          onChange={(e) => setRoutePreferences(prev => ({ ...prev, aiAssistanceLevel: e.target.value as any }))}
-                          className="px-3 py-1 bg-black/20 border border-white/10 rounded-lg text-white text-sm"
-                        >
-                          <option value="minimal">Minimal</option>
-                          <option value="moderate">Moderate</option>
-                          <option value="maximum">Maximum</option>
-                        </select>
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-300">Eco-Friendly Priority</span>
-                        <button
-                          onClick={() => togglePreference('prioritizeEco')}
-                          className={`px-3 py-1 rounded-lg text-sm transition-colors ${
-                            routePreferences.prioritizeEco ? 'bg-green-500/20 text-green-400' : 'bg-white/10 text-gray-400'
-                          }`}
-                        >
-                          {routePreferences.prioritizeEco ? 'On' : 'Off'}
-                        </button>
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-300">Avoid Crowds</span>
-                        <button
-                          onClick={() => togglePreference('avoidCrowds')}
-                          className={`px-3 py-1 rounded-lg text-sm transition-colors ${
-                            routePreferences.avoidCrowds ? 'bg-blue-500/20 text-blue-400' : 'bg-white/10 text-gray-400'
-                          }`}
-                        >
-                          {routePreferences.avoidCrowds ? 'On' : 'Off'}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm text-gray-300 mb-2">
-                      Max detour distance: {routePreferences.maxDetourDistance} km
-                    </label>
-                    <input
-                      type="range"
-                      min="1"
-                      max="50"
-                      value={routePreferences.maxDetourDistance}
-                      onChange={(e) => setRoutePreferences(prev => ({ ...prev, maxDetourDistance: Number(e.target.value) }))}
-                      className="w-full"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-sm text-gray-300 mb-2">Budget</label>
-                      <select
-                        value={routePreferences.budgetRange}
-                        onChange={(e) => setRoutePreferences(prev => ({ ...prev, budgetRange: e.target.value as any }))}
-                        className="w-full px-3 py-2 bg-black/20 border border-white/10 rounded-xl text-white focus:border-cyan-400 focus:outline-none"
-                      >
-                        <option value="budget">Budget</option>
-                        <option value="mid">Mid-range</option>
-                        <option value="luxury">Luxury</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm text-gray-300 mb-2">Travel Style</label>
-                      <select
-                        value={routePreferences.travelStyle}
-                        onChange={(e) => setRoutePreferences(prev => ({ ...prev, travelStyle: e.target.value as any }))}
-                        className="w-full px-3 py-2 bg-black/20 border border-white/10 rounded-xl text-white focus:border-cyan-400 focus:outline-none"
-                      >
-                        <option value="comfort">Comfort</option>
-                        <option value="adventure">Adventure</option>
-                        <option value="cultural">Cultural</option>
-                        <option value="nature">Nature</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <button
-                onClick={handlePlanRoute}
-                disabled={isPlanning || !routeForm.from || !routeForm.to}
-                className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-4 rounded-2xl font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
-              >
-                {isPlanning ? (
-                  <div className="flex items-center justify-center space-x-2">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    <span>AI is Planning Your Route...</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center space-x-2">
-                    <Brain className="h-5 w-5" />
-                    <span>Plan Route with AI Discoveries</span>
-                  </div>
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Enhanced Planning Progress */}
-          {isPlanning && (
-            <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4">
-              <h3 className="text-white font-medium mb-4">AI is discovering amazing stops along your route...</h3>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Route calculation</span>
-                  <span className="text-cyan-400">Complete ✓</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Finding hidden gems</span>
-                  <span className="text-yellow-400">In progress...</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Analyzing food spots</span>
-                  <span className="text-yellow-400">Processing...</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Weather optimization</span>
-                  <span className="text-gray-500">Pending</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Safety verification</span>
-                  <span className="text-gray-500">Pending</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Cost optimization</span>
-                  <span className="text-gray-500">Pending</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Enhanced Route Results */}
-          {currentRoute && (
-            <div className="space-y-4">
-              {/* Route Overview */}
-              <div className="bg-gradient-to-r from-green-500/10 to-teal-500/10 backdrop-blur-sm rounded-3xl p-6 border border-green-400/30">
-                <div className="flex items-center space-x-2 mb-4">
-                  <CheckCircle className="h-6 w-6 text-green-400" />
-                  <h2 className="text-xl font-bold text-white">{currentRoute.name}</h2>
-                  {currentRoute.aiOptimized && (
-                    <div className="bg-purple-500/20 px-2 py-1 rounded-full">
-                      <span className="text-purple-400 text-xs font-medium">AI Optimized</span>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-green-400">{currentRoute.distance} km</div>
-                    <div className="text-sm text-gray-400">Total Distance</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-400">{currentRoute.estimatedTime}h</div>
-                    <div className="text-sm text-gray-400">Est. Time</div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-4 mb-4">
-                  <div className="text-center">
-                    <div className="text-lg font-bold text-purple-400">{filteredStops?.length}</div>
-                    <div className="text-xs text-gray-400">Discoveries</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-lg font-bold text-orange-400">₹{currentRoute.totalCost}</div>
-                    <div className="text-xs text-gray-400">Est. Cost</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-lg font-bold text-yellow-400">{currentRoute.safetyAlerts}</div>
-                    <div className="text-xs text-gray-400">Safety Alerts</div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="text-center">
-                    <div className="text-sm font-bold text-green-400">{currentRoute.carbonFootprint} kg CO₂</div>
-                    <div className="text-xs text-gray-400">Carbon Footprint</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-sm font-bold text-blue-400">{currentRoute.fuelEfficiency} km/l</div>
-                    <div className="text-xs text-gray-400">Fuel Efficiency</div>
-                  </div>
-                </div>
-
-                <div className="flex space-x-2 mb-4">
-                  <button className="flex-1 bg-gradient-to-r from-blue-500 to-cyan-500 px-4 py-2 rounded-xl text-white font-medium">
-                    <Download className="h-4 w-4 inline mr-2" />
-                    Save Route
-                  </button>
-                  <button className="flex-1 bg-white/10 px-4 py-2 rounded-xl text-gray-300 hover:bg-white/20 transition-colors">
-                    <Share className="h-4 w-4 inline mr-2" />
-                    Share
-                  </button>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {currentRoute.weatherConditions.map((condition, index) => (
-                    <span key={index} className="px-2 py-1 bg-white/10 rounded-full text-xs text-gray-300">
-                      {condition === 'Sunny' && <Sun className="h-3 w-3 inline mr-1" />}
-                      {condition === 'Cloudy' && <CloudSnow className="h-3 w-3 inline mr-1" />}
-                      {condition}
-                    </span>
+              {/* Preferences */}
+              <div>
+                <h4 className="text-white font-medium mb-3">What would you like to discover?</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  {preferences.map((pref) => (
+                    <button
+                      key={pref.id}
+                      onClick={() => togglePreference(pref.id)}
+                      className={`flex items-center space-x-2 p-3 rounded-xl transition-all duration-300 ${
+                        routeData.preferences.includes(pref.id)
+                          ? `bg-gradient-to-r ${pref.color} bg-opacity-20 border border-white/20`
+                          : 'bg-white/5 border border-white/10 hover:border-white/20'
+                      }`}
+                    >
+                      <pref.icon className="h-4 w-4 text-white" />
+                      <span className="text-sm text-white">{pref.label}</span>
+                    </button>
                   ))}
                 </div>
               </div>
 
-              {/* Interactive Map */}
-              <div className="bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-white">Interactive Route Map</h3>
-                  <div className="flex space-x-2">
-                    <button className="px-3 py-1 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full text-white text-sm">
-                      <Eye className="h-3 w-3 inline mr-1" />
-                      3D View
-                    </button>
-                    <button className="px-3 py-1 bg-white/10 rounded-full text-gray-300 text-sm hover:bg-white/20 transition-colors">
-                      <Navigation className="h-3 w-3 inline mr-1" />
-                      Directions
-                    </button>
-                  </div>
-                </div>
+              {/* Action Buttons */}
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={handleVoiceInput}
+                  className={`flex items-center justify-center space-x-2 py-4 rounded-2xl border transition-all duration-300 ${
+                    isListening
+                      ? 'bg-red-500/20 border-red-400/30 text-red-400'
+                      : 'bg-white/5 border-white/10 text-gray-300 hover:border-white/20'
+                  }`}
+                >
+                  <Mic className={`h-5 w-5 ${isListening ? 'animate-pulse' : ''}`} />
+                  <span className="text-sm font-medium">
+                    {isListening ? 'Listening...' : 'Voice Input'}
+                  </span>
+                </button>
                 
-                <div className="h-48 bg-gradient-to-br from-slate-800 to-slate-700 rounded-2xl flex items-center justify-center relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-pink-500/20 animate-pulse"></div>
-                  <div className="text-center z-10">
-                    <Map className="h-12 w-12 text-cyan-400 mx-auto mb-2" />
-                    <div className="text-white font-medium">Interactive Map View</div>
-                    <div className="text-gray-400 text-sm">Route: {currentRoute.from} → {currentRoute.to}</div>
-                    <div className="text-cyan-400 text-xs mt-1">✨ AI-Optimized Route</div>
-                  </div>
-                  
-                  {/* Enhanced route markers */}
-                  <div className="absolute top-4 left-8 w-3 h-3 bg-green-400 rounded-full animate-pulse shadow-lg"></div>
-                  <div className="absolute top-12 left-16 w-2 h-2 bg-orange-400 rounded-full animate-bounce"></div>
-                  <div className="absolute top-8 right-20 w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
-                  <div className="absolute bottom-8 right-8 w-3 h-3 bg-red-400 rounded-full animate-pulse shadow-lg"></div>
-                  <div className="absolute bottom-12 left-12 w-2 h-2 bg-yellow-400 rounded-full animate-bounce"></div>
+                <button
+                  onClick={handlePlanRoute}
+                  disabled={!routeData.from || !routeData.to || isGenerating}
+                  className="bg-gradient-to-r from-cyan-500 to-blue-500 py-4 rounded-2xl font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 flex items-center justify-center space-x-2"
+                >
+                  {isGenerating ? (
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  ) : (
+                    <>
+                      <Bot className="h-5 w-5" />
+                      <span>Plan with AI</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Generated Route Display */}
+          {generatedRoute && (
+            <div className="bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-white">Your AI-Generated Route</h3>
+                <div className="flex items-center space-x-2">
+                  <Heart className="h-5 w-5 text-gray-400 hover:text-pink-400 cursor-pointer transition-colors" />
+                  <Share className="h-5 w-5 text-gray-400 hover:text-blue-400 cursor-pointer transition-colors" />
                 </div>
               </div>
-
-              {/* Enhanced Discoveries Section */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-white">AI Discoveries Along Your Route</h3>
-                  <div className="flex space-x-2">
-                    <button className="px-3 py-1 bg-purple-500/20 rounded-full text-purple-400 text-sm">
-                      <Brain className="h-3 w-3 inline mr-1" />
-                      AI Picks
-                    </button>
-                    <button className="px-3 py-1 bg-cyan-500/20 rounded-full text-cyan-400 text-sm">
-                      <Users className="h-3 w-3 inline mr-1" />
-                      Traveler Favorites
-                    </button>
-                  </div>
-                </div>
-                
-                {filteredStops?.map((stop, index) => {
-                  const IconComponent = getStopIcon(stop.type);
+              
+              <div className="grid grid-cols-1 gap-4">
+                {generatedRoute.map((stop, index) => {
+                  const IconComponent = getTypeIcon(stop.type);
                   return (
-                    <div key={stop.id} className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 hover:border-white/20 transition-all duration-300">
+                    <div key={stop.id} className="bg-black/20 rounded-2xl p-4 border border-white/10">
                       <div className="flex items-start space-x-4">
-                        <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${getStopColor(stop.type)} flex items-center justify-center flex-shrink-0 shadow-lg`}>
+                        <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${getTypeColor(stop.type)} flex items-center justify-center flex-shrink-0`}>
                           <IconComponent className="h-6 w-6 text-white" />
                         </div>
-
+                        
                         <div className="flex-1">
                           <div className="flex items-start justify-between mb-2">
                             <div>
-                              <div className="flex items-center space-x-2">
-                                <h4 className="text-white font-semibold">{stop.name}</h4>
-                                {stop.isAIRecommended && (
-                                  <div className="bg-purple-500/20 px-2 py-1 rounded-full">
-                                    <span className="text-purple-400 text-xs font-medium">AI Pick</span>
-                                  </div>
-                                )}
-                              </div>
-                              <div className="flex items-center space-x-2 text-gray-400 text-sm">
+                              <h4 className="text-white font-medium">{stop.name}</h4>
+                              <div className="flex items-center space-x-1 text-gray-400 text-sm">
                                 <MapPin className="h-3 w-3" />
                                 <span>{stop.location}</span>
-                                <span>• {stop.distanceFromRoute}km detour</span>
                               </div>
                             </div>
                             
-                            <div className="flex items-center space-x-2">
-                              <button
-                                onClick={() => setSelectedStop(stop)}
-                                className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-                              >
-                                <Eye className="h-4 w-4 text-gray-400" />
-                              </button>
-                              
-                              <button className={`p-2 rounded-full transition-colors ${
-                                stop.isBookmarked ? 'text-yellow-400' : 'text-gray-400 hover:text-yellow-400'
-                              }`}>
-                                <Bookmark className={`h-4 w-4 ${stop.isBookmarked ? 'fill-current' : ''}`} />
-                              </button>
+                            <div className="text-right">
+                              <div className="flex items-center space-x-1">
+                                <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                                <span className="text-yellow-400 text-sm">{stop.rating}</span>
+                              </div>
+                              <div className="text-gray-400 text-xs">{stop.reviews} reviews</div>
                             </div>
                           </div>
-
+                          
                           <p className="text-gray-300 text-sm mb-3">{stop.description}</p>
-
-                          {/* Special Offers */}
-                          {stop.specialOffers && stop.specialOffers.length > 0 && (
-                            <div className="bg-green-500/10 border border-green-400/30 rounded-xl p-2 mb-3">
-                              <div className="flex items-center space-x-1 mb-1">
-                                <Gift className="h-3 w-3 text-green-400" />
-                                <span className="text-green-400 text-xs font-medium">Special Offers</span>
+                          
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center space-x-4 text-sm">
+                              <span className="text-green-400">{stop.priceRange}</span>
+                              <span className="text-gray-400">{stop.estimatedTime}</span>
+                              <span className="text-blue-400">{stop.distance}km</span>
+                            </div>
+                            
+                            {stop.isHiddenGem && (
+                              <div className="bg-purple-500/20 px-2 py-1 rounded-full">
+                                <span className="text-purple-400 text-xs">Hidden Gem</span>
                               </div>
-                              {stop.specialOffers.map((offer, i) => (
-                                <div key={i} className="text-green-300 text-xs">• {offer}</div>
+                            )}
+                          </div>
+                          
+                          {stop.specialOffers && stop.specialOffers.length > 0 && (
+                            <div className="bg-green-500/10 rounded-xl p-2 mb-3">
+                              <div className="text-green-400 text-xs font-medium mb-1">Special Offers:</div>
+                              {stop.specialOffers.map((offer, idx) => (
+                                <div key={idx} className="text-green-300 text-xs">• {offer}</div>
                               ))}
                             </div>
                           )}
-
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center space-x-4">
-                              <div className="flex items-center space-x-1">
-                                <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                                <span className="text-yellow-400 text-sm">{stop.rating}</span>
-                                <span className="text-gray-400 text-xs">({stop.reviews})</span>
-                              </div>
-                              
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                stop.price === 'free' ? 'bg-green-500/20 text-green-400' :
-                                stop.price === '$' ? 'bg-blue-500/20 text-blue-400' :
-                                stop.price === '$$' ? 'bg-yellow-500/20 text-yellow-400' :
-                                'bg-red-500/20 text-red-400'
-                              }`}>
-                                {stop.price === 'free' ? 'Free' : stop.price}
-                              </span>
-
-                              <div className={`flex items-center space-x-1 text-xs ${
-                                stop.isOpen ? 'text-green-400' : 'text-red-400'
-                              }`}>
-                                <div className={`w-2 h-2 rounded-full ${stop.isOpen ? 'bg-green-400' : 'bg-red-400'}`} />
-                                <span>{stop.isOpen ? 'Open' : 'Closed'}</span>
-                              </div>
-
-                              {stop.averageSpend && (
-                                <span className="text-gray-400 text-xs">
-                                  ~₹{stop.averageSpend} avg
-                                </span>
-                              )}
-                            </div>
-
+                          
+                          <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-2">
-                              {stop.isTravelerRecommended && (
-                                <div className="bg-gradient-to-r from-cyan-500/20 to-blue-500/20 px-2 py-1 rounded-full">
-                                  <span className="text-cyan-400 text-xs font-medium">Traveler Pick</span>
+                              <div className="flex items-center space-x-1">
+                                <Shield className="h-3 w-3 text-blue-400" />
+                                <span className="text-blue-400 text-xs">{stop.safetyRating}/5 Safety</span>
+                              </div>
+                              {stop.carbonFootprint && (
+                                <div className="flex items-center space-x-1">
+                                  <TreePine className="h-3 w-3 text-green-400" />
+                                  <span className="text-green-400 text-xs">{stop.carbonFootprint}</span>
                                 </div>
                               )}
                             </div>
-                          </div>
-
-                          <div className="flex flex-wrap gap-1 mb-3">
-                            {stop.amenities.slice(0, 4).map((amenity, i) => (
-                              <span key={i} className="px-2 py-1 bg-white/10 rounded-full text-xs text-gray-300">
-                                {amenity}
-                              </span>
-                            ))}
-                            {stop.amenities.length > 4 && (
-                              <span className="px-2 py-1 bg-white/10 rounded-full text-xs text-gray-400">
-                                +{stop.amenities.length - 4} more
-                              </span>
-                            )}
-                          </div>
-
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-4">
-                              <button className={`flex items-center space-x-1 transition-colors ${
-                                stop.isLiked ? 'text-pink-400' : 'text-gray-400 hover:text-pink-400'
-                              }`}>
-                                <Heart className={`h-4 w-4 ${stop.isLiked ? 'fill-current' : ''}`} />
-                                <span className="text-sm">{stop.likes}</span>
-                              </button>
-                              
-                              <button className="text-gray-400 hover:text-blue-400 transition-colors">
-                                <MessageCircle className="h-4 w-4" />
-                              </button>
-
-                              {stop.contact && (
-                                <button className="text-gray-400 hover:text-green-400 transition-colors">
-                                  <Phone className="h-4 w-4" />
-                                </button>
-                              )}
-
-                              <button className="text-gray-400 hover:text-purple-400 transition-colors">
-                                <Share className="h-4 w-4" />
-                              </button>
-                            </div>
                             
-                            <button className="text-cyan-400 text-sm hover:text-cyan-300 transition-colors flex items-center space-x-1">
-                              <Plus className="h-3 w-3" />
-                              <span>Add to Route</span>
+                            <button className="text-cyan-400 text-sm hover:text-cyan-300 transition-colors">
+                              View Details →
                             </button>
                           </div>
                         </div>
@@ -1196,321 +702,310 @@ function RouteDiscoveryPage() {
         </div>
       )}
 
-      {/* Enhanced Saved Routes Tab */}
-      {activeTab === 'saved-routes' && (
+      {activeTab === 'saved' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-white">Your Saved Routes</h2>
-            <div className="flex space-x-2">
-              <button className="text-cyan-400 text-sm">Sort by Recent</button>
-              <button className="text-gray-400 text-sm">Filter</button>
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-white">Your Saved Routes</h3>
+            <div className="flex items-center space-x-2">
+              <button className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
+                <Search className="h-4 w-4 text-gray-400" />
+              </button>
+              <button className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
+                <Filter className="h-4 w-4 text-gray-400" />
+              </button>
             </div>
           </div>
           
-          {savedRoutes.map((route, index) => (
-            <div key={route.id} className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 hover:border-white/20 transition-all duration-300">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <h3 className="text-white font-medium">{route.name}</h3>
-                    {route.isAIOptimized && (
-                      <div className="bg-purple-500/20 px-2 py-1 rounded-full">
-                        <span className="text-purple-400 text-xs font-medium">AI</span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex items-center space-x-4 text-sm text-gray-400 mb-2">
-                    <span>{route.distance}</span>
-                    <span>{route.stops} stops</span>
-                    <span>{route.duration}</span>
-                    <span className="text-green-400">{route.estimatedCost}</span>
-                  </div>
-                  <div className="flex items-center space-x-4 text-xs text-gray-400">
-                    <span className={`px-2 py-1 rounded-full ${
-                      route.difficulty === 'Easy' ? 'bg-green-500/20 text-green-400' :
-                      route.difficulty === 'Moderate' ? 'bg-yellow-500/20 text-yellow-400' :
-                      'bg-red-500/20 text-red-400'
-                    }`}>
-                      {route.difficulty}
-                    </span>
-                    <span>Best for: {route.bestFor}</span>
-                    <div className="flex items-center space-x-1">
-                      <Heart className="h-3 w-3 text-pink-400 fill-current" />
-                      <span>{route.likes}</span>
-                    </div>
-                  </div>
+          {mockSavedRoutes.map((route) => (
+            <div key={route.id} className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4">
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <h4 className="text-white font-medium">{route.name}</h4>
+                  <div className="text-gray-400 text-sm">{route.from} → {route.to}</div>
                 </div>
-                <div className="flex space-x-2">
-                  <button className="text-cyan-400 text-sm hover:text-cyan-300 transition-colors">Open</button>
-                  <button className="text-gray-400 hover:text-white transition-colors">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </button>
+                <div className="text-right">
+                  <div className="text-green-400 text-sm font-medium">{route.estimatedCost}</div>
+                  <div className="text-gray-400 text-xs">Used {route.timesUsed}x</div>
                 </div>
               </div>
               
-              <div className="text-xs text-gray-500">
-                Last used: {route.lastUsed.toLocaleDateString()}
-              </div>
-            </div>
-          ))}
-          
-          {savedRoutes.length === 0 && (
-            <div className="text-center py-12">
-              <Bookmark className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-white mb-2">No Saved Routes</h3>
-              <p className="text-gray-400 text-sm">Plan your first route to get started</p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Enhanced Community Routes Tab */}
-      {activeTab === 'community-routes' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-white">Community Routes</h2>
-            <div className="flex space-x-2">
-              <button className="px-3 py-1 bg-gradient-to-r from-orange-500/20 to-red-500/20 rounded-full text-orange-400 text-sm">
-                <TrendingUp className="h-3 w-3 inline mr-1" />
-                Trending
-              </button>
-              <button className="text-gray-400 text-sm">Filter</button>
-            </div>
-          </div>
-
-          {/* Featured Routes */}
-          <div className="space-y-3">
-            {communityRoutes.filter(route => route.featured).map((route) => (
-              <div key={route.id} className="bg-gradient-to-r from-orange-500/10 to-red-500/10 backdrop-blur-sm rounded-2xl border border-orange-400/30 p-4">
-                <div className="flex items-center space-x-2 mb-3">
-                  <Award className="h-4 w-4 text-orange-400" />
-                  <span className="text-orange-400 text-sm font-medium">Featured Route</span>
+              <div className="grid grid-cols-4 gap-4 mb-3 text-sm">
+                <div>
+                  <span className="text-gray-400">Distance:</span>
+                  <div className="text-white">{route.distance}km</div>
                 </div>
-                <CommunityRouteCard route={route} />
-              </div>
-            ))}
-          </div>
-
-          {/* Regular Routes */}
-          <div className="space-y-4">
-            {communityRoutes.filter(route => !route.featured).map((route) => (
-              <div key={route.id} className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 hover:border-white/20 transition-all duration-300">
-                <CommunityRouteCard route={route} />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Enhanced Stop Detail Modal */}
-      {selectedStop && (
-        <StopDetailModal stop={selectedStop} onClose={() => setSelectedStop(null)} />
-      )}
-    </div>
-  );
-}
-
-function CommunityRouteCard({ route }: { route: any }) {
-  return (
-    <div>
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1">
-          <h3 className="text-white font-medium text-lg mb-1">{route.name}</h3>
-          <div className="flex items-center space-x-2 mb-2">
-            <img
-              src={route.authorAvatar}
-              alt={route.author}
-              className="w-5 h-5 rounded-full"
-            />
-            <span className="text-cyan-400 text-sm">by {route.author}</span>
-            <span className="text-gray-400 text-xs">• {route.createdAt.toLocaleDateString()}</span>
-          </div>
-          <div className="flex items-center space-x-4 text-sm text-gray-400 mb-2">
-            <span>{route.distance}</span>
-            <span>{route.stops} stops</span>
-            <span>{route.duration}</span>
-            <span className="text-green-400">{route.estimatedCost}</span>
-          </div>
-          <div className="flex items-center space-x-2 mb-3">
-            <Star className="h-4 w-4 text-yellow-400 fill-current" />
-            <span className="text-yellow-400 text-sm">{route.rating}</span>
-            <span className="text-gray-400 text-xs">({route.reviews} reviews)</span>
-            <span className={`px-2 py-1 rounded-full text-xs ${
-              route.difficulty === 'Easy' ? 'bg-green-500/20 text-green-400' :
-              route.difficulty === 'Moderate' ? 'bg-yellow-500/20 text-yellow-400' :
-              'bg-red-500/20 text-red-400'
-            }`}>
-              {route.difficulty}
-            </span>
-          </div>
-          <div className="flex flex-wrap gap-1">
-            {route.tags.map((tag: string, index: number) => (
-              <span key={index} className="px-2 py-1 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-full text-xs text-cyan-400 border border-cyan-400/30">
-                #{tag}
-              </span>
-            ))}
-          </div>
-        </div>
-        <div className="flex flex-col items-end space-y-2">
-          <div className="flex items-center space-x-1">
-            <Heart className="h-4 w-4 text-pink-400 fill-current" />
-            <span className="text-pink-400 text-sm">{route.likes}</span>
-          </div>
-          <button className="text-cyan-400 text-sm hover:text-cyan-300 transition-colors">
-            Copy Route
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function StopDetailModal({ stop, onClose }: { stop: RouteStop; onClose: () => void }) {
-  const IconComponent = getStopIcon(stop.type);
-  
-  return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-slate-900/95 backdrop-blur-md rounded-3xl border border-white/20 max-w-md w-full max-h-[80vh] overflow-y-auto">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-3">
-              <h2 className="text-xl font-bold text-white">{stop.name}</h2>
-              {stop.isAIRecommended && (
-                <div className="bg-purple-500/20 px-2 py-1 rounded-full">
-                  <span className="text-purple-400 text-xs font-medium">AI Pick</span>
+                <div>
+                  <span className="text-gray-400">Duration:</span>
+                  <div className="text-white">{route.duration}</div>
                 </div>
-              )}
-            </div>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-            >
-              <X className="h-5 w-5 text-white" />
-            </button>
-          </div>
-
-          <div className="mb-4">
-            <img
-              src={stop.image}
-              alt={stop.name}
-              className="w-full h-48 object-cover rounded-2xl"
-            />
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-white font-medium mb-2">Description</h3>
-              <p className="text-gray-300 text-sm leading-relaxed">{stop.description}</p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <h3 className="text-white font-medium mb-2">Location</h3>
-                <div className="flex items-center space-x-2 text-gray-300 text-sm">
-                  <MapPin className="h-4 w-4" />
-                  <span>{stop.location}</span>
+                <div>
+                  <span className="text-gray-400">Stops:</span>
+                  <div className="text-white">{route.stops}</div>
+                </div>
+                <div>
+                  <span className="text-gray-400">Difficulty:</span>
+                  <div className={`text-sm font-medium ${
+                    route.difficulty === 'easy' ? 'text-green-400' :
+                    route.difficulty === 'moderate' ? 'text-yellow-400' :
+                    'text-red-400'
+                  }`}>
+                    {route.difficulty}
+                  </div>
                 </div>
               </div>
-
-              <div>
-                <h3 className="text-white font-medium mb-2">Hours</h3>
-                <div className="flex items-center space-x-2 text-gray-300 text-sm">
-                  <Clock className="h-4 w-4" />
-                  <span>{stop.hours}</span>
-                </div>
-              </div>
-            </div>
-
-            {stop.specialOffers && stop.specialOffers.length > 0 && (
-              <div>
-                <h3 className="text-white font-medium mb-2">Special Offers</h3>
-                <div className="bg-green-500/10 border border-green-400/30 rounded-xl p-3">
-                  {stop.specialOffers.map((offer, index) => (
-                    <div key={index} className="flex items-center space-x-2 text-green-400 text-sm">
-                      <Gift className="h-3 w-3" />
-                      <span>{offer}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div>
-              <h3 className="text-white font-medium mb-2">Amenities</h3>
-              <div className="flex flex-wrap gap-2">
-                {stop.amenities.map((amenity, index) => (
-                  <span
-                    key={index}
-                    className="px-3 py-1 bg-white/10 rounded-full text-xs text-gray-300"
-                  >
-                    {amenity}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-white font-medium mb-2">Tags</h3>
-              <div className="flex flex-wrap gap-2">
-                {stop.tags.map((tag, index) => (
-                  <span
-                    key={index}
-                    className="px-3 py-1 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-full text-xs text-cyan-400 border border-cyan-400/30"
-                  >
+              
+              <div className="flex flex-wrap gap-1 mb-3">
+                {route.tags.map((tag, index) => (
+                  <span key={index} className="px-2 py-1 bg-cyan-500/20 text-cyan-400 rounded-full text-xs">
                     #{tag}
                   </span>
                 ))}
               </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="text-gray-400 text-xs">
+                  Last used: {route.lastUsed.toLocaleDateString()}
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button className="px-3 py-2 bg-cyan-500/20 text-cyan-400 rounded-xl text-sm hover:bg-cyan-500/30 transition-colors">
+                    Use Route
+                  </button>
+                  <button className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
+                    <Share className="h-4 w-4 text-gray-400" />
+                  </button>
+                </div>
+              </div>
             </div>
+          ))}
+        </div>
+      )}
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center space-x-1">
-                <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                <span className="text-yellow-400 text-sm">{stop.rating}</span>
-                <span className="text-gray-400 text-sm">({stop.reviews} reviews)</span>
+      {activeTab === 'community' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-white">Community Routes</h3>
+            <div className="flex items-center space-x-2">
+              <button className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
+                <Search className="h-4 w-4 text-gray-400" />
+              </button>
+              <button className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
+                <Filter className="h-4 w-4 text-gray-400" />
+              </button>
+            </div>
+          </div>
+          
+          {mockCommunityRoutes.map((route) => (
+            <div key={route.id} className={`bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 ${
+              route.isFeatured ? 'border-yellow-400/30 bg-gradient-to-r from-yellow-500/5 to-orange-500/5' : ''
+            }`}>
+              {route.isFeatured && (
+                <div className="flex items-center space-x-1 mb-3">
+                  <Award className="h-4 w-4 text-yellow-400" />
+                  <span className="text-yellow-400 text-sm font-medium">Featured Route</span>
+                </div>
+              )}
+              
+              <div className="flex items-start space-x-3 mb-3">
+                <img
+                  src={route.authorAvatar}
+                  alt={route.author}
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+                <div className="flex-1">
+                  <h4 className="text-white font-medium">{route.title}</h4>
+                  <div className="text-gray-400 text-sm">{route.from} → {route.to}</div>
+                  <div className="text-gray-400 text-xs">by {route.author}</div>
+                </div>
+                <div className="text-right">
+                  <div className="flex items-center space-x-1">
+                    <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                    <span className="text-yellow-400 text-sm">{route.rating}</span>
+                  </div>
+                  <div className="text-gray-400 text-xs">{route.reviews} reviews</div>
+                </div>
               </div>
               
-              <span className={`px-3 py-1 rounded-full text-sm text-center ${
-                stop.price === 'free' ? 'bg-green-500/20 text-green-400' :
-                stop.price === '$' ? 'bg-blue-500/20 text-blue-400' :
-                stop.price === '$$' ? 'bg-yellow-500/20 text-yellow-400' :
-                'bg-red-500/20 text-red-400'
-              }`}>
-                {stop.price === 'free' ? 'Free' : `${stop.price} • ~₹${stop.averageSpend}`}
-              </span>
-            </div>
-
-            <div className="flex space-x-3">
-              <button className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-3 rounded-2xl font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300">
-                <Navigation className="h-5 w-5 inline mr-2" />
-                Get Directions
-              </button>
+              <p className="text-gray-300 text-sm mb-3">{route.description}</p>
               
-              {stop.contact && (
-                <button className="px-6 py-3 border border-white/20 rounded-2xl text-gray-300 hover:bg-white/5 transition-colors">
-                  <Phone className="h-5 w-5" />
-                </button>
-              )}
+              <div className="grid grid-cols-4 gap-4 mb-3 text-xs">
+                <div>
+                  <span className="text-gray-400">Distance:</span>
+                  <div className="text-white">{route.distance}km</div>
+                </div>
+                <div>
+                  <span className="text-gray-400">Duration:</span>
+                  <div className="text-white">{route.duration}</div>
+                </div>
+                <div>
+                  <span className="text-gray-400">Stops:</span>
+                  <div className="text-white">{route.stops}</div>
+                </div>
+                <div>
+                  <span className="text-gray-400">Cost:</span>
+                  <div className="text-green-400">{route.estimatedCost}</div>
+                </div>
+              </div>
+              
+              <div className="flex flex-wrap gap-1 mb-3">
+                {route.tags.map((tag, index) => (
+                  <span key={index} className="px-2 py-1 bg-purple-500/20 text-purple-400 rounded-full text-xs">
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <button
+                    className={`flex items-center space-x-1 transition-colors ${
+                      route.isLiked ? 'text-pink-400' : 'text-gray-400 hover:text-pink-400'
+                    }`}
+                  >
+                    <Heart className={`h-4 w-4 ${route.isLiked ? 'fill-current' : ''}`} />
+                    <span className="text-sm">{route.likes}</span>
+                  </button>
+                  
+                  <div className="flex items-center space-x-1 text-gray-400 text-sm">
+                    <MessageCircle className="h-4 w-4" />
+                    <span>{route.reviews}</span>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <button className="px-3 py-2 bg-purple-500/20 text-purple-400 rounded-xl text-sm hover:bg-purple-500/30 transition-colors">
+                    Use Route
+                  </button>
+                  <button className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
+                    <Share className="h-4 w-4 text-gray-400" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* AI Assistant Sidebar */}
+      {showAIAssistant && (
+        <div className="fixed inset-y-0 right-0 w-80 bg-slate-900/95 backdrop-blur-md border-l border-white/10 z-50 flex flex-col">
+          <div className="flex items-center justify-between p-4 border-b border-white/10">
+            <div className="flex items-center space-x-2">
+              <Bot className="h-5 w-5 text-purple-400" />
+              <span className="text-white font-medium">AI Route Assistant</span>
+            </div>
+            <button
+              onClick={() => setShowAIAssistant(false)}
+              className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+            >
+              ✕
+            </button>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {aiMessages.length === 0 && (
+              <div className="text-center text-gray-400 text-sm">
+                <Bot className="h-12 w-12 mx-auto mb-3 text-purple-400" />
+                <p>Hi! I'm your AI route assistant. I can help you find the best routes, hidden gems, and perfect stops for your journey.</p>
+                <div className="mt-4 space-y-2">
+                  <button
+                    onClick={() => setAiMessages([{
+                      id: '1',
+                      content: "Find me hidden food spots between Mumbai and Goa",
+                      isUser: true,
+                      timestamp: new Date(),
+                      type: 'text'
+                    }])}
+                    className="w-full text-left p-2 bg-white/5 rounded-lg text-xs hover:bg-white/10 transition-colors"
+                  >
+                    "Find hidden food spots on my route"
+                  </button>
+                  <button
+                    onClick={() => setAiMessages([{
+                      id: '1',
+                      content: "What's the best time to travel to avoid traffic?",
+                      isUser: true,
+                      timestamp: new Date(),
+                      type: 'text'
+                    }])}
+                    className="w-full text-left p-2 bg-white/5 rounded-lg text-xs hover:bg-white/10 transition-colors"
+                  >
+                    "Best time to avoid traffic?"
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            {aiMessages.map((message) => (
+              <div key={message.id} className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-xs rounded-2xl px-4 py-3 ${
+                  message.isUser
+                    ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white'
+                    : 'bg-white/10 text-white'
+                }`}>
+                  <p className="text-sm">{message.content}</p>
+                  {message.type === 'route' && message.data && (
+                    <div className="mt-3 pt-3 border-t border-white/20">
+                      <div className="text-xs text-white/80 mb-2">Route Summary:</div>
+                      <div className="space-y-1 text-xs">
+                        <div>Distance: {message.data.totalDistance}</div>
+                        <div>Time: {message.data.estimatedTime}</div>
+                        <div>Cost: {message.data.estimatedCost}</div>
+                        <div className="text-cyan-300">{message.data.highlights.join(', ')}</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
+          
+          <div className="p-4 border-t border-white/10">
+            <div className="flex items-center space-x-2">
+              <input
+                type="text"
+                value={aiInput}
+                onChange={(e) => setAiInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleAISend()}
+                placeholder="Ask me about routes..."
+                className="flex-1 px-3 py-2 bg-black/20 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none text-sm"
+              />
+              <button
+                onClick={handleAISend}
+                className="p-2 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                <Send className="h-4 w-4 text-white" />
+              </button>
             </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* Map Overlay */}
+      {showMap && (
+        <div className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900/95 backdrop-blur-md rounded-3xl border border-white/20 w-full max-w-4xl h-96">
+            <div className="flex items-center justify-between p-4 border-b border-white/10">
+              <h3 className="text-white font-medium">Route Map</h3>
+              <button
+                onClick={() => setShowMap(false)}
+                className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-4 h-80 bg-gradient-to-br from-slate-800 to-slate-700 rounded-b-3xl flex items-center justify-center">
+              <div className="text-center text-gray-400">
+                <Map className="h-16 w-16 mx-auto mb-4" />
+                <p>Interactive map would be displayed here</p>
+                <p className="text-sm mt-2">Showing route with all discovered stops</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
-}
-
-function getStopIcon(type: string) {
-  switch (type) {
-    case 'food': return Utensils;
-    case 'camping': return Tent;
-    case 'parking': return Parking;
-    case 'stay': return Home;
-    case 'fuel': return Fuel;
-    case 'hidden-gem': return Star;
-    case 'attraction': return Camera;
-    case 'emergency': return AlertTriangle;
-    default: return MapPin;
-  }
 }
 
 export default RouteDiscoveryPage;
