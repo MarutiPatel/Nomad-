@@ -1,14 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-  Navigation, MapPin, Clock, Star, Heart, Share, Plus, Filter, 
-  Search, Bot, Mic, Send, Car, Train, Plane, Footprints,
-  Utensils, Coffee, Bed, Camera, Fuel, TreePine, AlertTriangle,
-  Users, Calendar, DollarSign, Map, Eye, Play, Bookmark,
-  ThumbsUp, MessageCircle, Award, Zap, RouteIcon,
-  Volume2, VolumeX, Settings, Target, Compass, Globe,
-  TrendingUp, CheckCircle, Info, ArrowRight, RefreshCw,
-  Sparkles, Lightning, MapPinIcon
-} from 'lucide-react';
+import { Navigation, MapPin, Clock, Star, Heart, Share, Plus, Filter, Search, Bot, Mic, Send, Car, Train, Plane, Footprints, Utensils, Coffee, Bed, Camera, Fuel, TreePine, AlertTriangle, Users, Calendar, DollarSign, Map, Eye, Play, Bookmark, ThumbsUp, MessageCircle, Award, Zap, RouteIcon, Volume2, VolumeX, Settings, Target, Compass, Globe, TrendingUp, CheckCircle, Info, ArrowRight, RefreshCw, Sparkles, CloudLightning as Lightning, MapPinIcon } from 'lucide-react';
 
 interface RouteStop {
   id: string;
