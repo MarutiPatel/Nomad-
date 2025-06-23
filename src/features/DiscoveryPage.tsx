@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Target, Compass, Wand2, Clock, Star, MapPin, Shuffle, Filter, Search, Zap, Globe, Camera, Heart, Users, Play, RefreshCw, Sparkles, Map, Navigation, Eye, Brain, Magnet as Magic, Telescope, ArrowRight, CheckCircle, Timer, Mountain, Plane, Coffee, Utensils, Music } from 'lucide-react';
+import { Target, Compass, Wand2, Clock, Star, MapPin, Shuffle, Filter, Search, Zap, Globe, Camera, Heart, Users, Play, RefreshCw, Sparkles, Map, Navigation, Eye, Brain, Magnet as Magic, Telescope, ArrowRight, CheckCircle, Timer, Mountain, Plane, Coffee, Utensils, Music, User, UserPlus, MessageCircle, ThumbsUp, Settings, ChevronDown } from 'lucide-react';
 
 interface DiscoveryItem {
   id: string;
@@ -24,6 +24,28 @@ interface TravelTwin {
   location: string;
   bio: string;
   travelStyle: string;
+  age: number;
+  gender: 'male' | 'female' | 'non-binary' | 'prefer-not-to-say';
+  languages: string[];
+  currentTrip?: string;
+  zodiacSign?: string;
+  mbtiType?: string;
+  energyLevel: 'chill' | 'balanced' | 'high-energy';
+  socialStyle: 'introvert' | 'ambivert' | 'extrovert';
+  budgetStyle: 'budget' | 'mid-range' | 'luxury';
+  travelPace: 'slow' | 'moderate' | 'fast';
+}
+
+interface TwinPreferences {
+  ageRange: { min: number; max: number };
+  gender: string[];
+  travelStyles: string[];
+  energyLevel: string[];
+  socialStyle: string[];
+  budgetStyle: string[];
+  minCompatibility: number;
+  location: 'nearby' | 'same-country' | 'global';
+  languages: string[];
 }
 
 interface TeleportDestination {
@@ -82,40 +104,142 @@ function DiscoveryPage() {
   const [selectedMood, setSelectedMood] = useState<string>('');
   const [dreamInput, setDreamInput] = useState('');
   const [generatedItinerary, setGeneratedItinerary] = useState<DreamItinerary | null>(null);
-  const [foundTwin, setFoundTwin] = useState<TravelTwin | null>(null);
+  const [foundTwins, setFoundTwins] = useState<TravelTwin[]>([]);
   const [teleportResult, setTeleportResult] = useState<TeleportDestination | null>(null);
   const [selectedEra, setSelectedEra] = useState<HistoricalPeriod | null>(null);
+  const [showPreferences, setShowPreferences] = useState(false);
+  const [twinPreferences, setTwinPreferences] = useState<TwinPreferences>({
+    ageRange: { min: 18, max: 35 },
+    gender: ['any'],
+    travelStyles: ['any'],
+    energyLevel: ['any'],
+    socialStyle: ['any'],
+    budgetStyle: ['any'],
+    minCompatibility: 70,
+    location: 'global',
+    languages: ['any']
+  });
 
   const mockTravelTwins: TravelTwin[] = [
     {
       id: '1',
-      displayName: 'CosmicWanderer88',
+      displayName: 'VibeMasterAlex',
       avatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=100',
       compatibility: 94,
-      commonInterests: ['hidden beaches', 'local food', 'photography', 'sunset viewing'],
-      location: 'Currently in Goa, India',
-      bio: 'Love exploring hidden gems and authentic experiences',
-      travelStyle: 'Adventure Seeker'
+      commonInterests: ['hidden beaches', 'local food', 'photography', 'sunset vibes'],
+      location: 'Goa, India',
+      bio: 'Main character energy ✨ Living for those golden hour moments and authentic vibes',
+      travelStyle: 'Aesthetic Explorer',
+      age: 24,
+      gender: 'female',
+      languages: ['English', 'Hindi', 'Spanish'],
+      currentTrip: 'Goa Beach Culture Deep Dive',
+      zodiacSign: 'Sagittarius',
+      mbtiType: 'ENFP',
+      energyLevel: 'high-energy',
+      socialStyle: 'extrovert',
+      budgetStyle: 'mid-range',
+      travelPace: 'moderate'
     },
     {
       id: '2',
-      displayName: 'ZenNomad42',
+      displayName: 'ZenNomadSoul',
       avatar: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=100',
-      compatibility: 87,
-      commonInterests: ['meditation', 'mountains', 'spiritual journeys', 'yoga'],
-      location: 'Himalayan Region',
-      bio: 'Seeking peace and meaningful connections through travel',
-      travelStyle: 'Spiritual Seeker'
+      compatibility: 89,
+      commonInterests: ['meditation', 'mountains', 'spiritual growth', 'mindful travel'],
+      location: 'Rishikesh, India',
+      bio: 'Spiritual bestie seeking deeper connections 🧘‍♀️ All about that mindful travel life',
+      travelStyle: 'Mindful Wanderer',
+      age: 27,
+      gender: 'non-binary',
+      languages: ['English', 'French', 'Sanskrit'],
+      currentTrip: 'Himalayan Consciousness Journey',
+      zodiacSign: 'Pisces',
+      mbtiType: 'INFP',
+      energyLevel: 'chill',
+      socialStyle: 'introvert',
+      budgetStyle: 'budget',
+      travelPace: 'slow'
     },
     {
       id: '3',
-      displayName: 'UrbanExplorer',
+      displayName: 'TechNomadKing',
       avatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=100',
-      compatibility: 91,
-      commonInterests: ['tech hubs', 'coworking', 'urban culture', 'nightlife'],
+      compatibility: 92,
+      commonInterests: ['tech hubs', 'coworking spaces', 'startup culture', 'city exploring'],
       location: 'Bangalore, India',
-      bio: 'Digital nomad exploring tech cities and startup culture',
-      travelStyle: 'Digital Nomad'
+      bio: 'Building the future while exploring the world 🚀 Work hard, travel harder mentality',
+      travelStyle: 'Digital Pioneer',
+      age: 29,
+      gender: 'male',
+      languages: ['English', 'German', 'Portuguese'],
+      currentTrip: 'South India Tech & Culture Tour',
+      zodiacSign: 'Gemini',
+      mbtiType: 'ENTJ',
+      energyLevel: 'high-energy',
+      socialStyle: 'ambivert',
+      budgetStyle: 'luxury',
+      travelPace: 'fast'
+    },
+    {
+      id: '4',
+      displayName: 'AdventureQueenB',
+      avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=100',
+      compatibility: 87,
+      commonInterests: ['extreme sports', 'mountain climbing', 'adrenaline rush', 'outdoor challenges'],
+      location: 'Manali, HP',
+      bio: 'Adrenaline junkie living life on the edge 🏔️ No limits, just pure adventure energy',
+      travelStyle: 'Extreme Explorer',
+      age: 25,
+      gender: 'female',
+      languages: ['English', 'Hindi', 'French'],
+      currentTrip: 'Himalayan Peak Adventures',
+      zodiacSign: 'Aries',
+      mbtiType: 'ESTP',
+      energyLevel: 'high-energy',
+      socialStyle: 'extrovert',
+      budgetStyle: 'mid-range',
+      travelPace: 'fast'
+    },
+    {
+      id: '5',
+      displayName: 'CultureConnoisseur',
+      avatar: 'https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg?auto=compress&cs=tinysrgb&w=100',
+      compatibility: 85,
+      commonInterests: ['art galleries', 'local traditions', 'historical sites', 'cultural immersion'],
+      location: 'Jaipur, Rajasthan',
+      bio: 'Living for authentic cultural moments 🎨 Deep diving into local traditions and stories',
+      travelStyle: 'Cultural Curator',
+      age: 31,
+      gender: 'female',
+      languages: ['English', 'Hindi', 'Italian'],
+      currentTrip: 'Rajasthan Heritage Discovery',
+      zodiacSign: 'Virgo',
+      mbtiType: 'ISFJ',
+      energyLevel: 'balanced',
+      socialStyle: 'ambivert',
+      budgetStyle: 'luxury',
+      travelPace: 'slow'
+    },
+    {
+      id: '6',
+      displayName: 'WildSoulNomad',
+      avatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=100',
+      compatibility: 88,
+      commonInterests: ['wildlife photography', 'nature conservation', 'eco-travel', 'off-grid adventures'],
+      location: 'Kerala Backwaters',
+      bio: 'Wild at heart, gentle with nature 🦋 Capturing the untamed beauty of our planet',
+      travelStyle: 'Eco Adventurer',
+      age: 26,
+      gender: 'male',
+      languages: ['English', 'Malayalam', 'Tamil'],
+      currentTrip: 'Western Ghats Biodiversity Quest',
+      zodiacSign: 'Cancer',
+      mbtiType: 'ISFP',
+      energyLevel: 'chill',
+      socialStyle: 'introvert',
+      budgetStyle: 'budget',
+      travelPace: 'slow'
     }
   ];
 
@@ -225,15 +349,30 @@ function DiscoveryPage() {
     { emoji: '🧘', label: 'Spiritual', color: 'from-indigo-400 to-purple-500' }
   ];
 
-  const handleFindTwin = async () => {
+  const handleFindTwins = async () => {
     setIsAnalyzing(true);
-    setFoundTwin(null);
+    setFoundTwins([]);
     
-    // Simulate AI analysis
+    // Simulate AI analysis with multiple steps
     await new Promise(resolve => setTimeout(resolve, 3000));
     
-    const randomTwin = mockTravelTwins[Math.floor(Math.random() * mockTravelTwins.length)];
-    setFoundTwin(randomTwin);
+    // Filter twins based on preferences
+    let filteredTwins = mockTravelTwins.filter(twin => {
+      const ageInRange = twin.age >= twinPreferences.ageRange.min && twin.age <= twinPreferences.ageRange.max;
+      const genderMatch = twinPreferences.gender.includes('any') || twinPreferences.gender.includes(twin.gender);
+      const compatibilityMatch = twin.compatibility >= twinPreferences.minCompatibility;
+      
+      return ageInRange && genderMatch && compatibilityMatch;
+    });
+    
+    // Ensure we have 5-6 results
+    if (filteredTwins.length < 5) {
+      filteredTwins = [...filteredTwins, ...mockTravelTwins.filter(t => !filteredTwins.includes(t))].slice(0, 6);
+    } else {
+      filteredTwins = filteredTwins.slice(0, 6);
+    }
+    
+    setFoundTwins(filteredTwins);
     setIsAnalyzing(false);
   };
 
@@ -335,25 +474,140 @@ function DiscoveryPage() {
 
   const renderDoppelarting = () => (
     <div className="space-y-6">
-      {/* AI Twin Matching */}
+      {/* Twin Matching Interface */}
       <div className="bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-cyan-500/10 backdrop-blur-sm rounded-3xl p-6 border border-white/10">
         <div className="text-center mb-6">
           <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full flex items-center justify-center">
-            <Target className="h-8 w-8 text-white" />
+            <Magic className="h-8 w-8 text-white" />
           </div>
-          <h2 className="text-xl font-bold text-white mb-2">Find Your Travel Twin</h2>
-          <p className="text-gray-400 text-sm">AI analyzes your vibe to find your perfect travel doppelganger</p>
+          <h2 className="text-xl font-bold text-white mb-2">✨ Vibe Check: Twin Radar ✨</h2>
+          <p className="text-gray-400 text-sm">AI matches your energy to find your perfect travel bestie</p>
         </div>
 
-        {!isAnalyzing && !foundTwin && (
+        {/* Twin Preferences */}
+        <div className="mb-6">
+          <button
+            onClick={() => setShowPreferences(!showPreferences)}
+            className="w-full flex items-center justify-between p-3 bg-white/5 rounded-2xl border border-white/10 hover:border-white/20 transition-colors"
+          >
+            <div className="flex items-center space-x-2">
+              <Settings className="h-4 w-4 text-purple-400" />
+              <span className="text-white font-medium">Twin Preferences</span>
+            </div>
+            <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showPreferences ? 'rotate-180' : ''}`} />
+          </button>
+
+          {showPreferences && (
+            <div className="mt-4 space-y-4 p-4 bg-black/20 rounded-2xl">
+              {/* Age Range */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Age Range: {twinPreferences.ageRange.min}-{twinPreferences.ageRange.max}</label>
+                <div className="flex space-x-4">
+                  <input
+                    type="range"
+                    min="18"
+                    max="50"
+                    value={twinPreferences.ageRange.min}
+                    onChange={(e) => setTwinPreferences(prev => ({
+                      ...prev,
+                      ageRange: { ...prev.ageRange, min: parseInt(e.target.value) }
+                    }))}
+                    className="flex-1"
+                  />
+                  <input
+                    type="range"
+                    min="18"
+                    max="50"
+                    value={twinPreferences.ageRange.max}
+                    onChange={(e) => setTwinPreferences(prev => ({
+                      ...prev,
+                      ageRange: { ...prev.ageRange, max: parseInt(e.target.value) }
+                    }))}
+                    className="flex-1"
+                  />
+                </div>
+              </div>
+
+              {/* Gender Preference */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Gender Preference</label>
+                <div className="flex flex-wrap gap-2">
+                  {['any', 'male', 'female', 'non-binary'].map(gender => (
+                    <button
+                      key={gender}
+                      onClick={() => setTwinPreferences(prev => ({
+                        ...prev,
+                        gender: prev.gender.includes(gender) 
+                          ? prev.gender.filter(g => g !== gender)
+                          : [...prev.gender.filter(g => g !== 'any'), gender]
+                      }))}
+                      className={`px-3 py-1 rounded-full text-xs transition-colors ${
+                        twinPreferences.gender.includes(gender)
+                          ? 'bg-purple-500/20 text-purple-400 border border-purple-400/30'
+                          : 'bg-white/10 text-gray-400 border border-white/10'
+                      }`}
+                    >
+                      {gender === 'any' ? 'Any Gender' : gender.charAt(0).toUpperCase() + gender.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Energy Level */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Energy Vibe</label>
+                <div className="flex flex-wrap gap-2">
+                  {['any', 'chill', 'balanced', 'high-energy'].map(energy => (
+                    <button
+                      key={energy}
+                      onClick={() => setTwinPreferences(prev => ({
+                        ...prev,
+                        energyLevel: prev.energyLevel.includes(energy)
+                          ? prev.energyLevel.filter(e => e !== energy)
+                          : [...prev.energyLevel.filter(e => e !== 'any'), energy]
+                      }))}
+                      className={`px-3 py-1 rounded-full text-xs transition-colors ${
+                        twinPreferences.energyLevel.includes(energy)
+                          ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-400/30'
+                          : 'bg-white/10 text-gray-400 border border-white/10'
+                      }`}
+                    >
+                      {energy === 'any' ? 'Any Energy' : 
+                       energy === 'high-energy' ? 'High Energy' :
+                       energy.charAt(0).toUpperCase() + energy.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Compatibility Threshold */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Min Compatibility: {twinPreferences.minCompatibility}%</label>
+                <input
+                  type="range"
+                  min="50"
+                  max="100"
+                  value={twinPreferences.minCompatibility}
+                  onChange={(e) => setTwinPreferences(prev => ({
+                    ...prev,
+                    minCompatibility: parseInt(e.target.value)
+                  }))}
+                  className="w-full"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {!isAnalyzing && foundTwins.length === 0 && (
           <div className="bg-white/5 rounded-2xl p-4 mb-4">
             <div className="flex items-center space-x-3 mb-3">
               <div className="w-10 h-10 rounded-full bg-gradient-to-r from-cyan-400 to-purple-500 flex items-center justify-center">
                 <Brain className="h-5 w-5 text-white" />
               </div>
               <div>
-                <div className="text-white font-medium">Ready to find your travel twin?</div>
-                <div className="text-gray-400 text-sm">AI will analyze your travel patterns and preferences</div>
+                <div className="text-white font-medium">Ready to find your travel bestie?</div>
+                <div className="text-gray-400 text-sm">AI will analyze your vibe and match you with compatible twins</div>
               </div>
             </div>
           </div>
@@ -366,71 +620,114 @@ function DiscoveryPage() {
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
               </div>
               <div>
-                <div className="text-white font-medium">Analyzing your travel patterns...</div>
-                <div className="text-gray-400 text-sm">Finding compatibility matches...</div>
+                <div className="text-white font-medium">Scanning the vibe universe...</div>
+                <div className="text-gray-400 text-sm">Finding your perfect travel twins...</div>
               </div>
             </div>
             
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Travel style analysis</span>
+                <span className="text-gray-400">Analyzing travel personality</span>
                 <span className="text-cyan-400">Complete ✓</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Interest matching</span>
-                <span className="text-yellow-400">In progress...</span>
+                <span className="text-gray-400">Vibe compatibility matching</span>
+                <span className="text-yellow-400">Processing...</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Compatibility scoring</span>
+                <span className="text-gray-400">Finding twin souls</span>
                 <span className="text-gray-500">Pending</span>
               </div>
             </div>
           </div>
         )}
 
-        {foundTwin && (
+        {foundTwins.length > 0 && (
           <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-2xl p-4 border border-green-400/30 mb-4">
-            <div className="flex items-center space-x-2 mb-3">
+            <div className="flex items-center space-x-2 mb-4">
               <CheckCircle className="h-5 w-5 text-green-400" />
-              <span className="text-green-400 font-medium text-sm">Perfect Match Found!</span>
+              <span className="text-green-400 font-medium text-sm">Found {foundTwins.length} Compatible Twins!</span>
             </div>
             
-            <div className="flex items-center space-x-4 mb-4">
-              <img
-                src={foundTwin.avatar}
-                alt={foundTwin.displayName}
-                className="w-12 h-12 rounded-full object-cover"
-              />
-              <div className="flex-1">
-                <h3 className="text-white font-semibold">{foundTwin.displayName}</h3>
-                <p className="text-gray-400 text-sm">{foundTwin.location}</p>
-                <div className="flex items-center space-x-1 mt-1">
-                  <Heart className="h-3 w-3 text-pink-400 fill-current" />
-                  <span className="text-pink-400 text-sm font-medium">{foundTwin.compatibility}% match</span>
+            <div className="space-y-4">
+              {foundTwins.map((twin) => (
+                <div key={twin.id} className="bg-black/20 rounded-2xl p-4 border border-white/10">
+                  <div className="flex items-start space-x-4">
+                    <img
+                      src={twin.avatar}
+                      alt={twin.displayName}
+                      className="w-12 h-12 rounded-full object-cover"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <h3 className="text-white font-semibold">{twin.displayName}</h3>
+                          <p className="text-gray-400 text-sm">{twin.location} • {twin.age} years old</p>
+                        </div>
+                        <div className="text-right">
+                          <div className="flex items-center space-x-1">
+                            <Heart className="h-3 w-3 text-pink-400 fill-current" />
+                            <span className="text-pink-400 text-sm font-medium">{twin.compatibility}%</span>
+                          </div>
+                          <div className="text-xs text-gray-400">{twin.gender} • {twin.energyLevel}</div>
+                        </div>
+                      </div>
+                      
+                      <p className="text-gray-300 text-sm mb-3">{twin.bio}</p>
+                      
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="text-xs text-purple-400 bg-purple-500/20 px-2 py-1 rounded-full">
+                          {twin.travelStyle}
+                        </div>
+                        {twin.currentTrip && (
+                          <div className="text-xs text-orange-400">
+                            Currently: {twin.currentTrip}
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex flex-wrap gap-1 mb-3">
+                        {twin.commonInterests.slice(0, 3).map((interest, index) => (
+                          <span key={index} className="px-2 py-1 bg-cyan-500/20 text-cyan-400 rounded-full text-xs">
+                            {interest}
+                          </span>
+                        ))}
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex space-x-2">
+                          {twin.zodiacSign && (
+                            <span className="text-xs text-yellow-400">✨ {twin.zodiacSign}</span>
+                          )}
+                          {twin.mbtiType && (
+                            <span className="text-xs text-blue-400">🧠 {twin.mbtiType}</span>
+                          )}
+                        </div>
+                        <div className="flex space-x-2">
+                          <button className="flex items-center space-x-1 px-3 py-1 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full text-white text-xs hover:shadow-lg transition-all">
+                            <Heart className="h-3 w-3" />
+                            <span>Connect</span>
+                          </button>
+                          <button className="flex items-center space-x-1 px-3 py-1 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full text-white text-xs hover:shadow-lg transition-all">
+                            <MessageCircle className="h-3 w-3" />
+                            <span>Chat</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-            
-            <div className="mb-3">
-              <p className="text-gray-300 text-sm mb-2">{foundTwin.bio}</p>
-              <div className="text-xs text-gray-400 mb-2">Common interests:</div>
-              <div className="flex flex-wrap gap-1">
-                {foundTwin.commonInterests.map((interest, index) => (
-                  <span key={index} className="px-2 py-1 bg-purple-500/20 text-purple-400 rounded-full text-xs">
-                    {interest}
-                  </span>
-                ))}
-              </div>
+              ))}
             </div>
           </div>
         )}
 
         <button
-          onClick={handleFindTwin}
+          onClick={handleFindTwins}
           disabled={isAnalyzing}
           className="w-full bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-3 rounded-2xl font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
         >
-          {isAnalyzing ? 'Analyzing...' : foundTwin ? 'Find Another Twin' : 'Find My Travel Twin'}
+          {isAnalyzing ? 'Scanning Vibes...' : foundTwins.length > 0 ? 'Find More Twins' : '✨ Find My Travel Twin ✨'}
         </button>
       </div>
 
@@ -457,7 +754,7 @@ function DiscoveryPage() {
         {selectedMood && (
           <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-xl p-3 border border-cyan-400/30">
             <div className="text-cyan-400 text-sm font-medium">
-              Perfect! Here are {selectedMood.toLowerCase()} experiences near you...
+              Perfect! Here are {selectedMood.toLowerCase()} vibes near you...
             </div>
             <div className="mt-2 space-y-1">
               <div className="text-xs text-gray-300">• Sunset meditation spots</div>
@@ -480,18 +777,18 @@ function DiscoveryPage() {
           }`}>
             <Shuffle className="h-12 w-12 text-white" />
           </div>
-          <h2 className="text-xl font-bold text-white mb-2">Teleport Roulette</h2>
-          <p className="text-gray-400 text-sm">Spin the wheel for spontaneous adventure discovery</p>
+          <h2 className="text-xl font-bold text-white mb-2">🎲 Random Adventure Portal 🎲</h2>
+          <p className="text-gray-400 text-sm">Spin for spontaneous wanderlust destinations</p>
         </div>
 
         {!isSpinning && !teleportResult && (
           <div className="space-y-4">
             <div className="flex justify-center space-x-4">
               <button className="px-4 py-2 bg-white/10 rounded-xl text-gray-300 text-sm border border-white/10">
-                Nearby (50km)
+                Nearby Vibes (50km)
               </button>
               <button className="px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-xl text-cyan-400 text-sm border border-cyan-400/30">
-                Adventure (500km+)
+                Epic Adventures (500km+)
               </button>
             </div>
           </div>
@@ -500,7 +797,7 @@ function DiscoveryPage() {
         {isSpinning && (
           <div className="mt-4 text-center">
             <div className="text-orange-400 text-sm animate-pulse mb-3">
-              🌟 Spinning through destinations...
+              🌟 Portal scanning dimensions...
             </div>
             <div className="grid grid-cols-2 gap-2 text-xs text-gray-400">
               <div>Scanning: Mountain adventures</div>
@@ -515,7 +812,7 @@ function DiscoveryPage() {
           <div className="bg-gradient-to-r from-green-500/20 to-teal-500/20 rounded-2xl p-4 border border-green-400/30 mb-4">
             <div className="flex items-center space-x-2 mb-3">
               <Zap className="h-5 w-5 text-green-400" />
-              <span className="text-green-400 font-medium text-sm">Destination Found!</span>
+              <span className="text-green-400 font-medium text-sm">✨ Portal Activated! ✨</span>
             </div>
             
             <div className="mb-4">
@@ -531,7 +828,7 @@ function DiscoveryPage() {
             <p className="text-gray-300 text-sm mb-3">{teleportResult.description}</p>
             
             <div className="space-y-2 mb-4">
-              <div className="text-xs text-green-400 font-medium">Highlights:</div>
+              <div className="text-xs text-green-400 font-medium">Adventure Highlights:</div>
               {teleportResult.highlights.map((highlight, index) => (
                 <div key={index} className="flex items-center space-x-2 text-xs text-gray-300">
                   <Star className="h-3 w-3 text-yellow-400 fill-current" />
@@ -564,13 +861,13 @@ function DiscoveryPage() {
           disabled={isSpinning}
           className="w-full bg-gradient-to-r from-orange-500 to-pink-500 px-6 py-4 rounded-2xl font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
         >
-          {isSpinning ? 'Spinning the Wheel...' : teleportResult ? 'Spin Again' : 'Spin the Wheel'}
+          {isSpinning ? '🌀 Portal Spinning...' : teleportResult ? '🎲 Spin Again' : '🚀 Activate Portal'}
         </button>
       </div>
 
       {/* Recent Discoveries */}
       <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4">
-        <h3 className="text-white font-semibold mb-4">Recent Teleport Discoveries</h3>
+        <h3 className="text-white font-semibold mb-4">Recent Portal Discoveries</h3>
         <div className="space-y-3">
           {teleportDestinations.slice(0, 3).map((destination) => (
             <div key={destination.id} className="flex items-center space-x-3 p-3 bg-white/5 rounded-xl">
@@ -599,8 +896,8 @@ function DiscoveryPage() {
           <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-purple-400 to-cyan-500 rounded-full flex items-center justify-center">
             <Wand2 className="h-8 w-8 text-white" />
           </div>
-          <h2 className="text-xl font-bold text-white mb-2">Dreamscape Mode</h2>
-          <p className="text-gray-400 text-sm">Describe your dream trip and AI creates a surreal itinerary</p>
+          <h2 className="text-xl font-bold text-white mb-2">🌈 Dreamscape Creator 🌈</h2>
+          <p className="text-gray-400 text-sm">Manifest your wildest travel fantasies into reality</p>
         </div>
 
         <div className="space-y-4">
@@ -638,7 +935,7 @@ function DiscoveryPage() {
             disabled={!dreamInput.trim() || isGenerating}
             className="w-full bg-gradient-to-r from-purple-500 to-cyan-500 px-6 py-3 rounded-2xl font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
           >
-            {isGenerating ? 'Weaving Your Dream...' : 'Generate Dream Itinerary'}
+            {isGenerating ? '🌟 Weaving Your Dream...' : '✨ Generate Dream Journey ✨'}
           </button>
         </div>
       </div>
@@ -734,7 +1031,7 @@ function DiscoveryPage() {
           </div>
           
           <button className="w-full mt-4 bg-gradient-to-r from-purple-500 to-cyan-500 px-6 py-3 rounded-2xl font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300">
-            Start Dream Journey
+            🚀 Start Dream Journey
           </button>
         </div>
       )}
@@ -749,13 +1046,13 @@ function DiscoveryPage() {
           <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full flex items-center justify-center">
             <Clock className="h-8 w-8 text-white" />
           </div>
-          <h2 className="text-xl font-bold text-white mb-2">Nomad Time Machine</h2>
-          <p className="text-gray-400 text-sm">See historical versions of your current location through AR</p>
+          <h2 className="text-xl font-bold text-white mb-2">⏰ Temporal Explorer ⏰</h2>
+          <p className="text-gray-400 text-sm">Experience history through immersive AR time portals</p>
         </div>
 
         <div className="bg-white/5 rounded-2xl p-4 mb-4">
           <div className="text-white font-medium mb-2">Current Location: Goa, India</div>
-          <div className="text-gray-400 text-sm mb-3">Select a historical period to experience:</div>
+          <div className="text-gray-400 text-sm mb-3">Select a historical era to experience:</div>
           
           <div className="space-y-2">
             {historicalPeriods.map((period) => (
@@ -781,7 +1078,7 @@ function DiscoveryPage() {
           <div className="bg-gradient-to-r from-orange-500/20 to-red-500/20 rounded-2xl p-4 border border-orange-400/30 mb-4">
             <div className="flex items-center space-x-3 mb-3">
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-orange-400"></div>
-              <span className="text-orange-400 font-medium text-sm">Activating Time Portal...</span>
+              <span className="text-orange-400 font-medium text-sm">⚡ Activating Time Portal...</span>
             </div>
             <div className="space-y-1 text-xs text-gray-300">
               <div>• Calibrating temporal coordinates...</div>
@@ -795,7 +1092,7 @@ function DiscoveryPage() {
           <div className="bg-gradient-to-r from-green-500/20 to-teal-500/20 rounded-2xl p-4 border border-green-400/30 mb-4">
             <div className="flex items-center space-x-2 mb-3">
               <CheckCircle className="h-5 w-5 text-green-400" />
-              <span className="text-green-400 font-medium text-sm">Time Portal Active!</span>
+              <span className="text-green-400 font-medium text-sm">🌟 Time Portal Active!</span>
             </div>
             
             <div className="mb-4">
@@ -827,7 +1124,7 @@ function DiscoveryPage() {
           disabled={isTimeTravel}
           className="w-full bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-3 rounded-2xl font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
         >
-          {isTimeTravel ? 'Activating Time Portal...' : selectedEra ? 'Experience AR Time View' : 'Activate Time Machine'}
+          {isTimeTravel ? '⚡ Activating Portal...' : selectedEra ? '👁️ Experience AR Time View' : '🕰️ Activate Time Machine'}
         </button>
       </div>
 
@@ -856,7 +1153,7 @@ function DiscoveryPage() {
     <div className="p-4 pb-20 lg:pb-4">
       {/* Header */}
       <div className="text-center mb-6">
-        <h1 className="text-2xl font-bold text-white mb-2">Discovery Hub</h1>
+        <h1 className="text-2xl font-bold text-white mb-2">🌟 Discovery Universe 🌟</h1>
         <p className="text-gray-400 text-sm">AI-powered exploration and serendipitous adventures</p>
       </div>
 
@@ -870,8 +1167,8 @@ function DiscoveryPage() {
               : 'bg-white/10 text-gray-400 hover:text-white hover:bg-white/20'
           }`}
         >
-          <Target className="h-4 w-4" />
-          <span>Doppelarting</span>
+          <Magic className="h-4 w-4" />
+          <span>✨ Twin Radar</span>
         </button>
         
         <button
@@ -883,7 +1180,7 @@ function DiscoveryPage() {
           }`}
         >
           <Shuffle className="h-4 w-4" />
-          <span>Teleport</span>
+          <span>🎲 Portal Spin</span>
         </button>
         
         <button
@@ -895,7 +1192,7 @@ function DiscoveryPage() {
           }`}
         >
           <Wand2 className="h-4 w-4" />
-          <span>Dreamscape</span>
+          <span>🌈 Dreamscape</span>
         </button>
         
         <button
@@ -907,7 +1204,7 @@ function DiscoveryPage() {
           }`}
         >
           <Clock className="h-4 w-4" />
-          <span>Time Machine</span>
+          <span>⏰ Time Portal</span>
         </button>
       </div>
 
