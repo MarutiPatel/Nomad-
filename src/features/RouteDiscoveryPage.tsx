@@ -4,9 +4,10 @@ import {
   Search, Bot, Mic, Send, Car, Train, Plane, Footprints,
   Utensils, Coffee, Bed, Camera, Fuel, TreePine, AlertTriangle,
   Users, Calendar, DollarSign, Map, Eye, Play, Bookmark,
-  ThumbsUp, MessageCircle, Award, Zap, Route as RouteIcon,
+  ThumbsUp, MessageCircle, Award, Zap, RouteIcon,
   Volume2, VolumeX, Settings, Target, Compass, Globe,
-  TrendingUp, CheckCircle, Info, ArrowRight, RefreshCw
+  TrendingUp, CheckCircle, Info, ArrowRight, RefreshCw,
+  Sparkles, Lightning, MapPinIcon
 } from 'lucide-react';
 
 interface RouteStop {
@@ -26,6 +27,8 @@ interface RouteStop {
   isHiddenGem?: boolean;
   safetyRating: number;
   carbonFootprint?: string;
+  openingHours?: string;
+  contactInfo?: string;
 }
 
 interface SavedRoute {
@@ -70,7 +73,7 @@ interface AIMessage {
   content: string;
   isUser: boolean;
   timestamp: Date;
-  type: 'text' | 'route' | 'recommendations';
+  type: 'text' | 'route' | 'recommendations' | 'analysis' | 'suggestions';
   data?: any;
 }
 
@@ -186,77 +189,8 @@ function RouteDiscoveryPage() {
     }
   ];
 
-  const mockRouteStops: RouteStop[] = [
-    {
-      id: '1',
-      name: 'Highway Dhaba Delight',
-      type: 'food',
-      location: 'Panvel, Maharashtra',
-      coordinates: { lat: 18.9894, lng: 73.1267 },
-      rating: 4.5,
-      reviews: 234,
-      priceRange: '₹150-300',
-      distance: 45,
-      estimatedTime: '1h',
-      image: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400',
-      description: 'Authentic Punjabi food with truck driver vibes',
-      specialOffers: ['Free chai with meal', '20% off for groups'],
-      isHiddenGem: true,
-      safetyRating: 4.8,
-      carbonFootprint: 'Low impact'
-    },
-    {
-      id: '2',
-      name: 'Sunset Point Resort',
-      type: 'stay',
-      location: 'Mahabaleshwar, Maharashtra',
-      coordinates: { lat: 17.9242, lng: 73.6582 },
-      rating: 4.7,
-      reviews: 89,
-      priceRange: '₹2000-4000',
-      distance: 120,
-      estimatedTime: '3h',
-      image: 'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg?auto=compress&cs=tinysrgb&w=400',
-      description: 'Hillside resort with panoramic valley views',
-      specialOffers: ['Early check-in free', 'Complimentary breakfast'],
-      safetyRating: 4.9,
-      carbonFootprint: 'Eco-friendly'
-    },
-    {
-      id: '3',
-      name: 'Ancient Cave Temples',
-      type: 'attraction',
-      location: 'Karla, Maharashtra',
-      coordinates: { lat: 18.7469, lng: 73.4831 },
-      rating: 4.6,
-      reviews: 156,
-      priceRange: 'Free',
-      distance: 85,
-      estimatedTime: '2h 30m',
-      image: 'https://images.pexels.com/photos/3244513/pexels-photo-3244513.jpeg?auto=compress&cs=tinysrgb&w=400',
-      description: '2000-year-old Buddhist cave temples with intricate carvings',
-      isHiddenGem: true,
-      safetyRating: 4.5,
-      carbonFootprint: 'Zero impact'
-    },
-    {
-      id: '4',
-      name: 'Green Valley Camping',
-      type: 'camping',
-      location: 'Pawna Lake, Maharashtra',
-      coordinates: { lat: 18.7469, lng: 73.4831 },
-      rating: 4.4,
-      reviews: 78,
-      priceRange: '₹800-1500',
-      distance: 95,
-      estimatedTime: '2h 45m',
-      image: 'https://images.pexels.com/photos/1687845/pexels-photo-1687845.jpeg?auto=compress&cs=tinysrgb&w=400',
-      description: 'Lakeside camping with bonfire and stargazing',
-      specialOffers: ['Equipment rental included', 'Group discounts'],
-      safetyRating: 4.3,
-      carbonFootprint: 'Minimal impact'
-    }
-  ];
+  const [myFootprints] = useState(mockSavedRoutes);
+  const [friendsFootprints] = useState(mockCommunityRoutes);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -279,32 +213,268 @@ function RouteDiscoveryPage() {
     }));
   };
 
+  const generateRouteStops = (from: string, to: string, preferences: string[]) => {
+    const baseStops: RouteStop[] = [];
+    
+    // Generate route-specific stops based on the route
+    if (from.toLowerCase().includes('pune') && to.toLowerCase().includes('lonavala')) {
+      // Pune to Lonavala route
+      if (preferences.includes('food')) {
+        baseStops.push({
+          id: '1',
+          name: 'Sunny Da Dhaba',
+          type: 'food',
+          location: 'Khandala, Maharashtra',
+          coordinates: { lat: 18.7469, lng: 73.4831 },
+          rating: 4.5,
+          reviews: 456,
+          priceRange: '₹200-400',
+          distance: 35,
+          estimatedTime: '45m',
+          image: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400',
+          description: 'Famous roadside dhaba serving authentic Maharashtrian cuisine with stunning valley views',
+          specialOffers: ['Free chai with main course', '20% off for groups of 4+'],
+          isHiddenGem: true,
+          safetyRating: 4.8,
+          carbonFootprint: 'Low impact',
+          openingHours: '6:00 AM - 11:00 PM',
+          contactInfo: '+91 98765 43210'
+        });
+      }
+
+      if (preferences.includes('stay')) {
+        baseStops.push({
+          id: '2',
+          name: 'Hill Station Resort & Spa',
+          type: 'stay',
+          location: 'Lonavala, Maharashtra',
+          coordinates: { lat: 18.7537, lng: 73.4135 },
+          rating: 4.7,
+          reviews: 289,
+          priceRange: '₹3000-6000',
+          distance: 64,
+          estimatedTime: '1h 30m',
+          image: 'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg?auto=compress&cs=tinysrgb&w=400',
+          description: 'Luxury resort with panoramic hill views, spa services, and infinity pool',
+          specialOffers: ['Early check-in free', 'Complimentary breakfast', 'Spa discount 30%'],
+          safetyRating: 4.9,
+          carbonFootprint: 'Eco-friendly certified',
+          openingHours: '24/7',
+          contactInfo: '+91 98765 43211'
+        });
+      }
+
+      if (preferences.includes('attractions')) {
+        baseStops.push({
+          id: '3',
+          name: 'Karla Caves',
+          type: 'attraction',
+          location: 'Karla, Maharashtra',
+          coordinates: { lat: 18.7469, lng: 73.4831 },
+          rating: 4.6,
+          reviews: 567,
+          priceRange: '₹50 entry',
+          distance: 50,
+          estimatedTime: '1h 15m',
+          image: 'https://images.pexels.com/photos/3244513/pexels-photo-3244513.jpeg?auto=compress&cs=tinysrgb&w=400',
+          description: 'Ancient Buddhist rock-cut caves dating back to 2nd century BCE with intricate carvings',
+          isHiddenGem: true,
+          safetyRating: 4.5,
+          carbonFootprint: 'Zero impact',
+          openingHours: '9:00 AM - 5:30 PM',
+          contactInfo: 'Archaeological Survey of India'
+        });
+      }
+
+      if (preferences.includes('fuel')) {
+        baseStops.push({
+          id: '4',
+          name: 'Highway Fuel Station',
+          type: 'fuel',
+          location: 'Mumbai-Pune Highway',
+          coordinates: { lat: 18.7200, lng: 73.4000 },
+          rating: 4.2,
+          reviews: 123,
+          priceRange: '₹95-105/L',
+          distance: 25,
+          estimatedTime: '30m',
+          image: 'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg?auto=compress&cs=tinysrgb&w=400',
+          description: 'Modern fuel station with convenience store and clean restrooms',
+          specialOffers: ['Loyalty points', 'Free car wash with full tank'],
+          safetyRating: 4.8,
+          carbonFootprint: 'Standard',
+          openingHours: '24/7',
+          contactInfo: '+91 1800 XXX XXXX'
+        });
+      }
+
+      if (preferences.includes('camping')) {
+        baseStops.push({
+          id: '5',
+          name: 'Pawna Lake Camping',
+          type: 'camping',
+          location: 'Pawna Lake, Maharashtra',
+          coordinates: { lat: 18.7469, lng: 73.4831 },
+          rating: 4.4,
+          reviews: 234,
+          priceRange: '₹1200-2500',
+          distance: 55,
+          estimatedTime: '1h 20m',
+          image: 'https://images.pexels.com/photos/1687845/pexels-photo-1687845.jpeg?auto=compress&cs=tinysrgb&w=400',
+          description: 'Lakeside camping with tents, bonfire, barbecue, and stargazing activities',
+          specialOffers: ['Equipment included', 'Group discounts', 'Free breakfast'],
+          safetyRating: 4.3,
+          carbonFootprint: 'Minimal impact',
+          openingHours: 'Check-in: 2:00 PM, Check-out: 11:00 AM',
+          contactInfo: '+91 98765 43212'
+        });
+      }
+    } else {
+      // Generate generic stops for other routes
+      if (preferences.includes('food')) {
+        baseStops.push({
+          id: 'f1',
+          name: 'Local Food Paradise',
+          type: 'food',
+          location: `Highway near ${to}`,
+          coordinates: { lat: 19.0760, lng: 72.8777 },
+          rating: 4.6,
+          reviews: 345,
+          priceRange: '₹150-350',
+          distance: Math.floor(Math.random() * 50) + 20,
+          estimatedTime: `${Math.floor(Math.random() * 60) + 30}m`,
+          image: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400',
+          description: 'Authentic local cuisine with traditional recipes and fresh ingredients',
+          specialOffers: ['Family meals discount', 'Free dessert'],
+          isHiddenGem: Math.random() > 0.5,
+          safetyRating: 4.5,
+          carbonFootprint: 'Low impact'
+        });
+      }
+
+      if (preferences.includes('stay')) {
+        baseStops.push({
+          id: 's1',
+          name: 'Comfort Inn & Suites',
+          type: 'stay',
+          location: `${to} City Center`,
+          coordinates: { lat: 19.0760, lng: 72.8777 },
+          rating: 4.3,
+          reviews: 189,
+          priceRange: '₹2500-4500',
+          distance: Math.floor(Math.random() * 30) + 40,
+          estimatedTime: `${Math.floor(Math.random() * 30) + 60}m`,
+          image: 'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg?auto=compress&cs=tinysrgb&w=400',
+          description: 'Modern hotel with excellent amenities and convenient location',
+          specialOffers: ['Free WiFi', 'Breakfast included', 'Parking available'],
+          safetyRating: 4.7,
+          carbonFootprint: 'Eco-friendly'
+        });
+      }
+
+      if (preferences.includes('attractions')) {
+        baseStops.push({
+          id: 'a1',
+          name: 'Historic Landmark',
+          type: 'attraction',
+          location: `${to} Heritage Site`,
+          coordinates: { lat: 19.0760, lng: 72.8777 },
+          rating: 4.8,
+          reviews: 678,
+          priceRange: '₹100-200',
+          distance: Math.floor(Math.random() * 20) + 45,
+          estimatedTime: `${Math.floor(Math.random() * 45) + 75}m`,
+          image: 'https://images.pexels.com/photos/3244513/pexels-photo-3244513.jpeg?auto=compress&cs=tinysrgb&w=400',
+          description: 'Must-visit historical site with rich cultural heritage and architecture',
+          isHiddenGem: Math.random() > 0.7,
+          safetyRating: 4.4,
+          carbonFootprint: 'Zero impact'
+        });
+      }
+    }
+
+    return baseStops;
+  };
+
   const handlePlanRoute = async () => {
-    if (!routeData.from || !routeData.to) return;
+    if (!routeData.from || !routeData.to) {
+      alert('Please enter both starting location and destination');
+      return;
+    }
     
     setIsGenerating(true);
     setShowAIAssistant(true);
     
-    // Simulate AI processing
+    // Add initial AI message
+    const initialMessage: AIMessage = {
+      id: Date.now().toString(),
+      content: `🤖 Analyzing your route from ${routeData.from} to ${routeData.to}...`,
+      isUser: false,
+      timestamp: new Date(),
+      type: 'text'
+    };
+    
+    setAiMessages([initialMessage]);
+    
+    // Simulate AI processing with realistic delay
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    const aiMessage: AIMessage = {
-      id: Date.now().toString(),
-      content: `Perfect! I've analyzed your route from ${routeData.from} to ${routeData.to} and found some amazing stops based on your preferences.`,
+    // Generate route stops based on preferences
+    const generatedStops = generateRouteStops(routeData.from, routeData.to, routeData.preferences);
+    
+    // Calculate route statistics
+    const totalDistance = generatedStops.reduce((sum, stop) => sum + stop.distance, 0);
+    const totalTime = Math.floor(totalDistance / 50 * 60); // Assuming average 50km/h
+    const estimatedCost = Math.floor(totalDistance * 8 + generatedStops.length * 200); // Fuel + stops
+    
+    const routeAnalysis: AIMessage = {
+      id: (Date.now() + 1).toString(),
+      content: `🎯 Perfect! I've analyzed your route and found ${generatedStops.length} amazing stops based on your preferences for ${routeData.preferences.join(', ')}.`,
       isUser: false,
       timestamp: new Date(),
       type: 'route',
       data: {
-        route: mockRouteStops,
-        totalDistance: '463 km',
-        estimatedTime: '8h 30m',
-        estimatedCost: '₹2,500',
-        highlights: ['3 hidden gems', '2 eco-friendly stops', '1 local favorite']
+        route: generatedStops,
+        totalDistance: `${totalDistance}km`,
+        estimatedTime: `${Math.floor(totalTime / 60)}h ${totalTime % 60}m`,
+        estimatedCost: `₹${estimatedCost}`,
+        highlights: [
+          `${generatedStops.filter(s => s.isHiddenGem).length} hidden gems`,
+          `${generatedStops.filter(s => s.specialOffers?.length).length} special offers`,
+          `${generatedStops.filter(s => s.rating >= 4.5).length} highly rated spots`
+        ],
+        preferences: routeData.preferences,
+        travelers: routeData.travelers,
+        departureDate: routeData.departure
       }
     };
     
-    setAiMessages(prev => [...prev, aiMessage]);
-    setGeneratedRoute(mockRouteStops);
+    setAiMessages(prev => [...prev, routeAnalysis]);
+    setGeneratedRoute(generatedStops);
+    
+    // Add follow-up suggestions after a short delay
+    setTimeout(() => {
+      const suggestionsMessage: AIMessage = {
+        id: (Date.now() + 2).toString(),
+        content: "💡 I can help you with more details about any of these stops, suggest alternative routes, find budget options, or plan timing for your journey. What would you like to explore?",
+        isUser: false,
+        timestamp: new Date(),
+        type: 'suggestions',
+        data: {
+          suggestions: [
+            'Tell me more about hidden gems',
+            'Find budget-friendly alternatives',
+            'Optimize timing for each stop',
+            'Add more attractions nearby',
+            'Check weather conditions',
+            'Find group discounts'
+          ]
+        }
+      };
+      
+      setAiMessages(prev => [...prev, suggestionsMessage]);
+    }, 1500);
+    
     setIsGenerating(false);
   };
 
@@ -320,33 +490,132 @@ function RouteDiscoveryPage() {
     };
     
     setAiMessages(prev => [...prev, userMessage]);
+    const currentInput = aiInput;
     setAiInput('');
     
-    // Simulate AI response
+    // Show thinking indicator
+    const thinkingMessage: AIMessage = {
+      id: (Date.now() + 1).toString(),
+      content: '🤔 Let me help you with that...',
+      isUser: false,
+      timestamp: new Date(),
+      type: 'text'
+    };
+    
+    setAiMessages(prev => [...prev, thinkingMessage]);
+    
+    // Generate contextual AI response based on input
     setTimeout(() => {
-      const responses = [
-        "I can help you find the best routes! Would you like me to suggest some hidden food spots along the way?",
-        "Great question! Based on your travel style, I recommend taking the scenic route with 3 extra stops for photography.",
-        "I've found some amazing camping spots that other travelers have rated 4.8+ stars. Shall I add them to your route?",
-        "Perfect timing! There's a local festival happening in that area next week. Want me to plan your route around it?"
-      ];
+      let aiResponse: AIMessage;
+      const input = currentInput.toLowerCase();
       
-      const aiResponse: AIMessage = {
-        id: (Date.now() + 1).toString(),
-        content: responses[Math.floor(Math.random() * responses.length)],
-        isUser: false,
-        timestamp: new Date(),
-        type: 'text'
-      };
+      if (input.includes('hidden') || input.includes('gem')) {
+        aiResponse = {
+          id: (Date.now() + 2).toString(),
+          content: `🏆 Great question! I found ${generatedRoute?.filter(s => s.isHiddenGem).length || 2} hidden gems on your route that most travelers miss:`,
+          isUser: false,
+          timestamp: new Date(),
+          type: 'recommendations',
+          data: {
+            recommendations: generatedRoute?.filter(s => s.isHiddenGem).map(stop => ({
+              name: stop.name,
+              type: stop.type,
+              description: stop.description,
+              specialNote: 'Local favorite - not in guidebooks!'
+            })) || []
+          }
+        };
+      } else if (input.includes('budget') || input.includes('cheap') || input.includes('cost')) {
+        aiResponse = {
+          id: (Date.now() + 2).toString(),
+          content: `💰 I can help you save money! Here are budget-friendly options for your route:`,
+          isUser: false,
+          timestamp: new Date(),
+          type: 'analysis',
+          data: {
+            budgetTips: [
+              'Choose local dhabas over restaurants - save ₹200-500 per meal',
+              'Book accommodation in advance for 30% discount',
+              'Travel on weekdays to avoid weekend surcharges',
+              'Look for group packages at camping sites',
+              'Use fuel reward programs for additional savings'
+            ],
+            totalSavings: '₹800-1200'
+          }
+        };
+      } else if (input.includes('time') || input.includes('timing') || input.includes('schedule')) {
+        aiResponse = {
+          id: (Date.now() + 2).toString(),
+          content: `⏰ Perfect timing is crucial! Here's my recommended schedule for your ${routeData.from} to ${routeData.to} journey:`,
+          isUser: false,
+          timestamp: new Date(),
+          type: 'analysis',
+          data: {
+            schedule: [
+              '7:00 AM - Start journey (avoid rush hour)',
+              '9:30 AM - First food stop & fuel',
+              '12:00 PM - Lunch at scenic location',
+              '2:30 PM - Main attraction visit',
+              '5:00 PM - Reach destination/check-in',
+              '7:00 PM - Evening exploration'
+            ],
+            tips: [
+              'Start early to enjoy cooler weather',
+              'Plan lunch stops with good views',
+              'Avoid peak traffic hours (8-10 AM, 6-8 PM)'
+            ]
+          }
+        };
+      } else if (input.includes('weather') || input.includes('climate')) {
+        aiResponse = {
+          id: (Date.now() + 2).toString(),
+          content: `🌤️ Weather update for your route! Here's what to expect:`,
+          isUser: false,
+          timestamp: new Date(),
+          type: 'analysis',
+          data: {
+            weather: {
+              departure: 'Partly cloudy, 24°C - Perfect for travel',
+              route: 'Clear skies expected, visibility excellent',
+              destination: 'Pleasant weather, 22°C - Ideal for sightseeing'
+            },
+            recommendations: [
+              'Carry light jacket for evening',
+              'Perfect weather for outdoor activities',
+              'Great visibility for scenic photography'
+            ]
+          }
+        };
+      } else {
+        // Generic helpful response
+        const responses = [
+          `🚗 That's a great point about your ${routeData.from} to ${routeData.to} trip! Based on your preferences for ${routeData.preferences.join(', ')}, I recommend focusing on the highest-rated stops first.`,
+          `🌟 Excellent question! For your route, I'd suggest taking the scenic path and allowing extra time at ${generatedRoute?.[0]?.name || 'the first stop'} - it's rated ${generatedRoute?.[0]?.rating || '4.5'}/5 by travelers.`,
+          `💡 Smart thinking! Given you're traveling with ${routeData.travelers} ${routeData.travelers === 1 ? 'person' : 'people'}, I can suggest group-friendly stops and family discounts along your route.`,
+          `🎯 Great insight! The route I've planned includes local favorites and traveler-tested spots. Would you like me to add more specific types of stops or adjust the timing?`
+        ];
+        
+        aiResponse = {
+          id: (Date.now() + 2).toString(),
+          content: responses[Math.floor(Math.random() * responses.length)],
+          isUser: false,
+          timestamp: new Date(),
+          type: 'text'
+        };
+      }
       
-      setAiMessages(prev => [...prev, aiResponse]);
-    }, 1000);
+      // Remove thinking message and add real response
+      setAiMessages(prev => {
+        const filtered = prev.filter(msg => msg.content !== '🤔 Let me help you with that...');
+        return [...filtered, aiResponse];
+      });
+    }, 1000 + Math.random() * 1000);
   };
 
   const handleVoiceInput = () => {
     setIsListening(!isListening);
+    // Voice recognition simulation
     if (!isListening) {
-      // Simulate voice input
       setTimeout(() => {
         setRouteData({
           ...routeData,
@@ -676,7 +945,7 @@ function RouteDiscoveryPage() {
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-2">
                               <div className="flex items-center space-x-1">
-                                <Shield className="h-3 w-3 text-blue-400" />
+                                <CheckCircle className="h-3 w-3 text-blue-400" />
                                 <span className="text-blue-400 text-xs">{stop.safetyRating}/5 Safety</span>
                               </div>
                               {stop.carbonFootprint && (
@@ -908,28 +1177,31 @@ function RouteDiscoveryPage() {
                 <p>Hi! I'm your AI route assistant. I can help you find the best routes, hidden gems, and perfect stops for your journey.</p>
                 <div className="mt-4 space-y-2">
                   <button
-                    onClick={() => setAiMessages([{
-                      id: '1',
-                      content: "Find me hidden food spots between Mumbai and Goa",
-                      isUser: true,
-                      timestamp: new Date(),
-                      type: 'text'
-                    }])}
+                    onClick={() => {
+                      setAiInput("Find me hidden food spots between Mumbai and Goa");
+                      handleAISend();
+                    }}
                     className="w-full text-left p-2 bg-white/5 rounded-lg text-xs hover:bg-white/10 transition-colors"
                   >
                     "Find hidden food spots on my route"
                   </button>
                   <button
-                    onClick={() => setAiMessages([{
-                      id: '1',
-                      content: "What's the best time to travel to avoid traffic?",
-                      isUser: true,
-                      timestamp: new Date(),
-                      type: 'text'
-                    }])}
+                    onClick={() => {
+                      setAiInput("What's the best time to travel to avoid traffic?");
+                      handleAISend();
+                    }}
                     className="w-full text-left p-2 bg-white/5 rounded-lg text-xs hover:bg-white/10 transition-colors"
                   >
                     "Best time to avoid traffic?"
+                  </button>
+                  <button
+                    onClick={() => {
+                      setAiInput("Show me budget-friendly options");
+                      handleAISend();
+                    }}
+                    className="w-full text-left p-2 bg-white/5 rounded-lg text-xs hover:bg-white/10 transition-colors"
+                  >
+                    "Show me budget-friendly options"
                   </button>
                 </div>
               </div>
@@ -943,14 +1215,83 @@ function RouteDiscoveryPage() {
                     : 'bg-white/10 text-white'
                 }`}>
                   <p className="text-sm">{message.content}</p>
+                  
                   {message.type === 'route' && message.data && (
                     <div className="mt-3 pt-3 border-t border-white/20">
                       <div className="text-xs text-white/80 mb-2">Route Summary:</div>
                       <div className="space-y-1 text-xs">
-                        <div>Distance: {message.data.totalDistance}</div>
-                        <div>Time: {message.data.estimatedTime}</div>
-                        <div>Cost: {message.data.estimatedCost}</div>
-                        <div className="text-cyan-300">{message.data.highlights.join(', ')}</div>
+                        <div>📍 Distance: {message.data.totalDistance}</div>
+                        <div>⏱️ Time: {message.data.estimatedTime}</div>
+                        <div>💰 Cost: {message.data.estimatedCost}</div>
+                        <div className="text-cyan-300">✨ {message.data.highlights.join(', ')}</div>
+                      </div>
+                    </div>
+                  )}
+
+                  {message.type === 'recommendations' && message.data && (
+                    <div className="mt-3 pt-3 border-t border-white/20">
+                      <div className="space-y-2">
+                        {message.data.recommendations.map((rec: any, idx: number) => (
+                          <div key={idx} className="bg-black/20 rounded-lg p-2">
+                            <div className="text-xs font-medium text-cyan-300">{rec.name}</div>
+                            <div className="text-xs text-gray-300">{rec.description}</div>
+                            {rec.specialNote && (
+                              <div className="text-xs text-orange-300 mt-1">💎 {rec.specialNote}</div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {message.type === 'analysis' && message.data && (
+                    <div className="mt-3 pt-3 border-t border-white/20">
+                      {message.data.budgetTips && (
+                        <div className="space-y-1">
+                          {message.data.budgetTips.map((tip: string, idx: number) => (
+                            <div key={idx} className="text-xs text-green-300">💡 {tip}</div>
+                          ))}
+                          {message.data.totalSavings && (
+                            <div className="text-xs text-green-400 font-medium mt-2">
+                              💰 Total Savings: {message.data.totalSavings}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      {message.data.schedule && (
+                        <div className="space-y-1">
+                          {message.data.schedule.map((item: string, idx: number) => (
+                            <div key={idx} className="text-xs text-blue-300">🕐 {item}</div>
+                          ))}
+                        </div>
+                      )}
+
+                      {message.data.weather && (
+                        <div className="space-y-1">
+                          <div className="text-xs text-blue-300">🌤️ Start: {message.data.weather.departure}</div>
+                          <div className="text-xs text-blue-300">🛣️ Route: {message.data.weather.route}</div>
+                          <div className="text-xs text-blue-300">🎯 Destination: {message.data.weather.destination}</div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {message.type === 'suggestions' && message.data && (
+                    <div className="mt-3 pt-3 border-t border-white/20">
+                      <div className="grid grid-cols-1 gap-1">
+                        {message.data.suggestions.map((suggestion: string, idx: number) => (
+                          <button
+                            key={idx}
+                            onClick={() => {
+                              setAiInput(suggestion);
+                              handleAISend();
+                            }}
+                            className="text-left p-2 bg-black/20 rounded-lg text-xs hover:bg-black/40 transition-colors text-cyan-300"
+                          >
+                            💭 {suggestion}
+                          </button>
+                        ))}
                       </div>
                     </div>
                   )}
@@ -972,7 +1313,8 @@ function RouteDiscoveryPage() {
               />
               <button
                 onClick={handleAISend}
-                className="p-2 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                disabled={!aiInput.trim()}
+                className="p-2 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
               >
                 <Send className="h-4 w-4 text-white" />
               </button>
@@ -998,7 +1340,10 @@ function RouteDiscoveryPage() {
               <div className="text-center text-gray-400">
                 <Map className="h-16 w-16 mx-auto mb-4" />
                 <p>Interactive map would be displayed here</p>
-                <p className="text-sm mt-2">Showing route with all discovered stops</p>
+                <p className="text-sm mt-2">Showing route: {routeData.from} → {routeData.to}</p>
+                {generatedRoute && (
+                  <p className="text-sm mt-1">With {generatedRoute.length} discovered stops</p>
+                )}
               </div>
             </div>
           </div>
