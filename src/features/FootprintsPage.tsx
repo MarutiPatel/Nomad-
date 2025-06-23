@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   MapPin, Camera, Heart, MessageCircle, Share, Plus, 
   Filter, Search, Map, Grid, List, Clock, Star, Eye,
@@ -6,7 +6,7 @@ import {
   Users, Globe, UserPlus, MoreHorizontal, ThumbsUp,
   Reply, Flag, Bookmark, TrendingUp, Zap, Crown,
   AtSign, Hash, Settings, ChevronDown, ChevronUp,
-  User
+  User, Navigation, Image as ImageIcon, Upload
 } from 'lucide-react';
 
 interface User {
@@ -84,7 +84,7 @@ function FootprintsPage() {
       avatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=100',
       isVerified: true,
       isFollowing: true,
-      location: 'Goa, India',
+      location: 'New York, USA',
       travelStyle: 'Adventure Seeker'
     },
     {
@@ -93,7 +93,7 @@ function FootprintsPage() {
       avatar: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=100',
       isVerified: false,
       isFollowing: true,
-      location: 'Himachal Pradesh',
+      location: 'Swiss Alps, Switzerland',
       travelStyle: 'Nature Lover'
     },
     {
@@ -102,7 +102,7 @@ function FootprintsPage() {
       avatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=100',
       isVerified: true,
       isFollowing: false,
-      location: 'Bangalore, India',
+      location: 'Barcelona, Spain',
       travelStyle: 'Work & Travel'
     },
     {
@@ -119,19 +119,19 @@ function FootprintsPage() {
     {
       id: '1',
       author: mockUsers[3],
-      location: 'Goa Beach, India',
-      coordinates: { lat: 15.2993, lng: 74.1240 },
-      title: 'Sunset Paradise',
-      description: 'Amazing sunset view with fellow travelers. The beach was perfect for evening walks and the local food was incredible!',
+      location: 'Times Square, New York',
+      coordinates: { lat: 40.7580, lng: -73.9855 },
+      title: 'Urban Energy Rush',
+      description: 'The heartbeat of NYC! Amazing energy even at 2 AM. Met fellow travelers from 6 different countries right here.',
       mediaType: 'photo',
-      mediaUrl: 'https://images.pexels.com/photos/1032650/pexels-photo-1032650.jpeg?auto=compress&cs=tinysrgb&w=400',
+      mediaUrl: 'https://images.pexels.com/photos/378570/pexels-photo-378570.jpeg?auto=compress&cs=tinysrgb&w=400',
       timestamp: new Date('2024-01-15T18:30:00'),
-      likes: 24,
+      likes: 34,
       comments: [
         {
           id: '1',
           author: mockUsers[0],
-          content: 'Absolutely stunning! Which beach is this exactly?',
+          content: 'Times Square never gets old! Which corner did you find the best street performers?',
           timestamp: new Date('2024-01-15T19:00:00'),
           likes: 3,
           isLiked: false,
@@ -139,31 +139,22 @@ function FootprintsPage() {
             {
               id: '1',
               author: mockUsers[3],
-              content: 'This is Arambol Beach! Such a hidden gem 🏖️',
+              content: 'Near the TKTS stairs! There was an amazing violinist playing classical music 🎻',
               timestamp: new Date('2024-01-15T19:15:00'),
               likes: 1,
               isLiked: true
             }
           ]
-        },
-        {
-          id: '2',
-          author: mockUsers[1],
-          content: 'Adding this to my travel bucket list! 🌅',
-          timestamp: new Date('2024-01-15T20:30:00'),
-          likes: 5,
-          isLiked: true,
-          replies: []
         }
       ],
-      shares: 8,
-      views: 156,
+      shares: 12,
+      views: 203,
       visibility: 'public',
-      tags: ['sunset', 'beach', 'goa', 'peaceful'],
+      tags: ['urban', 'nightlife', 'street-performers', 'nyc'],
       isLiked: true,
       isBookmarked: false,
-      mood: 'peaceful',
-      weather: 'sunny'
+      mood: 'excited',
+      weather: 'clear'
     }
   ];
 
@@ -171,19 +162,19 @@ function FootprintsPage() {
     {
       id: 'f1',
       author: mockUsers[0],
-      location: 'Anjuna Beach, Goa',
-      coordinates: { lat: 15.5736, lng: 73.7370 },
-      title: 'Beach Volleyball Vibes',
-      description: 'Epic beach volleyball session with fellow nomads! Nothing beats the combination of sports, sun, and amazing people. The sunset afterwards was just the cherry on top! 🏐',
+      location: 'Central Park, New York',
+      coordinates: { lat: 40.7829, lng: -73.9654 },
+      title: 'Morning Zen in the City',
+      description: 'Found this perfect meditation spot in Central Park. The contrast between urban chaos and nature\'s peace is incredible. Perfect sunrise yoga session! 🧘‍♀️',
       mediaType: 'video',
       mediaUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
       timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000),
-      likes: 42,
+      likes: 56,
       comments: [
         {
           id: 'c1',
           author: mockUsers[1],
-          content: 'Looks like so much fun! Wish I was there 🏐',
+          content: 'This looks so peaceful! What time did you go to avoid crowds? 🌅',
           timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
           likes: 8,
           isLiked: false,
@@ -191,7 +182,7 @@ function FootprintsPage() {
             {
               id: 'r1',
               author: mockUsers[0],
-              content: '@MountainSoul42 Next time you should totally join! The more the merrier 🎉',
+              content: '@MountainSoul42 Sunrise at 6 AM! Hardly anyone around and the light is magical ✨',
               timestamp: new Date(Date.now() - 90 * 60 * 1000),
               likes: 3,
               isLiked: true,
@@ -200,13 +191,13 @@ function FootprintsPage() {
           ]
         }
       ],
-      shares: 12,
-      views: 234,
+      shares: 18,
+      views: 387,
       visibility: 'friends',
-      tags: ['beach', 'volleyball', 'sports', 'friends', 'sunset'],
+      tags: ['meditation', 'yoga', 'sunrise', 'central-park', 'peaceful'],
       isLiked: false,
       isBookmarked: true,
-      mood: 'excited',
+      mood: 'peaceful',
       weather: 'sunny',
       travelBuddies: [mockUsers[2]],
       isFeatured: true
@@ -214,10 +205,10 @@ function FootprintsPage() {
     {
       id: 'f2',
       author: mockUsers[1],
-      location: 'Triund Peak, Himachal Pradesh',
-      coordinates: { lat: 32.2396, lng: 77.1887 },
-      title: 'Mountain Meditation Bliss',
-      description: 'Started the day with sunrise meditation at 3000m altitude. The silence here is absolutely profound - you can literally hear your heartbeat echoing in the valley. This is why I travel.',
+      location: 'Matterhorn, Switzerland',
+      coordinates: { lat: 45.9763, lng: 7.6586 },
+      title: 'Alpine Majesty at Sunrise',
+      description: 'Hiked 4 hours to catch sunrise over the Matterhorn. The silence at this altitude is profound - you can hear your heartbeat echoing across the valley. This is why I climb.',
       mediaType: 'gallery',
       mediaUrl: [
         'https://images.pexels.com/photos/1366919/pexels-photo-1366919.jpeg?auto=compress&cs=tinysrgb&w=400',
@@ -225,46 +216,27 @@ function FootprintsPage() {
         'https://images.pexels.com/photos/962464/pexels-photo-962464.jpeg?auto=compress&cs=tinysrgb&w=400'
       ],
       timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000),
-      likes: 67,
+      likes: 89,
       comments: [
         {
           id: 'c2',
           author: mockUsers[2],
-          content: 'This looks absolutely incredible! How difficult was the trek?',
+          content: 'Absolutely breathtaking! How difficult was the hike? Planning a Switzerland trip 🏔️',
           timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000),
-          likes: 2,
+          likes: 4,
           isLiked: true,
           replies: []
-        },
-        {
-          id: 'c3',
-          author: mockUsers[0],
-          content: 'The peace you must have felt up there... I can almost feel it through the photos 🧘‍♀️',
-          timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000),
-          likes: 12,
-          isLiked: false,
-          replies: [
-            {
-              id: 'r2',
-              author: mockUsers[1],
-              content: '@CosmicWanderer88 It really was life-changing! You should definitely plan a trip here',
-              timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-              likes: 4,
-              isLiked: true,
-              mentionedUser: mockUsers[0]
-            }
-          ]
         }
       ],
-      shares: 23,
-      views: 445,
+      shares: 31,
+      views: 567,
       visibility: 'public',
-      tags: ['meditation', 'mountains', 'sunrise', 'spiritual', 'himachal'],
+      tags: ['matterhorn', 'sunrise', 'hiking', 'alps', 'switzerland'],
       isLiked: true,
       isBookmarked: false,
-      mood: 'peaceful',
+      mood: 'grateful',
       weather: 'clear',
-      altitude: 3000
+      altitude: 3883
     }
   ];
 
@@ -272,38 +244,38 @@ function FootprintsPage() {
     {
       id: 'c1',
       author: mockUsers[2],
-      location: 'Bangalore, Karnataka',
-      coordinates: { lat: 12.9716, lng: 77.5946 },
-      title: 'Digital Nomad Hub Discovery',
-      description: 'Found this amazing coworking space with the best coffee in Bangalore! Perfect blend of productivity and travel vibes. The community here is incredible - met nomads from 12 different countries today! ☕️💻',
+      location: 'Park Güell, Barcelona',
+      coordinates: { lat: 41.4145, lng: 2.1527 },
+      title: 'Gaudí\'s Mosaic Wonderland',
+      description: 'Working remotely from Park Güell today! Found this perfect spot with WiFi and the most incredible views of Barcelona. The mosaic work here is absolutely mind-blowing 🎨💻',
       mediaType: 'photo',
       mediaUrl: 'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg?auto=compress&cs=tinysrgb&w=400',
       timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000),
-      likes: 89,
+      likes: 134,
       comments: [
         {
           id: 'cc1',
           author: {
             id: '4',
-            displayName: 'TechNomadGirl',
+            displayName: 'ArchitectureNerd',
             avatar: 'https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg?auto=compress&cs=tinysrgb&w=100',
             isVerified: false
           },
-          content: 'Which coworking space is this? Planning a trip to Bangalore next month!',
+          content: 'Gaudí was truly ahead of his time! Did you visit Casa Batlló too? The whole city is an art museum 🏛️',
           timestamp: new Date(Date.now() - 10 * 60 * 60 * 1000),
-          likes: 6,
+          likes: 12,
           isLiked: false,
           replies: [
             {
               id: 'rr1',
               author: mockUsers[2],
-              content: '@TechNomadGirl It\'s 91springboard in Koramangala! Amazing community and great coffee ☕',
+              content: '@ArchitectureNerd Yes! And Sagrada Familia tomorrow. Barcelona is a digital nomad\'s dream city 🌆',
               timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000),
               likes: 8,
               isLiked: false,
               mentionedUser: {
                 id: '4',
-                displayName: 'TechNomadGirl',
+                displayName: 'ArchitectureNerd',
                 avatar: 'https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg?auto=compress&cs=tinysrgb&w=100',
                 isVerified: false
               }
@@ -311,67 +283,15 @@ function FootprintsPage() {
           ]
         }
       ],
-      shares: 15,
-      views: 332,
+      shares: 23,
+      views: 456,
       visibility: 'public',
-      tags: ['coworking', 'bangalore', 'digital-nomad', 'coffee', 'community'],
+      tags: ['gaudi', 'architecture', 'barcelona', 'digital-nomad', 'art'],
       isLiked: false,
       isBookmarked: false,
-      mood: 'productive',
-      weather: 'cloudy',
+      mood: 'inspired',
+      weather: 'sunny',
       isFeatured: true
-    },
-    {
-      id: 'c2',
-      author: {
-        id: '5',
-        displayName: 'BackpackerSarah',
-        avatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=100',
-        isVerified: true,
-        location: 'Kerala, India',
-        travelStyle: 'Budget Traveler'
-      },
-      location: 'Alleppey Backwaters, Kerala',
-      coordinates: { lat: 9.4981, lng: 76.3388 },
-      title: 'Houseboat Heaven on a Budget',
-      description: 'Spent 3 days on a traditional Kerala houseboat for just ₹800 per day! The local family who owns it shared amazing stories and the most delicious fish curry I\'ve ever had. Sometimes the best experiences come from the most unexpected places! 🛥️',
-      mediaType: 'video',
-      mediaUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-      timestamp: new Date(Date.now() - 18 * 60 * 60 * 1000),
-      likes: 156,
-      comments: [
-        {
-          id: 'cc2',
-          author: {
-            id: '6',
-            displayName: 'BudgetTraveler101',
-            avatar: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=100',
-            isVerified: false
-          },
-          content: 'This is exactly what I needed to see! How did you find such an affordable option?',
-          timestamp: new Date(Date.now() - 15 * 60 * 60 * 1000),
-          likes: 12,
-          isLiked: true,
-          replies: []
-        },
-        {
-          id: 'cc3',
-          author: mockUsers[0],
-          content: 'The backwaters look absolutely magical! Kerala is definitely on my list now 🌴',
-          timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000),
-          likes: 8,
-          isLiked: false,
-          replies: []
-        }
-      ],
-      shares: 34,
-      views: 578,
-      visibility: 'public',
-      tags: ['kerala', 'houseboat', 'budget-travel', 'backwaters', 'local-experience'],
-      isLiked: true,
-      isBookmarked: true,
-      mood: 'grateful',
-      weather: 'sunny'
     }
   ];
 
@@ -393,27 +313,18 @@ function FootprintsPage() {
   };
 
   const handleLike = (id: string) => {
-    // Handle like functionality for all feeds
     console.log('Liked footprint:', id);
   };
 
   const handleComment = (footprintId: string, content: string) => {
     if (!content.trim()) return;
-    
-    // Add new comment logic here
     console.log('New comment on', footprintId, ':', content);
-    
-    // Clear input
     setCommentInputs(prev => ({ ...prev, [footprintId]: '' }));
   };
 
   const handleReply = (footprintId: string, commentId: string, content: string) => {
     if (!content.trim()) return;
-    
-    // Add new reply logic here
     console.log('New reply on', footprintId, commentId, ':', content);
-    
-    // Clear input
     setReplyInputs(prev => ({ ...prev, [`${footprintId}-${commentId}`]: '' }));
   };
 
@@ -498,7 +409,6 @@ function FootprintsPage() {
       );
     }
 
-    // Default photo
     return (
       <div className="h-64 overflow-hidden rounded-t-3xl">
         <img
@@ -885,7 +795,7 @@ function FootprintsPage() {
             <option value="">All Tags</option>
             <option value="beach">Beach</option>
             <option value="mountains">Mountains</option>
-            <option value="spiritual">Spiritual</option>
+            <option value="urban">Urban</option>
             <option value="adventure">Adventure</option>
           </select>
         </div>
@@ -956,6 +866,229 @@ function FootprintsPage() {
           )}
         </div>
       )}
+
+      {/* Create Footprint Modal */}
+      {showCreateModal && (
+        <CreateFootprintModal onClose={() => setShowCreateModal(false)} />
+      )}
+    </div>
+  );
+}
+
+function CreateFootprintModal({ onClose }: { onClose: () => void }) {
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    location: '',
+    visibility: 'public' as 'public' | 'followers' | 'private',
+    tags: '',
+    mediaType: 'photo' as 'photo' | 'video' | 'voice'
+  });
+
+  const [currentLocation, setCurrentLocation] = useState('Detected: New York, NY');
+  const [useCustomLocation, setUseCustomLocation] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('Creating footprint:', formData);
+    onClose();
+  };
+
+  const detectLocation = () => {
+    // Simulate GPS detection
+    const locations = [
+      'New York, NY, USA',
+      'Central Park, New York',
+      'Times Square, New York',
+      'Brooklyn Bridge, New York',
+      'Paris, France',
+      'London, UK',
+      'Tokyo, Japan'
+    ];
+    const detected = locations[Math.floor(Math.random() * locations.length)];
+    setCurrentLocation(`Detected: ${detected}`);
+    if (!useCustomLocation) {
+      setFormData(prev => ({ ...prev, location: detected }));
+    }
+  };
+
+  useEffect(() => {
+    // Auto-detect location on modal open
+    detectLocation();
+  }, []);
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-slate-900/95 backdrop-blur-md rounded-3xl border border-white/20 max-w-md w-full max-h-[80vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-white">Drop a Footprint</h2>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+            >
+              <X className="h-5 w-5 text-white" />
+            </button>
+          </div>
+          
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Media Upload */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Add Media (Optional)</label>
+              <div className="flex space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, mediaType: 'photo' }))}
+                  className={`flex-1 p-3 rounded-xl border transition-colors flex items-center justify-center space-x-2 ${
+                    formData.mediaType === 'photo'
+                      ? 'bg-blue-500/20 border-blue-400/30 text-blue-400'
+                      : 'bg-white/5 border-white/10 text-gray-400 hover:border-white/20'
+                  }`}
+                >
+                  <Camera className="h-5 w-5" />
+                  <span className="text-sm">Photo</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, mediaType: 'video' }))}
+                  className={`flex-1 p-3 rounded-xl border transition-colors flex items-center justify-center space-x-2 ${
+                    formData.mediaType === 'video'
+                      ? 'bg-red-500/20 border-red-400/30 text-red-400'
+                      : 'bg-white/5 border-white/10 text-gray-400 hover:border-white/20'
+                  }`}
+                >
+                  <Video className="h-5 w-5" />
+                  <span className="text-sm">Video</span>
+                </button>
+                <button
+                  type="button"
+                  className="p-3 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:border-white/20 transition-colors"
+                >
+                  <Upload className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Title */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Title</label>
+              <input
+                type="text"
+                value={formData.title}
+                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none"
+                placeholder="What's this moment about?"
+                required
+              />
+            </div>
+
+            {/* Location */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Location</label>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between p-3 bg-green-500/10 rounded-xl border border-green-400/30">
+                  <div className="flex items-center space-x-2">
+                    <Navigation className="h-4 w-4 text-green-400" />
+                    <span className="text-green-400 text-sm">{currentLocation}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={detectLocation}
+                    className="text-green-400 hover:text-green-300 transition-colors"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </button>
+                </div>
+                
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    id="customLocation"
+                    checked={useCustomLocation}
+                    onChange={(e) => setUseCustomLocation(e.target.checked)}
+                    className="w-4 h-4 text-cyan-600 bg-black/20 border-white/10 rounded focus:ring-cyan-500"
+                  />
+                  <label htmlFor="customLocation" className="text-sm text-gray-300">
+                    Use custom location
+                  </label>
+                </div>
+                
+                {useCustomLocation && (
+                  <input
+                    type="text"
+                    value={formData.location}
+                    onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                    className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none"
+                    placeholder="Enter custom location"
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Caption/Story (Optional)</label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none resize-none"
+                rows={3}
+                placeholder="Share your story about this moment..."
+              />
+            </div>
+
+            {/* Visibility */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Visibility</label>
+              <select
+                value={formData.visibility}
+                onChange={(e) => setFormData(prev => ({ ...prev, visibility: e.target.value as any }))}
+                className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white focus:border-cyan-400 focus:outline-none"
+              >
+                <option value="public">Public - Anyone can see</option>
+                <option value="followers">Followers Only</option>
+                <option value="private">Private - Only me</option>
+              </select>
+            </div>
+
+            {/* Tags */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Tags (Optional)</label>
+              <input
+                type="text"
+                value={formData.tags}
+                onChange={(e) => setFormData(prev => ({ ...prev, tags: e.target.value }))}
+                className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none"
+                placeholder="adventure, beach, sunset (comma separated)"
+              />
+            </div>
+
+            {/* Submit Buttons */}
+            <div className="flex space-x-3 pt-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 px-6 py-3 border border-white/20 rounded-2xl text-gray-300 hover:bg-white/5 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="flex-1 bg-gradient-to-r from-cyan-500 to-purple-500 px-6 py-3 rounded-2xl font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                Drop Footprint
+              </button>
+            </div>
+          </form>
+
+          {/* Info */}
+          <div className="mt-4 p-3 bg-blue-500/10 rounded-xl border border-blue-400/30">
+            <p className="text-blue-300 text-xs text-center">
+              📍 Timestamp and location are auto-detected but editable. Your footprint will be visible to other travelers based on your privacy settings.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
