@@ -5,7 +5,7 @@ import {
   Footprints, Radar, Target, Camera, Map, Heart, Trophy,
   Bell, Search, Plus, Menu, X, LogOut, Shield, Zap,
   Clock, Utensils, Bot, Eye, Gift, AlertTriangle, BookOpen,
-  Calendar, Globe, RefreshCw, Route as RouteIcon
+  Calendar, Globe, RefreshCw, Route as RouteIcon, Star
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import FootprintsPage from '../features/FootprintsPage';
