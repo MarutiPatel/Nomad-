@@ -64,24 +64,12 @@ interface Footprint {
   travelBuddies?: User[];
   altitude?: number;
   isEditing?: boolean;
-  // Stealth Features
-  isStealthMode?: boolean;
-  allowedViewers?: string[];
-  stealthTags?: string[];
-  expiryDate?: Date;
-  // Place Pulse Features
-  placePulse?: {
-    friendliness: number; // 1-5
-    cleanliness: number; // 1-5
-    safety: number; // 1-5
-    signalStrength: number; // 1-5
-    foodQuality: number; // 1-5
-  };
   // Stealth mode features
   stealthMode: boolean;
   allowedViewers: 'everyone' | 'friends' | 'tags' | 'custom';
   allowedTags?: string[];
   secretTrail?: string;
+  expiryDate?: Date;
   // Place pulse ratings
   placePulse?: {
     friendliness: number; // 1-5
@@ -181,14 +169,6 @@ function FootprintsPage() {
       isBookmarked: false,
       mood: 'excited',
       weather: 'clear',
-      isStealthMode: false,
-      placePulse: {
-        friendliness: 5,
-        cleanliness: 4,
-        safety: 5,
-        signalStrength: 3,
-        foodQuality: 4
-      },
       stealthMode: false,
       allowedViewers: 'everyone',
       placePulse: {
@@ -239,18 +219,8 @@ function FootprintsPage() {
       tags: ['meditation', 'yoga', 'sunrise', 'central-park', 'peaceful'],
       isLiked: false,
       isBookmarked: true,
-      isStealthMode: true,
-      allowedViewers: ['friends'],
-      stealthTags: ['zen-seekers'],
       mood: 'peaceful',
       weather: 'sunny',
-      placePulse: {
-        friendliness: 4,
-        cleanliness: 5,
-        safety: 5,
-        signalStrength: 4,
-        foodQuality: 3
-      },
       travelBuddies: [mockUsers[2]],
       isFeatured: true,
       stealthMode: true,
@@ -360,13 +330,6 @@ function FootprintsPage() {
       tags: ['gaudi', 'architecture', 'barcelona', 'digital-nomad', 'art'],
       isLiked: false,
       isBookmarked: false,
-      placePulse: {
-        friendliness: 5,
-        cleanliness: 4,
-        safety: 4,
-        signalStrength: 5,
-        foodQuality: 5
-      },
       mood: 'inspired',
       weather: 'sunny',
       isFeatured: true,
@@ -669,78 +632,6 @@ function FootprintsPage() {
             {footprint.altitude && <span className="text-xs">⛰️ {footprint.altitude}m</span>}
           </div>
         </div>
-
-        {/* Stealth Mode Indicator */}
-        {footprint.isStealthMode && (
-          <div className="bg-gradient-to-r from-purple-500/10 to-indigo-500/10 rounded-xl p-3 mb-3 border border-purple-400/30">
-            <div className="flex items-center space-x-2 mb-2">
-              <Eye className="h-4 w-4 text-purple-400" />
-              <span className="text-purple-400 text-sm font-medium">Stealth Mode</span>
-            </div>
-            <div className="text-purple-300 text-xs">
-              Visible to: {footprint.allowedViewers?.join(', ') || 'Custom viewers'}
-              {footprint.stealthTags && (
-                <span className="ml-2">• Tags: {footprint.stealthTags.join(', ')}</span>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Place Pulse Rating */}
-        {footprint.placePulse && (
-          <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-xl p-3 mb-3 border border-blue-400/30">
-            <div className="flex items-center space-x-2 mb-3">
-              <Users className="h-4 w-4 text-blue-400" />
-              <span className="text-blue-400 text-sm font-medium">Place Pulse</span>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-300">Friendliness</span>
-                <div className="flex space-x-1">
-                  {[1,2,3,4,5].map(i => (
-                    <div key={i} className={`w-1.5 h-1.5 rounded-full ${
-                      i <= footprint.placePulse!.friendliness ? 'bg-green-400' : 'bg-gray-600'
-                    }`} />
-                  ))}
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-gray-300">Cleanliness</span>
-                <div className="flex space-x-1">
-                  {[1,2,3,4,5].map(i => (
-                    <div key={i} className={`w-1.5 h-1.5 rounded-full ${
-                      i <= footprint.placePulse!.cleanliness ? 'bg-blue-400' : 'bg-gray-600'
-                    }`} />
-                  ))}
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-gray-300">Safety</span>
-                <div className="flex space-x-1">
-                  {[1,2,3,4,5].map(i => (
-                    <div key={i} className={`w-1.5 h-1.5 rounded-full ${
-                      i <= footprint.placePulse!.safety ? 'bg-yellow-400' : 'bg-gray-600'
-                    }`} />
-                  ))}
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-gray-300">Signal</span>
-                <div className="flex space-x-1">
-                  {[1,2,3,4,5].map(i => (
-                    <div key={i} className={`w-1.5 h-1.5 rounded-full ${
-                      i <= footprint.placePulse!.signalStrength ? 'bg-cyan-400' : 'bg-gray-600'
-                    }`} />
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Stealth Mode Indicator */}
         {footprint.stealthMode && (
@@ -1132,12 +1023,7 @@ function CreateFootprintModal({ onClose }: { onClose: () => void }) {
     cleanliness: 3,
     safety: 3,
     signalStrength: 3,
-    foodQuality: 3,
-    // Stealth features
-    isStealthMode: false,
-    allowedViewers: '',
-    stealthTags: '',
-    expiryDate: ''
+    foodQuality: 3
   });
 
   const [currentLocation, setCurrentLocation] = useState('Detected: New York, NY');
