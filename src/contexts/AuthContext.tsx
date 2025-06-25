@@ -22,6 +22,15 @@ interface User {
   canReceiveChatInvites: boolean;
   profileVisibility: 'public' | 'friends' | 'private';
   locationSharingPrecision: 'precise' | 'approximate';
+  trustScore: number;
+  trustCircles: string[];
+  isCreator: boolean;
+  creatorContent?: {
+    followers: number;
+    totalViews: number;
+    guides: number;
+    meetups: number;
+  };
 }
 
 interface AuthContextType {
@@ -118,6 +127,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (parsedUser.canReceiveChatInvites === undefined) parsedUser.canReceiveChatInvites = true;
         if (!parsedUser.profileVisibility) parsedUser.profileVisibility = 'public';
         if (!parsedUser.locationSharingPrecision) parsedUser.locationSharingPrecision = 'approximate';
+        if (parsedUser.trustScore === undefined) parsedUser.trustScore = 50;
+        if (!parsedUser.trustCircles) parsedUser.trustCircles = [];
+        if (parsedUser.isCreator === undefined) parsedUser.isCreator = false;
         
         setUser(parsedUser);
       } catch (err) {
@@ -150,8 +162,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       reportedUsers: [],
       canReceiveChatInvites: true,
       profileVisibility: 'public',
-      locationSharingPrecision: 'approximate'
+      locationSharingPrecision: 'approximate',
+      trustScore: Math.floor(Math.random() * 40) + 30, // 30-70 initial trust score
+      trustCircles: [],
+      isCreator: Math.random() < 0.1 // 10% chance of being a creator
     };
+    
+    if (newUser.isCreator) {
+      newUser.creatorContent = {
+        followers: Math.floor(Math.random() * 500) + 50,
+        totalViews: Math.floor(Math.random() * 5000) + 500,
+        guides: Math.floor(Math.random() * 10) + 1,
+        meetups: Math.floor(Math.random() * 5)
+      };
+    }
+    
     return newUser;
   };
 
@@ -191,6 +216,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (existingUser.canReceiveChatInvites === undefined) existingUser.canReceiveChatInvites = true;
       if (!existingUser.profileVisibility) existingUser.profileVisibility = 'public';
       if (!existingUser.locationSharingPrecision) existingUser.locationSharingPrecision = 'approximate';
+      if (existingUser.trustScore === undefined) existingUser.trustScore = 50;
+      if (!existingUser.trustCircles) existingUser.trustCircles = [];
+      if (existingUser.isCreator === undefined) existingUser.isCreator = false;
       
       setUser(existingUser);
       localStorage.setItem('nomad_user', JSON.stringify(existingUser));
@@ -235,6 +263,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (existingUser.canReceiveChatInvites === undefined) existingUser.canReceiveChatInvites = true;
       if (!existingUser.profileVisibility) existingUser.profileVisibility = 'public';
       if (!existingUser.locationSharingPrecision) existingUser.locationSharingPrecision = 'approximate';
+      if (existingUser.trustScore === undefined) existingUser.trustScore = 50;
+      if (!existingUser.trustCircles) existingUser.trustCircles = [];
+      if (existingUser.isCreator === undefined) existingUser.isCreator = false;
       
       setUser(existingUser);
       localStorage.setItem('nomad_user', JSON.stringify(existingUser));
