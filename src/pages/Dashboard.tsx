@@ -5,7 +5,8 @@ import {
   Footprints, Radar, Target, Camera, Map, Heart, Trophy,
   Bell, Search, Plus, Menu, X, LogOut, Shield, Zap,
   Clock, Utensils, Bot, Eye, Gift, AlertTriangle, BookOpen,
-  Calendar, Globe, RefreshCw, Route as RouteIcon, Star
+  Calendar, Globe, RefreshCw, Route as RouteIcon, Star,
+  Smartphone, Headphones, Gamepad2, Video
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import FootprintsPage from '../features/FootprintsPage';
@@ -23,6 +24,7 @@ import LiveEventsPage from '../features/LiveEventsPage';
 import NomadNetworkPage from '../features/NomadNetworkPage';
 import PlacesRatingPage from '../features/PlacesRatingPage';
 import OfflineBuddyBeaconPage from '../features/OfflineBuddyBeaconPage';
+import ARWorldPage from '../features/ARWorldPage';
 
 function Dashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -43,6 +45,7 @@ function Dashboard() {
     { path: '/dashboard/journal', icon: BookOpen, label: 'Travel Journal' },
     { path: '/dashboard/events', icon: Calendar, label: 'Live Events' },
     { path: '/dashboard/network', icon: Globe, label: 'Nomad Network' },
+    { path: '/dashboard/ar-world', icon: Camera, label: 'AR World Tags' },
     { path: '/dashboard/time-capsules', icon: Clock, label: 'Time Capsules' },
     { path: '/dashboard/food-discovery', icon: Utensils, label: 'Food & Utilities' },
     { path: '/dashboard/safety', icon: AlertTriangle, label: 'Safety Center' },
@@ -176,7 +179,7 @@ function Dashboard() {
 
               {/* Additional Features */}
               <div>
-                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">More Features</h3>
+                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Advanced Features</h3>
                 {additionalFeatures.map((item) => (
                   <Link
                     key={item.path}
@@ -190,6 +193,11 @@ function Dashboard() {
                   >
                     <item.icon className="h-5 w-5" />
                     <span className="font-medium">{item.label}</span>
+                    {item.label === 'AR World Tags' && (
+                      <div className="ml-auto">
+                        <Video className="h-3 w-3 text-purple-400" />
+                      </div>
+                    )}
                   </Link>
                 ))}
               </div>
@@ -228,6 +236,7 @@ function Dashboard() {
             <Route path="/journal" element={<TravelJournalPage />} />
             <Route path="/events" element={<LiveEventsPage />} />
             <Route path="/network" element={<NomadNetworkPage />} />
+            <Route path="/ar-world" element={<ARWorldPage />} />
             <Route path="/time-capsules" element={<TimeCapsulePage />} />
             <Route path="/food-discovery" element={<FoodDiscoveryPage />} />
             <Route path="/safety" element={<SafetyAlertsPage />} />
@@ -298,8 +307,8 @@ function DashboardHome() {
   const quickActions = [
     { icon: Plus, label: 'Drop Footprint', color: 'from-orange-400 to-pink-500', path: '/dashboard/footprints' },
     { icon: Radar, label: 'Find Buddies', color: 'from-cyan-400 to-blue-500', path: '/dashboard/radar' },
+    { icon: Camera, label: 'AR World Tags', color: 'from-purple-400 to-pink-500', path: '/dashboard/ar-world' },
     { icon: Star, label: 'Rate Places', color: 'from-yellow-400 to-orange-500', path: '/dashboard/places-rating' },
-    { icon: RouteIcon, label: 'Buddy Beacon', color: 'from-green-400 to-teal-500', path: '/dashboard/buddy-beacon' },
     { icon: Bot, label: 'AI Assistant', color: 'from-blue-400 to-purple-500', path: '/dashboard/ai-assistant' },
     { icon: Calendar, label: 'Live Events', color: 'from-red-400 to-orange-500', path: '/dashboard/events' }
   ];
@@ -307,6 +316,7 @@ function DashboardHome() {
   const recentActivity = [
     { type: 'account', message: `Welcome ${user?.displayName}! Your account was created`, time: 'Just now', icon: User },
     { type: 'system', message: 'Random travel name assigned for privacy', time: 'Just now', icon: Shield },
+    { type: 'ar', message: 'AR World Tags ready - leave messages in AR!', time: 'Now', icon: Camera },
     { type: 'discovery', message: 'Explore all 80+ features across 9 categories', time: 'Now', icon: Target },
     { type: 'community', message: 'Ready to find your travel twin?', time: 'Now', icon: Users },
     { type: 'journey', message: 'Your nomadic journey begins here', time: 'Now', icon: Compass }
@@ -384,6 +394,37 @@ function DashboardHome() {
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* AR/VR Features Highlight */}
+      <div className="mb-8 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-cyan-500/10 backdrop-blur-sm rounded-3xl p-6 border border-white/10">
+        <div className="flex items-center space-x-2 mb-4">
+          <Camera className="h-6 w-6 text-purple-400" />
+          <h2 className="text-lg font-semibold text-white">AR/VR Ready</h2>
+        </div>
+        
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-300">AR World Tags</span>
+            <Link to="/dashboard/ar-world" className="text-sm text-purple-400 font-medium">Explore →</Link>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-300">Virtual Postcards</span>
+            <span className="text-sm text-cyan-400 font-medium">Coming Soon</span>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-300">VR Travel Experiences</span>
+            <span className="text-sm text-pink-400 font-medium">Beta Access</span>
+          </div>
+        </div>
+
+        <div className="mt-4 p-3 bg-black/20 rounded-xl">
+          <p className="text-xs text-gray-400 text-center">
+            Experience travel in a whole new dimension with AR/VR features designed for the future of nomadic exploration.
+          </p>
         </div>
       </div>
 
