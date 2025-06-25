@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   Users, Globe, MapPin, Heart, MessageCircle, UserPlus, 
   Filter, Search, Star, Clock, Navigation, Camera,
-  Zap, Trophy, Eye, Share, Bookmark, Plus
+  Zap, Trophy, Eye, Share, Bookmark, Plus, Crown
 } from 'lucide-react';
 
 interface NomadProfile {
@@ -26,6 +26,15 @@ interface NomadProfile {
   isFollowing: boolean;
   isVerified: boolean;
   badges: string[];
+  trustScore: number;
+  trustCircles: string[];
+  isCreator: boolean;
+  creatorContent?: {
+    followers: number;
+    totalViews: number;
+    guides: number;
+    meetups: number;
+  };
 }
 
 interface TravelStory {
@@ -69,7 +78,16 @@ function NomadNetworkPage() {
       lastSeen: new Date(),
       isFollowing: false,
       isVerified: true,
-      badges: ['Explorer', 'Photographer', 'Foodie']
+      badges: ['Explorer', 'Photographer', 'Foodie'],
+      trustScore: 85,
+      trustCircles: ['Beach Lovers', 'Photography Enthusiasts'],
+      isCreator: true,
+      creatorContent: {
+        followers: 324,
+        totalViews: 15420,
+        guides: 8,
+        meetups: 3
+      }
     },
     {
       id: '2',
@@ -91,7 +109,10 @@ function NomadNetworkPage() {
       lastSeen: new Date(Date.now() - 2 * 60 * 60 * 1000),
       isFollowing: true,
       isVerified: false,
-      badges: ['Zen Master', 'Eco Warrior']
+      badges: ['Zen Master', 'Eco Warrior'],
+      trustScore: 92,
+      trustCircles: ['Mindful Travelers', 'Eco Warriors'],
+      isCreator: false
     },
     {
       id: '3',
@@ -113,7 +134,16 @@ function NomadNetworkPage() {
       lastSeen: new Date(),
       isFollowing: false,
       isVerified: true,
-      badges: ['Tech Nomad', 'Connector']
+      badges: ['Tech Nomad', 'Connector'],
+      trustScore: 78,
+      trustCircles: ['Digital Nomads', 'Tech Travelers'],
+      isCreator: true,
+      creatorContent: {
+        followers: 156,
+        totalViews: 8920,
+        guides: 5,
+        meetups: 7
+      }
     }
   ];
 
@@ -271,24 +301,72 @@ function NomadNetworkPage() {
                       {/* Header */}
                       <div className="flex items-start justify-between mb-2">
                         <div>
-                          <h3 className="text-white font-semibold">{profile.displayName}</h3>
+                          <div className="flex items-center space-x-1">
+                            <span className="text-white font-medium">{profile.displayName}</span>
+                            {profile.isVerified && (
+                              <Star className="h-3 w-3 text-blue-400 fill-current" />
+                            )}
+                            {profile.isCreator && (
+                              <Crown className="h-3 w-3 text-purple-400 fill-current" />
+                            )}
+                          </div>
                           <div className="flex items-center space-x-1 text-gray-400 text-sm">
                             <MapPin className="h-3 w-3" />
                             <span>{profile.location} • {profile.distance}km away</span>
                           </div>
                         </div>
                         
-                        <button
-                          onClick={() => handleFollow(profile.id)}
-                          className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                            profile.isFollowing
-                              ? 'bg-green-500/20 text-green-400 border border-green-400/30'
-                              : 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg'
-                          }`}
-                        >
-                          {profile.isFollowing ? 'Following' : 'Follow'}
-                        </button>
+                        {/* Trust Score */}
+                        <div className="text-right">
+                          <div className={`text-sm font-bold ${
+                            profile.trustScore >= 80 ? 'text-green-400' :
+                            profile.trustScore >= 60 ? 'text-yellow-400' :
+                            'text-orange-400'
+                          }`}>
+                            Trust: {profile.trustScore}%
+                          </div>
+                          <div className="text-xs text-gray-400">
+                            {profile.trustCircles.length} circles
+                          </div>
+                        </div>
                       </div>
+
+                      {/* Creator Badge */}
+                      {profile.isCreator && profile.creatorContent && (
+                        <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl p-3 mb-3 border border-purple-400/30">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <Crown className="h-4 w-4 text-purple-400" />
+                            <span className="text-purple-400 font-medium text-sm">Travel Creator</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div className="text-center">
+                              <div className="text-sm font-bold text-purple-400">{profile.creatorContent.followers}</div>
+                              <div className="text-gray-400">Followers</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-sm font-bold text-pink-400">{profile.creatorContent.guides}</div>
+                              <div className="text-gray-400">Guides</div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Trust Circles */}
+                      {profile.trustCircles.length > 0 && (
+                        <div className="mb-3">
+                          <h4 className="text-gray-400 text-xs mb-2">Trust Circles</h4>
+                          <div className="flex flex-wrap gap-1">
+                            {profile.trustCircles.slice(0, 2).map((circle, index) => (
+                              <span
+                                key={index}
+                                className="px-2 py-1 bg-gradient-to-r from-green-500/20 to-teal-500/20 rounded-full text-xs text-green-400 border border-green-400/30"
+                              >
+                                {circle}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
                       {/* Travel Style & Bio */}
                       <div className="mb-3">
@@ -350,6 +428,17 @@ function NomadNetworkPage() {
                         <button className="flex items-center space-x-1 px-3 py-2 bg-gradient-to-r from-green-500 to-teal-500 rounded-xl text-white text-sm font-medium hover:shadow-lg transition-all duration-300">
                           <MessageCircle className="h-4 w-4" />
                           <span>Message</span>
+                        </button>
+                        
+                        <button
+                          onClick={() => handleFollow(profile.id)}
+                          className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                            profile.isFollowing
+                              ? 'bg-green-500/20 text-green-400 border border-green-400/30'
+                              : 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg'
+                          }`}
+                        >
+                          {profile.isFollowing ? 'Following' : 'Follow'}
                         </button>
                       </div>
                     </div>
@@ -540,6 +629,80 @@ function ProfileDetailModal({
             <p className="text-gray-300 text-sm">{profile.bio}</p>
           </div>
 
+          {/* Trust Information */}
+          <div className="mb-6">
+            <h4 className="text-white font-medium mb-2">Trust & Reputation</h4>
+            <div className="bg-gradient-to-r from-green-500/10 to-teal-500/10 rounded-xl p-3 border border-green-400/30">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-green-400 font-medium">Trust Score</span>
+                <span className={`text-lg font-bold ${
+                  profile.trustScore >= 80 ? 'text-green-400' :
+                  profile.trustScore >= 60 ? 'text-yellow-400' :
+                  'text-orange-400'
+                }`}>
+                  {profile.trustScore}%
+                </span>
+              </div>
+              <div className="w-full h-2 bg-gray-700 rounded-full">
+                <div
+                  className={`h-2 rounded-full ${
+                    profile.trustScore >= 80 ? 'bg-gradient-to-r from-green-400 to-teal-500' :
+                    profile.trustScore >= 60 ? 'bg-gradient-to-r from-yellow-400 to-orange-500' :
+                    'bg-gradient-to-r from-orange-400 to-red-500'
+                  }`}
+                  style={{ width: `${profile.trustScore}%` }}
+                />
+              </div>
+              <p className="text-green-300 text-xs mt-2">
+                Built through verified travels and positive community interactions
+              </p>
+            </div>
+          </div>
+
+          {/* Trust Circles */}
+          {profile.trustCircles.length > 0 && (
+            <div className="mb-6">
+              <h4 className="text-white font-medium mb-2">Trust Circles</h4>
+              <div className="flex flex-wrap gap-2">
+                {profile.trustCircles.map((circle, index) => (
+                  <span
+                    key={index}
+                    className="px-3 py-1 bg-gradient-to-r from-green-500/20 to-teal-500/20 rounded-full text-xs text-green-400 border border-green-400/30"
+                  >
+                    {circle}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Creator Stats */}
+          {profile.isCreator && profile.creatorContent && (
+            <div className="mb-6">
+              <h4 className="text-white font-medium mb-2">Creator Stats</h4>
+              <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl p-3 border border-purple-400/30">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-purple-400">{profile.creatorContent.followers}</div>
+                    <div className="text-xs text-gray-400">Followers</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-pink-400">{profile.creatorContent.totalViews}</div>
+                    <div className="text-xs text-gray-400">Total Views</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-cyan-400">{profile.creatorContent.guides}</div>
+                    <div className="text-xs text-gray-400">Travel Guides</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-orange-400">{profile.creatorContent.meetups}</div>
+                    <div className="text-xs text-gray-400">Hosted Meetups</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Interests */}
           <div className="mb-6">
             <h4 className="text-white font-medium mb-2">Interests</h4>
@@ -594,6 +757,16 @@ function StoryDetailModal({
   story: TravelStory; 
   onClose: () => void;
 }) {
+  const formatTimeAgo = (date: Date) => {
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays}d ago`;
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-slate-900/95 backdrop-blur-md rounded-3xl border border-white/20 max-w-md w-full max-h-[80vh] overflow-y-auto">

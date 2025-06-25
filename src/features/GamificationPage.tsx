@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   Trophy, Star, Heart, Zap, Target, Gift, Crown, 
   Map, Compass, Camera, Users, TreePine, Coins,
-  Calendar, Clock, CheckCircle, Lock, Unlock
+  Calendar, Clock, CheckCircle, Lock, Unlock, Navigation
 } from 'lucide-react';
 
 interface Achievement {
@@ -40,10 +40,35 @@ interface Challenge {
   maxProgress: number;
   isActive: boolean;
   isCompleted: boolean;
+  category: 'nomad-trail' | 'place-discovery' | 'social' | 'eco';
+  questType?: 'location-based' | 'activity-based' | 'social-based';
+  requirements?: string[];
+  rewards: string[];
+  progressDescription: string;
+}
+
+interface TrailQuest {
+  id: string;
+  title: string;
+  description: string;
+  region: string;
+  totalStops: number;
+  completedStops: number;
+  stops: {
+    id: string;
+    name: string;
+    type: 'sunset' | 'food' | 'heritage' | 'adventure' | 'cultural';
+    description: string;
+    isCompleted: boolean;
+    coordinates: { lat: number; lng: number };
+  }[];
+  reward: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  estimatedDays: number;
 }
 
 function GamificationPage() {
-  const [activeTab, setActiveTab] = useState<'achievements' | 'karma' | 'challenges' | 'leaderboard'>('achievements');
+  const [activeTab, setActiveTab] = useState<'achievements' | 'karma' | 'challenges' | 'trail-quests' | 'leaderboard'>('achievements');
 
   const mockAchievements: Achievement[] = [
     {
@@ -145,7 +170,12 @@ function GamificationPage() {
       progress: 2,
       maxProgress: 5,
       isActive: true,
-      isCompleted: false
+      isCompleted: false,
+      category: 'nomad-trail',
+      questType: 'location-based',
+      requirements: ['Visit the hidden temple', 'Decode the ancient inscription', 'Take a photo at sunset'],
+      rewards: ['Ancient Explorer Badge', '500 Karma Points', 'Exclusive Temple History Guide'],
+      progressDescription: 'Found 2 of 5 cryptic clues'
     },
     {
       id: '2',
@@ -157,7 +187,12 @@ function GamificationPage() {
       progress: 6,
       maxProgress: 10,
       isActive: true,
-      isCompleted: false
+      isCompleted: false,
+      category: 'place-discovery',
+      questType: 'activity-based',
+      requirements: ['Try local cuisine', 'Rate each dish', 'Share photos with community'],
+      rewards: ['Galactic Foodie Badge', 'Food Discovery Boost'],
+      progressDescription: 'Tasted 6 out of 10 dishes'
     },
     {
       id: '3',
@@ -169,13 +204,112 @@ function GamificationPage() {
       progress: 3,
       maxProgress: 3,
       isActive: false,
-      isCompleted: true
+      isCompleted: true,
+      category: 'eco',
+      questType: 'activity-based',
+      requirements: ['Avoid single-use plastics', 'Use public transport', 'Support local eco-businesses'],
+      rewards: ['Eco Champion Status', 'Carbon Offset Credits'],
+      progressDescription: 'Successfully completed 3-day challenge'
+    }
+  ];
+  
+  const mockTrailQuests: TrailQuest[] = [
+    {
+      id: '1',
+      title: 'Goa Sunset Trail',
+      description: 'Explore 5 stunning sunset viewpoints across Goa beaches',
+      region: 'Goa, India',
+      totalStops: 5,
+      completedStops: 2,
+      stops: [
+        {
+          id: '1',
+          name: 'Anjuna Beach Cliff',
+          type: 'sunset',
+          description: 'Rocky cliff overlooking the Arabian Sea',
+          isCompleted: true,
+          coordinates: { lat: 15.5736, lng: 73.7370 }
+        },
+        {
+          id: '2',
+          name: 'Chapora Fort Viewpoint',
+          type: 'sunset',
+          description: 'Historic Portuguese fort with panoramic views',
+          isCompleted: true,
+          coordinates: { lat: 15.6060, lng: 73.7364 }
+        },
+        {
+          id: '3',
+          name: 'Vagator Beach Rocks',
+          type: 'sunset',
+          description: 'Dramatic red cliffs and secluded coves',
+          isCompleted: false,
+          coordinates: { lat: 15.6076, lng: 73.7324 }
+        },
+        {
+          id: '4',
+          name: 'Morjim Turtle Beach',
+          type: 'sunset',
+          description: 'Peaceful beach known for turtle nesting',
+          isCompleted: false,
+          coordinates: { lat: 15.6299, lng: 73.7265 }
+        },
+        {
+          id: '5',
+          name: 'Arambol Sweet Water Lake',
+          type: 'sunset',
+          description: 'Hidden freshwater lake behind sand dunes',
+          isCompleted: false,
+          coordinates: { lat: 15.6885, lng: 73.7384 }
+        }
+      ],
+      reward: 'Goa Sunset Master Badge + Local Guide Recommendations',
+      difficulty: 'easy',
+      estimatedDays: 3
+    },
+    {
+      id: '2',
+      title: 'Kerala Spice Route',
+      description: 'Discover 3 authentic local dishes in traditional Kerala kitchens',
+      region: 'Kerala, India',
+      totalStops: 3,
+      completedStops: 0,
+      stops: [
+        {
+          id: '1',
+          name: 'Traditional Fish Curry',
+          type: 'food',
+          description: 'Coconut-based fish curry in a local home',
+          isCompleted: false,
+          coordinates: { lat: 9.9312, lng: 76.2673 }
+        },
+        {
+          id: '2',
+          name: 'Appam & Stew',
+          type: 'food',
+          description: 'Fermented rice pancakes with vegetable stew',
+          isCompleted: false,
+          coordinates: { lat: 10.8505, lng: 76.2711 }
+        },
+        {
+          id: '3',
+          name: 'Sadya Feast',
+          type: 'food',
+          description: 'Traditional banana leaf feast experience',
+          isCompleted: false,
+          coordinates: { lat: 8.5241, lng: 76.9366 }
+        }
+      ],
+      reward: 'Kerala Cuisine Expert Badge + Recipe Collection',
+      difficulty: 'medium',
+      estimatedDays: 5
     }
   ];
 
   const [achievements] = useState(mockAchievements);
   const [karmaActions] = useState(mockKarmaActions);
   const [challenges] = useState(mockChallenges);
+  const [trailQuests] = useState(mockTrailQuests);
 
   const totalKarmaPoints = karmaActions
     .filter(action => action.completedAt)
@@ -243,6 +377,7 @@ function GamificationPage() {
           { id: 'achievements', label: 'Achievements', icon: Trophy },
           { id: 'karma', label: 'Karma', icon: Heart },
           { id: 'challenges', label: 'Challenges', icon: Target },
+          { id: 'trail-quests', label: 'Trail Quests', icon: Navigation },
           { id: 'leaderboard', label: 'Leaderboard', icon: Crown }
         ].map((tab) => (
           <button
@@ -446,9 +581,7 @@ function GamificationPage() {
                   <div className="mb-3">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs text-gray-400">Progress</span>
-                      <span className="text-xs text-gray-400">
-                        {challenge.progress}/{challenge.maxProgress}
-                      </span>
+                      <span className="text-xs text-cyan-400">{challenge.progressDescription}</span>
                     </div>
                     <div className="w-full h-2 bg-gray-700 rounded-full">
                       <div
@@ -460,7 +593,7 @@ function GamificationPage() {
 
                   <div className="flex items-center justify-between">
                     <div className="text-sm text-gray-300">
-                      Reward: {challenge.reward}
+                      Rewards: {challenge.rewards.join(', ')}
                     </div>
                     
                     {challenge.isCompleted ? (
@@ -480,6 +613,92 @@ function GamificationPage() {
                   </div>
                 </div>
               </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {activeTab === 'trail-quests' && (
+        <div className="space-y-4">
+          <div className="bg-gradient-to-r from-orange-500/10 to-pink-500/10 backdrop-blur-sm rounded-3xl p-6 border border-orange-400/30 text-center mb-6">
+            <Navigation className="h-12 w-12 text-orange-400 mx-auto mb-3" />
+            <h2 className="text-xl font-bold text-white mb-2">Nomad Trail Quests</h2>
+            <p className="text-gray-400 text-sm">Follow curated trails and discover amazing locations</p>
+          </div>
+          
+          {trailQuests.map((quest) => (
+            <div
+              key={quest.id}
+              className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 hover:border-white/20 transition-all duration-300"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-white mb-1">{quest.title}</h3>
+                  <p className="text-gray-400 text-sm mb-2">{quest.description}</p>
+                  <div className="flex items-center space-x-3 text-xs text-gray-400">
+                    <span>📍 {quest.region}</span>
+                    <span>📅 {quest.estimatedDays} days</span>
+                    <span className={`px-2 py-1 rounded-full ${
+                      quest.difficulty === 'easy' ? 'bg-green-500/20 text-green-400' :
+                      quest.difficulty === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
+                      'bg-red-500/20 text-red-400'
+                    }`}>
+                      {quest.difficulty}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Progress */}
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-gray-300">Progress</span>
+                  <span className="text-sm text-orange-400">{quest.completedStops}/{quest.totalStops} stops</span>
+                </div>
+                <div className="w-full h-3 bg-gray-700 rounded-full">
+                  <div
+                    className="h-3 bg-gradient-to-r from-orange-400 to-pink-500 rounded-full transition-all duration-300"
+                    style={{ width: `${(quest.completedStops / quest.totalStops) * 100}%` }}
+                  />
+                </div>
+              </div>
+              
+              {/* Quest Stops */}
+              <div className="space-y-2 mb-4">
+                <h4 className="text-sm font-medium text-gray-300">Quest Stops:</h4>
+                {quest.stops.slice(0, 3).map((stop) => (
+                  <div key={stop.id} className="flex items-center space-x-3 text-sm">
+                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                      stop.isCompleted 
+                        ? 'bg-green-400 border-green-400' 
+                        : 'border-gray-600'
+                    }`}>
+                      {stop.isCompleted && <span className="text-xs">✓</span>}
+                    </div>
+                    <span className={stop.isCompleted ? 'text-green-400' : 'text-gray-400'}>
+                      {stop.name}
+                    </span>
+                  </div>
+                ))}
+                {quest.stops.length > 3 && (
+                  <div className="text-xs text-gray-500 ml-7">
+                    +{quest.stops.length - 3} more stops
+                  </div>
+                )}
+              </div>
+              
+              {/* Reward */}
+              <div className="bg-black/20 rounded-xl p-3 mb-3">
+                <div className="flex items-center space-x-2 mb-1">
+                  <Gift className="h-4 w-4 text-yellow-400" />
+                  <span className="text-yellow-400 text-sm font-medium">Reward</span>
+                </div>
+                <p className="text-gray-300 text-sm">{quest.reward}</p>
+              </div>
+              
+              <button className="w-full bg-gradient-to-r from-orange-500 to-pink-500 px-4 py-3 rounded-xl text-white font-medium hover:shadow-lg transition-all duration-300">
+                {quest.completedStops === 0 ? 'Start Quest' : 'Continue Quest'}
+              </button>
             </div>
           ))}
         </div>

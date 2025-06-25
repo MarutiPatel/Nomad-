@@ -20,6 +20,16 @@ interface JournalEntry {
   isPrivate: boolean;
   likes: number;
   isLiked: boolean;
+  // MindSpace features
+  emotionalState: {
+    energy: number; // 1-5
+    happiness: number; // 1-5
+    stress: number; // 1-5
+    inspiration: number; // 1-5
+    loneliness: number; // 1-5
+  };
+  mindfulnessNote?: string;
+  gratitudeList?: string[];
 }
 
 function TravelJournalPage() {
@@ -43,7 +53,16 @@ function TravelJournalPage() {
       tags: ['beach', 'sunset', 'food', 'friends'],
       isPrivate: false,
       likes: 12,
-      isLiked: true
+      isLiked: true,
+      emotionalState: {
+        energy: 5,
+        happiness: 5,
+        stress: 1,
+        inspiration: 4,
+        loneliness: 1
+      },
+      mindfulnessNote: 'The sound of waves washing away all worries. Living in the present moment.',
+      gratitudeList: ['Amazing sunset', 'New friendships', 'Delicious food', 'Safe travels']
     },
     {
       id: '2',
@@ -58,7 +77,16 @@ function TravelJournalPage() {
       tags: ['mountains', 'meditation', 'peace'],
       isPrivate: true,
       likes: 0,
-      isLiked: false
+      isLiked: false,
+      emotionalState: {
+        energy: 3,
+        happiness: 4,
+        stress: 1,
+        inspiration: 5,
+        loneliness: 2
+      },
+      mindfulnessNote: 'Complete silence except for my own breathing. Profound sense of connection with nature.',
+      gratitudeList: ['Mountain serenity', 'Fresh air', 'Physical strength', 'Inner peace']
     }
   ];
 
@@ -190,6 +218,76 @@ function TravelJournalPage() {
                 </div>
               )}
 
+              {/* MindSpace Emotional State */}
+              {entry.emotionalState && (
+                <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl p-3 mb-3 border border-purple-400/30">
+                  <h4 className="text-purple-400 font-medium text-xs mb-2">Emotional State</h4>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-300">Energy</span>
+                      <div className="flex space-x-1">
+                        {[1,2,3,4,5].map(i => (
+                          <div key={i} className={`w-1.5 h-1.5 rounded-full ${
+                            i <= entry.emotionalState.energy ? 'bg-yellow-400' : 'bg-gray-600'
+                          }`} />
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-300">Happiness</span>
+                      <div className="flex space-x-1">
+                        {[1,2,3,4,5].map(i => (
+                          <div key={i} className={`w-1.5 h-1.5 rounded-full ${
+                            i <= entry.emotionalState.happiness ? 'bg-pink-400' : 'bg-gray-600'
+                          }`} />
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-300">Stress</span>
+                      <div className="flex space-x-1">
+                        {[1,2,3,4,5].map(i => (
+                          <div key={i} className={`w-1.5 h-1.5 rounded-full ${
+                            i <= entry.emotionalState.stress ? 'bg-red-400' : 'bg-gray-600'
+                          }`} />
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-300">Inspiration</span>
+                      <div className="flex space-x-1">
+                        {[1,2,3,4,5].map(i => (
+                          <div key={i} className={`w-1.5 h-1.5 rounded-full ${
+                            i <= entry.emotionalState.inspiration ? 'bg-cyan-400' : 'bg-gray-600'
+                          }`} />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Mindfulness & Gratitude */}
+              {entry.mindfulnessNote && (
+                <div className="bg-gradient-to-r from-green-500/10 to-teal-500/10 rounded-xl p-3 mb-3 border border-green-400/30">
+                  <h4 className="text-green-400 font-medium text-xs mb-2">Mindful Moment</h4>
+                  <p className="text-green-300 text-xs italic">"{entry.mindfulnessNote}"</p>
+                </div>
+              )}
+
+              {entry.gratitudeList && entry.gratitudeList.length > 0 && (
+                <div className="bg-gradient-to-r from-orange-500/10 to-yellow-500/10 rounded-xl p-3 mb-3 border border-orange-400/30">
+                  <h4 className="text-orange-400 font-medium text-xs mb-2">Grateful For</h4>
+                  <div className="flex flex-wrap gap-1">
+                    {entry.gratitudeList.slice(0, 3).map((item, index) => (
+                      <span key={index} className="text-orange-300 text-xs bg-orange-500/20 px-2 py-1 rounded-full">
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Tags */}
               <div className="flex flex-wrap gap-1 mb-3">
                 {entry.tags.map((tag, index) => (
@@ -258,7 +356,15 @@ function CreateJournalModal({ onClose }: { onClose: () => void }) {
     weather: 'sunny' as const,
     mediaType: 'text' as const,
     tags: '',
-    isPrivate: false
+    isPrivate: false,
+    // MindSpace emotional tracking
+    energy: 3,
+    happiness: 3,
+    stress: 3,
+    inspiration: 3,
+    loneliness: 3,
+    mindfulnessNote: '',
+    gratitudeItems: ''
   });
 
   const [isRecording, setIsRecording] = useState(false);
@@ -401,6 +507,120 @@ function CreateJournalModal({ onClose }: { onClose: () => void }) {
                 className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none"
                 placeholder="adventure, beach, food (comma separated)"
               />
+            </div>
+
+            {/* MindSpace Emotional Tracking */}
+            <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 backdrop-blur-sm rounded-2xl p-4 border border-purple-400/30">
+              <h3 className="text-purple-400 font-medium mb-3">How are you feeling here?</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm text-purple-300 mb-2">Energy Level</label>
+                  <div className="flex items-center space-x-2">
+                    {[1,2,3,4,5].map(level => (
+                      <button
+                        key={level}
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, energy: level }))}
+                        className={`w-8 h-8 rounded-full border-2 transition-colors ${
+                          level <= formData.energy
+                            ? 'bg-yellow-400 border-yellow-400'
+                            : 'border-gray-600 hover:border-yellow-400'
+                        }`}
+                      >
+                        <span className="text-xs font-bold text-slate-900">{level}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm text-purple-300 mb-2">Happiness</label>
+                  <div className="flex items-center space-x-2">
+                    {[1,2,3,4,5].map(level => (
+                      <button
+                        key={level}
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, happiness: level }))}
+                        className={`w-8 h-8 rounded-full border-2 transition-colors ${
+                          level <= formData.happiness
+                            ? 'bg-pink-400 border-pink-400'
+                            : 'border-gray-600 hover:border-pink-400'
+                        }`}
+                      >
+                        <span className="text-xs font-bold text-white">{level}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm text-purple-300 mb-2">Stress Level</label>
+                  <div className="flex items-center space-x-2">
+                    {[1,2,3,4,5].map(level => (
+                      <button
+                        key={level}
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, stress: level }))}
+                        className={`w-8 h-8 rounded-full border-2 transition-colors ${
+                          level <= formData.stress
+                            ? 'bg-red-400 border-red-400'
+                            : 'border-gray-600 hover:border-red-400'
+                        }`}
+                      >
+                        <span className="text-xs font-bold text-white">{level}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm text-purple-300 mb-2">Inspiration</label>
+                  <div className="flex items-center space-x-2">
+                    {[1,2,3,4,5].map(level => (
+                      <button
+                        key={level}
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, inspiration: level }))}
+                        className={`w-8 h-8 rounded-full border-2 transition-colors ${
+                          level <= formData.inspiration
+                            ? 'bg-cyan-400 border-cyan-400'
+                            : 'border-gray-600 hover:border-cyan-400'
+                        }`}
+                      >
+                        <span className="text-xs font-bold text-slate-900">{level}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Mindfulness & Gratitude */}
+            <div className="bg-gradient-to-r from-green-500/10 to-teal-500/10 backdrop-blur-sm rounded-2xl p-4 border border-green-400/30">
+              <h3 className="text-green-400 font-medium mb-3">Mindful Moment</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm text-green-300 mb-2">Present Moment Observation</label>
+                  <textarea
+                    value={formData.mindfulnessNote}
+                    onChange={(e) => setFormData(prev => ({ ...prev, mindfulnessNote: e.target.value }))}
+                    className="w-full px-4 py-3 bg-black/20 border border-green-400/30 rounded-2xl text-green-300 placeholder-green-400/50 focus:border-green-400 focus:outline-none resize-none"
+                    rows={2}
+                    placeholder="What do you notice right now? Sounds, smells, feelings..."
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm text-green-300 mb-2">Things I'm Grateful For</label>
+                  <input
+                    type="text"
+                    value={formData.gratitudeItems}
+                    onChange={(e) => setFormData(prev => ({ ...prev, gratitudeItems: e.target.value }))}
+                    className="w-full px-4 py-3 bg-black/20 border border-green-400/30 rounded-2xl text-green-300 placeholder-green-400/50 focus:border-green-400 focus:outline-none"
+                    placeholder="Beautiful view, kind stranger, safe journey (comma separated)"
+                  />
+                </div>
+              </div>
             </div>
 
             <div className="flex items-center space-x-3">

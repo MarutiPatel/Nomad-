@@ -6,7 +6,7 @@ import {
   Users, Globe, UserPlus, MoreHorizontal, ThumbsUp,
   Reply, Flag, Bookmark, TrendingUp, Zap, Crown,
   AtSign, Hash, Settings, ChevronDown, ChevronUp,
-  User, Navigation, Image as ImageIcon, Upload
+  User, Navigation, Image as ImageIcon, Upload, RefreshCw
 } from 'lucide-react';
 
 interface User {
@@ -64,6 +64,20 @@ interface Footprint {
   travelBuddies?: User[];
   altitude?: number;
   isEditing?: boolean;
+  // Stealth mode features
+  stealthMode: boolean;
+  allowedViewers: 'everyone' | 'friends' | 'tags' | 'custom';
+  allowedTags?: string[];
+  expiryDate?: Date;
+  secretTrail?: string;
+  // Place pulse ratings
+  placePulse?: {
+    friendliness: number; // 1-5
+    cleanliness: number; // 1-5
+    safety: number; // 1-5
+    signalStrength: number; // 1-5
+    foodQuality?: number; // 1-5 (for food places)
+  };
 }
 
 function FootprintsPage() {
@@ -154,7 +168,15 @@ function FootprintsPage() {
       isLiked: true,
       isBookmarked: false,
       mood: 'excited',
-      weather: 'clear'
+      weather: 'clear',
+      stealthMode: false,
+      allowedViewers: 'everyone',
+      placePulse: {
+        friendliness: 4,
+        cleanliness: 3,
+        safety: 4,
+        signalStrength: 5
+      }
     }
   ];
 
@@ -200,7 +222,15 @@ function FootprintsPage() {
       mood: 'peaceful',
       weather: 'sunny',
       travelBuddies: [mockUsers[2]],
-      isFeatured: true
+      isFeatured: true,
+      stealthMode: false,
+      allowedViewers: 'friends',
+      placePulse: {
+        friendliness: 5,
+        cleanliness: 4,
+        safety: 5,
+        signalStrength: 3
+      }
     },
     {
       id: 'f2',
@@ -236,7 +266,17 @@ function FootprintsPage() {
       isBookmarked: false,
       mood: 'grateful',
       weather: 'clear',
-      altitude: 3883
+      altitude: 3883,
+      stealthMode: true,
+      allowedViewers: 'tags',
+      allowedTags: ['hiking', 'mountains'],
+      secretTrail: 'Alpine Adventurers',
+      placePulse: {
+        friendliness: 5,
+        cleanliness: 5,
+        safety: 4,
+        signalStrength: 1
+      }
     }
   ];
 
@@ -291,7 +331,15 @@ function FootprintsPage() {
       isBookmarked: false,
       mood: 'inspired',
       weather: 'sunny',
-      isFeatured: true
+      isFeatured: true,
+      stealthMode: false,
+      allowedViewers: 'everyone',
+      placePulse: {
+        friendliness: 4,
+        cleanliness: 4,
+        safety: 5,
+        signalStrength: 4
+      }
     }
   ];
 
@@ -517,6 +565,55 @@ function FootprintsPage() {
           </div>
         )}
 
+        {/* Place Pulse Ratings */}
+        {footprint.placePulse && (
+          <div className="bg-black/20 rounded-xl p-3 mb-3">
+            <h4 className="text-cyan-400 font-medium text-xs mb-2">Place Pulse</h4>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-300">Friendliness</span>
+                <div className="flex space-x-1">
+                  {[1,2,3,4,5].map(i => (
+                    <div key={i} className={`w-2 h-2 rounded-full ${
+                      i <= footprint.placePulse!.friendliness ? 'bg-green-400' : 'bg-gray-600'
+                    }`} />
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-300">Cleanliness</span>
+                <div className="flex space-x-1">
+                  {[1,2,3,4,5].map(i => (
+                    <div key={i} className={`w-2 h-2 rounded-full ${
+                      i <= footprint.placePulse!.cleanliness ? 'bg-blue-400' : 'bg-gray-600'
+                    }`} />
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-300">Safety</span>
+                <div className="flex space-x-1">
+                  {[1,2,3,4,5].map(i => (
+                    <div key={i} className={`w-2 h-2 rounded-full ${
+                      i <= footprint.placePulse!.safety ? 'bg-orange-400' : 'bg-gray-600'
+                    }`} />
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-300">Signal</span>
+                <div className="flex space-x-1">
+                  {[1,2,3,4,5].map(i => (
+                    <div key={i} className={`w-2 h-2 rounded-full ${
+                      i <= footprint.placePulse!.signalStrength ? 'bg-purple-400' : 'bg-gray-600'
+                    }`} />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Stats */}
         <div className="flex items-center justify-between mb-4 text-sm text-gray-400">
           <div className="flex items-center space-x-4">
@@ -534,6 +631,32 @@ function FootprintsPage() {
             {footprint.altitude && <span className="text-xs">⛰️ {footprint.altitude}m</span>}
           </div>
         </div>
+
+        {/* Stealth Mode Indicator */}
+        {footprint.stealthMode && (
+          <div className="bg-purple-500/10 rounded-xl p-2 mb-3 border border-purple-400/30">
+            <div className="flex items-center space-x-2">
+              <Eye className="h-3 w-3 text-purple-400" />
+              <span className="text-purple-400 text-xs font-medium">Stealth Mode</span>
+              <span className="text-gray-400 text-xs">
+                {footprint.allowedViewers === 'friends' ? 'Friends Only' :
+                 footprint.allowedViewers === 'tags' ? `Tags: ${footprint.allowedTags?.join(', ')}` :
+                 footprint.allowedViewers === 'custom' ? 'Custom Viewers' :
+                 'Limited Visibility'}
+              </span>
+            </div>
+            {footprint.secretTrail && (
+              <div className="text-purple-300 text-xs mt-1">
+                Trail: {footprint.secretTrail}
+              </div>
+            )}
+            {footprint.expiryDate && (
+              <div className="text-orange-400 text-xs mt-1">
+                Expires: {footprint.expiryDate.toLocaleDateString()}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Action Buttons */}
         <div className="flex items-center justify-between mb-4">
@@ -887,7 +1010,19 @@ function CreateFootprintModal({ onClose }: { onClose: () => void }) {
     priceRange: '$' as '$' | '$$' | '$$$',
     amenities: '',
     specialties: '',
-    openHours: ''
+    openHours: '',
+    // Stealth mode
+    stealthMode: false,
+    allowedViewers: 'everyone' as 'everyone' | 'friends' | 'tags' | 'custom',
+    allowedTags: '',
+    expiryDays: '7',
+    secretTrail: '',
+    // Place pulse ratings
+    friendliness: 3,
+    cleanliness: 3,
+    safety: 3,
+    signalStrength: 3,
+    foodQuality: 3
   });
 
   const [currentLocation, setCurrentLocation] = useState('Detected: New York, NY');
@@ -1119,6 +1254,193 @@ function CreateFootprintModal({ onClose }: { onClose: () => void }) {
                 />
               </div>
             )}
+
+            {/* Stealth Mode Toggle */}
+            <div className="bg-purple-500/10 backdrop-blur-sm rounded-2xl p-4 border border-purple-400/30">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-2">
+                  <Eye className="h-4 w-4 text-purple-400" />
+                  <span className="text-purple-400 font-medium">Stealth Mode</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, stealthMode: !prev.stealthMode }))}
+                  className={`px-3 py-1 rounded-full text-xs border transition-colors ${
+                    formData.stealthMode
+                      ? 'bg-purple-500/20 text-purple-400 border-purple-400/30'
+                      : 'bg-white/10 text-gray-400 border-white/10'
+                  }`}
+                >
+                  {formData.stealthMode ? 'Enabled' : 'Disabled'}
+                </button>
+              </div>
+              
+              {formData.stealthMode && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm text-purple-300 mb-2">Who can see this?</label>
+                    <select
+                      value={formData.allowedViewers}
+                      onChange={(e) => setFormData(prev => ({ ...prev, allowedViewers: e.target.value as any }))}
+                      className="w-full px-3 py-2 bg-black/20 border border-purple-400/30 rounded-xl text-purple-300 focus:border-purple-400 focus:outline-none text-sm"
+                    >
+                      <option value="friends" className="bg-slate-800">Friends Only</option>
+                      <option value="tags" className="bg-slate-800">Specific Tags</option>
+                      <option value="custom" className="bg-slate-800">Custom Trail</option>
+                    </select>
+                  </div>
+                  
+                  {formData.allowedViewers === 'tags' && (
+                    <div>
+                      <label className="block text-sm text-purple-300 mb-2">Allowed Tags</label>
+                      <input
+                        type="text"
+                        value={formData.allowedTags}
+                        onChange={(e) => setFormData(prev => ({ ...prev, allowedTags: e.target.value }))}
+                        className="w-full px-3 py-2 bg-black/20 border border-purple-400/30 rounded-xl text-purple-300 placeholder-purple-400/50 focus:border-purple-400 focus:outline-none text-sm"
+                        placeholder="hiking, photography, food"
+                      />
+                    </div>
+                  )}
+                  
+                  {formData.allowedViewers === 'custom' && (
+                    <div>
+                      <label className="block text-sm text-purple-300 mb-2">Secret Trail Name</label>
+                      <input
+                        type="text"
+                        value={formData.secretTrail}
+                        onChange={(e) => setFormData(prev => ({ ...prev, secretTrail: e.target.value }))}
+                        className="w-full px-3 py-2 bg-black/20 border border-purple-400/30 rounded-xl text-purple-300 placeholder-purple-400/50 focus:border-purple-400 focus:outline-none text-sm"
+                        placeholder="My Secret Adventure Trail"
+                      />
+                    </div>
+                  )}
+                  
+                  <div>
+                    <label className="block text-sm text-purple-300 mb-2">Auto-expire after (days)</label>
+                    <select
+                      value={formData.expiryDays}
+                      onChange={(e) => setFormData(prev => ({ ...prev, expiryDays: e.target.value }))}
+                      className="w-full px-3 py-2 bg-black/20 border border-purple-400/30 rounded-xl text-purple-300 focus:border-purple-400 focus:outline-none text-sm"
+                    >
+                      <option value="1" className="bg-slate-800">1 day</option>
+                      <option value="3" className="bg-slate-800">3 days</option>
+                      <option value="7" className="bg-slate-800">7 days</option>
+                      <option value="30" className="bg-slate-800">30 days</option>
+                      <option value="never" className="bg-slate-800">Never expire</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Place Pulse Ratings */}
+            <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 backdrop-blur-sm rounded-2xl p-4 border border-cyan-400/30">
+              <h3 className="text-cyan-400 font-medium mb-3">Rate This Place</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm text-cyan-300 mb-2">Local Friendliness</label>
+                  <div className="flex items-center space-x-2">
+                    {[1,2,3,4,5].map(rating => (
+                      <button
+                        key={rating}
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, friendliness: rating }))}
+                        className={`w-8 h-8 rounded-full border-2 transition-colors ${
+                          rating <= formData.friendliness
+                            ? 'bg-green-400 border-green-400'
+                            : 'border-gray-600 hover:border-green-400'
+                        }`}
+                      >
+                        <span className="text-xs font-bold text-white">{rating}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm text-cyan-300 mb-2">Cleanliness</label>
+                  <div className="flex items-center space-x-2">
+                    {[1,2,3,4,5].map(rating => (
+                      <button
+                        key={rating}
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, cleanliness: rating }))}
+                        className={`w-8 h-8 rounded-full border-2 transition-colors ${
+                          rating <= formData.cleanliness
+                            ? 'bg-blue-400 border-blue-400'
+                            : 'border-gray-600 hover:border-blue-400'
+                        }`}
+                      >
+                        <span className="text-xs font-bold text-white">{rating}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm text-cyan-300 mb-2">Solo Travel Safety</label>
+                  <div className="flex items-center space-x-2">
+                    {[1,2,3,4,5].map(rating => (
+                      <button
+                        key={rating}
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, safety: rating }))}
+                        className={`w-8 h-8 rounded-full border-2 transition-colors ${
+                          rating <= formData.safety
+                            ? 'bg-orange-400 border-orange-400'
+                            : 'border-gray-600 hover:border-orange-400'
+                        }`}
+                      >
+                        <span className="text-xs font-bold text-white">{rating}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm text-cyan-300 mb-2">Mobile Signal Strength</label>
+                  <div className="flex items-center space-x-2">
+                    {[1,2,3,4,5].map(rating => (
+                      <button
+                        key={rating}
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, signalStrength: rating }))}
+                        className={`w-8 h-8 rounded-full border-2 transition-colors ${
+                          rating <= formData.signalStrength
+                            ? 'bg-purple-400 border-purple-400'
+                            : 'border-gray-600 hover:border-purple-400'
+                        }`}
+                      >
+                        <span className="text-xs font-bold text-white">{rating}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                {formData.spotType === 'food' && (
+                  <div>
+                    <label className="block text-sm text-cyan-300 mb-2">Food Quality</label>
+                    <div className="flex items-center space-x-2">
+                      {[1,2,3,4,5].map(rating => (
+                        <button
+                          key={rating}
+                          type="button"
+                          onClick={() => setFormData(prev => ({ ...prev, foodQuality: rating }))}
+                          className={`w-8 h-8 rounded-full border-2 transition-colors ${
+                            rating <= formData.foodQuality
+                              ? 'bg-yellow-400 border-yellow-400'
+                              : 'border-gray-600 hover:border-yellow-400'
+                          }`}
+                        >
+                          <span className="text-xs font-bold text-white">{rating}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
 
             {/* Visibility */}
             <div>
