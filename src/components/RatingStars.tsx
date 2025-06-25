@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Star } from 'lucide-react';
 
 interface RatingStarsProps {
@@ -16,7 +16,7 @@ export default function RatingStars({
   onChange,
   className = ''
 }: RatingStarsProps) {
-  const [hoverRating, setHoverRating] = useState(0);
+  const [hoverRating, setHoverRating] = React.useState(0);
   
   const sizeClass = {
     sm: 'h-3 w-3',
