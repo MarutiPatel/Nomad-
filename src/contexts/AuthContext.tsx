@@ -19,6 +19,9 @@ interface User {
   isRadarVisible: boolean;
   blockedUsers: string[];
   reportedUsers: string[];
+  canReceiveChatInvites: boolean;
+  profileVisibility: 'public' | 'friends' | 'private';
+  locationSharingPrecision: 'precise' | 'approximate';
 }
 
 interface AuthContextType {
@@ -112,6 +115,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (parsedUser.isRadarVisible === undefined) parsedUser.isRadarVisible = true;
         if (!parsedUser.blockedUsers) parsedUser.blockedUsers = [];
         if (!parsedUser.reportedUsers) parsedUser.reportedUsers = [];
+        if (parsedUser.canReceiveChatInvites === undefined) parsedUser.canReceiveChatInvites = true;
+        if (!parsedUser.profileVisibility) parsedUser.profileVisibility = 'public';
+        if (!parsedUser.locationSharingPrecision) parsedUser.locationSharingPrecision = 'approximate';
         
         setUser(parsedUser);
       } catch (err) {
@@ -141,7 +147,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       languages: [],
       isRadarVisible: true,
       blockedUsers: [],
-      reportedUsers: []
+      reportedUsers: [],
+      canReceiveChatInvites: true,
+      profileVisibility: 'public',
+      locationSharingPrecision: 'approximate'
     };
     return newUser;
   };
@@ -179,6 +188,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (existingUser.isRadarVisible === undefined) existingUser.isRadarVisible = true;
       if (!existingUser.blockedUsers) existingUser.blockedUsers = [];
       if (!existingUser.reportedUsers) existingUser.reportedUsers = [];
+      if (existingUser.canReceiveChatInvites === undefined) existingUser.canReceiveChatInvites = true;
+      if (!existingUser.profileVisibility) existingUser.profileVisibility = 'public';
+      if (!existingUser.locationSharingPrecision) existingUser.locationSharingPrecision = 'approximate';
       
       setUser(existingUser);
       localStorage.setItem('nomad_user', JSON.stringify(existingUser));
@@ -220,6 +232,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (existingUser.isRadarVisible === undefined) existingUser.isRadarVisible = true;
       if (!existingUser.blockedUsers) existingUser.blockedUsers = [];
       if (!existingUser.reportedUsers) existingUser.reportedUsers = [];
+      if (existingUser.canReceiveChatInvites === undefined) existingUser.canReceiveChatInvites = true;
+      if (!existingUser.profileVisibility) existingUser.profileVisibility = 'public';
+      if (!existingUser.locationSharingPrecision) existingUser.locationSharingPrecision = 'approximate';
       
       setUser(existingUser);
       localStorage.setItem('nomad_user', JSON.stringify(existingUser));
