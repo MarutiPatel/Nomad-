@@ -27,19 +27,11 @@ interface LiveEvent {
   likes: number;
 }
 
-interface CrowdVote {
-  id: string;
-  question: string;
-  options: { id: string; text: string; votes: number }[];
-  totalVotes: number;
-  endsAt: Date;
-  userVoted?: string;
-}
-
 function LiveEventsPage() {
-  const [activeTab, setActiveTab] = useState<'events' | 'create' | 'votes'>('events');
+  const [activeTab, setActiveTab] = useState<'events' | 'create'>('events');
   const [selectedEvent, setSelectedEvent] = useState<LiveEvent | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const mockEvents: LiveEvent[] = [
     {
@@ -105,35 +97,7 @@ function LiveEventsPage() {
     }
   ];
 
-  const mockVotes: CrowdVote[] = [
-    {
-      id: '1',
-      question: 'Where should we have tonight\'s group dinner?',
-      options: [
-        { id: 'a', text: 'Beach Shack Restaurant', votes: 15 },
-        { id: 'b', text: 'Rooftop Cafe', votes: 8 },
-        { id: 'c', text: 'Local Street Food', votes: 23 },
-        { id: 'd', text: 'Hotel Restaurant', votes: 4 }
-      ],
-      totalVotes: 50,
-      endsAt: new Date(Date.now() + 2 * 60 * 60 * 1000),
-      userVoted: 'c'
-    },
-    {
-      id: '2',
-      question: 'Best time for tomorrow\'s beach volleyball?',
-      options: [
-        { id: 'a', text: '7:00 AM', votes: 12 },
-        { id: 'b', text: '5:00 PM', votes: 28 },
-        { id: 'c', text: '7:00 PM', votes: 18 }
-      ],
-      totalVotes: 58,
-      endsAt: new Date(Date.now() + 6 * 60 * 60 * 1000)
-    }
-  ];
-
   const [events, setEvents] = useState(mockEvents);
-  const [votes, setVotes] = useState(mockVotes);
 
   const handleJoinEvent = (eventId: string) => {
     setEvents(prev => prev.map(event => 
@@ -156,23 +120,6 @@ function LiveEventsPage() {
             likes: event.isLiked ? event.likes - 1 : event.likes + 1
           }
         : event
-    ));
-  };
-
-  const handleVote = (voteId: string, optionId: string) => {
-    setVotes(prev => prev.map(vote => 
-      vote.id === voteId 
-        ? {
-            ...vote,
-            userVoted: optionId,
-            options: vote.options.map(option => 
-              option.id === optionId 
-                ? { ...option, votes: option.votes + 1 }
-                : option
-            ),
-            totalVotes: vote.totalVotes + 1
-          }
-        : vote
     ));
   };
 
@@ -213,12 +160,21 @@ function LiveEventsPage() {
     return `${diffInDays}d`;
   };
 
+  // Filter events based on search query
+  const filteredEvents = events.filter(event =>
+    event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    event.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    event.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    event.organizer.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    event.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
   return (
     <div className="p-4 pb-20 lg:pb-4">
       {/* Header */}
       <div className="text-center mb-6">
         <h1 className="text-2xl font-bold text-white mb-2">Live Events</h1>
-        <p className="text-gray-400 text-sm">Real-time meetups and crowd-controlled activities</p>
+        <p className="text-gray-400 text-sm">Real-time meetups and activities</p>
       </div>
 
       {/* Tab Navigation */}
@@ -233,17 +189,6 @@ function LiveEventsPage() {
         >
           <Calendar className="h-4 w-4" />
           <span className="text-sm font-medium">Events</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('votes')}
-          className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl transition-all duration-300 ${
-            activeTab === 'votes'
-              ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
-              : 'text-gray-400 hover:text-white'
-          }`}
-        >
-          <Trophy className="h-4 w-4" />
-          <span className="text-sm font-medium">Crowd Votes</span>
         </button>
         <button
           onClick={() => setActiveTab('create')}
@@ -261,11 +206,18 @@ function LiveEventsPage() {
       {/* Content */}
       {activeTab === 'events' && (
         <div>
-          {/* Controls */}
+          {/* Controls with Search */}
           <div className="flex items-center space-x-2 mb-6">
-            <button className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
-              <Search className="h-4 w-4 text-gray-400" />
-            </button>
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search events..."
+                className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none"
+              />
+            </div>
             <button className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
               <Filter className="h-4 w-4 text-gray-400" />
             </button>
@@ -273,7 +225,7 @@ function LiveEventsPage() {
 
           {/* Events List */}
           <div className="space-y-4">
-            {events.map((event) => {
+            {filteredEvents.map((event) => {
               const IconComponent = getEventTypeIcon(event.type);
               return (
                 <div
@@ -393,63 +345,28 @@ function LiveEventsPage() {
               );
             })}
           </div>
-        </div>
-      )}
 
-      {activeTab === 'votes' && (
-        <div className="space-y-4">
-          {votes.map((vote) => (
-            <div
-              key={vote.id}
-              className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4"
-            >
-              <div className="flex items-start justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white">{vote.question}</h3>
-                <div className="text-xs text-orange-400">
-                  Ends in {formatTimeUntil(vote.endsAt)}
-                </div>
-              </div>
-
-              <div className="space-y-3 mb-4">
-                {vote.options.map((option) => {
-                  const percentage = vote.totalVotes > 0 ? (option.votes / vote.totalVotes) * 100 : 0;
-                  const isUserVote = vote.userVoted === option.id;
-                  
-                  return (
-                    <button
-                      key={option.id}
-                      onClick={() => !vote.userVoted && handleVote(vote.id, option.id)}
-                      disabled={!!vote.userVoted}
-                      className={`w-full p-3 rounded-xl border transition-all duration-300 ${
-                        isUserVote
-                          ? 'bg-cyan-500/20 border-cyan-400/30 text-cyan-400'
-                          : vote.userVoted
-                          ? 'bg-white/5 border-white/10 text-gray-400 cursor-not-allowed'
-                          : 'bg-white/5 border-white/10 text-white hover:border-white/20 hover:bg-white/10'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium">{option.text}</span>
-                        <span className="text-xs">{option.votes} votes</span>
-                      </div>
-                      <div className="w-full h-2 bg-gray-700 rounded-full">
-                        <div
-                          className={`h-2 rounded-full transition-all duration-500 ${
-                            isUserVote ? 'bg-gradient-to-r from-cyan-400 to-blue-500' : 'bg-gray-600'
-                          }`}
-                          style={{ width: `${percentage}%` }}
-                        />
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="text-center text-sm text-gray-400">
-                Total votes: {vote.totalVotes}
-              </div>
+          {/* No Results */}
+          {filteredEvents.length === 0 && (
+            <div className="text-center py-12">
+              <Search className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-white mb-2">No Events Found</h3>
+              <p className="text-gray-400 text-sm">
+                {searchQuery 
+                  ? `No events match "${searchQuery}". Try a different search term.`
+                  : 'No events available at the moment. Check back later!'
+                }
+              </p>
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="mt-4 bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-3 rounded-2xl font-semibold text-white"
+                >
+                  Clear Search
+                </button>
+              )}
             </div>
-          ))}
+          )}
         </div>
       )}
 
@@ -469,20 +386,6 @@ function LiveEventsPage() {
             >
               <Plus className="h-6 w-6" />
               <span>Create New Event</span>
-            </button>
-          </div>
-
-          {/* Create Vote */}
-          <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 backdrop-blur-sm rounded-3xl p-6 border border-purple-400/30">
-            <div className="text-center mb-4">
-              <Trophy className="h-12 w-12 text-purple-400 mx-auto mb-3" />
-              <h2 className="text-xl font-bold text-white mb-2">Create Vote</h2>
-              <p className="text-gray-400 text-sm">Let the crowd decide</p>
-            </div>
-            
-            <button className="w-full bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-4 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex items-center justify-center space-x-2">
-              <Plus className="h-6 w-6" />
-              <span>Create New Vote</span>
             </button>
           </div>
         </div>

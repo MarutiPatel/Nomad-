@@ -4,7 +4,7 @@ import {
   Eye, Star, Heart, Camera, Clock, Users, Zap,
   Compass, Globe, Footprints, AlertTriangle, Bell,
   TrendingUp, Award, RefreshCw, Settings, Map,
-  Utensils, TreePine, X
+  Utensils, TreePine, X, Trophy
 } from 'lucide-react';
 
 interface NearbyLocation {
@@ -33,12 +33,49 @@ interface LocationSuggestion {
   distance: number;
 }
 
+interface CrowdVote {
+  id: string;
+  question: string;
+  options: { id: string; text: string; votes: number }[];
+  totalVotes: number;
+  endsAt: Date;
+  userVoted?: string;
+}
+
 function DiscoveryPage() {
   const [currentLocation, setCurrentLocation] = useState('New York, NY');
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
   const [showLocationNotification, setShowLocationNotification] = useState(true);
   const [searchRadius, setSearchRadius] = useState(25); // km
   const [isLocationTracking, setIsLocationTracking] = useState(true);
+
+  // Mock crowd votes data
+  const mockVotes: CrowdVote[] = [
+    {
+      id: '1',
+      question: 'Where should we have tonight\'s group dinner?',
+      options: [
+        { id: 'a', text: 'Beach Shack Restaurant', votes: 15 },
+        { id: 'b', text: 'Rooftop Cafe', votes: 8 },
+        { id: 'c', text: 'Local Street Food', votes: 23 },
+        { id: 'd', text: 'Hotel Restaurant', votes: 4 }
+      ],
+      totalVotes: 50,
+      endsAt: new Date(Date.now() + 2 * 60 * 60 * 1000),
+      userVoted: 'c'
+    },
+    {
+      id: '2',
+      question: 'Best time for tomorrow\'s beach volleyball?',
+      options: [
+        { id: 'a', text: '7:00 AM', votes: 12 },
+        { id: 'b', text: '5:00 PM', votes: 28 },
+        { id: 'c', text: '7:00 PM', votes: 18 }
+      ],
+      totalVotes: 58,
+      endsAt: new Date(Date.now() + 6 * 60 * 60 * 1000)
+    }
+  ];
 
   // Mock nearby locations with global coverage
   const mockNearbyLocations: NearbyLocation[] = [
@@ -176,6 +213,7 @@ function DiscoveryPage() {
 
   const [nearbyLocations] = useState(mockNearbyLocations);
   const [suggestions] = useState(mockLocationSuggestions);
+  const [votes, setVotes] = useState(mockVotes);
 
   // Simulate location change detection
   useEffect(() => {
@@ -248,6 +286,36 @@ function DiscoveryPage() {
     
     const diffInDays = Math.floor(diffInHours / 24);
     return `${diffInDays}d ago`;
+  };
+
+  const handleVote = (voteId: string, optionId: string) => {
+    setVotes(prev => prev.map(vote => 
+      vote.id === voteId 
+        ? {
+            ...vote,
+            userVoted: optionId,
+            options: vote.options.map(option => 
+              option.id === optionId 
+                ? { ...option, votes: option.votes + 1 }
+                : option
+            ),
+            totalVotes: vote.totalVotes + 1
+          }
+        : vote
+    ));
+  };
+
+  const formatTimeUntilVoteEnd = (date: Date) => {
+    const now = new Date();
+    const diffInMinutes = Math.floor((date.getTime() - now.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 60) return `${diffInMinutes}m`;
+    
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours}h`;
+    
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays}d`;
   };
 
   return (
@@ -333,6 +401,69 @@ function DiscoveryPage() {
         <div className="flex justify-between text-xs text-gray-400 mt-1">
           <span>1km</span>
           <span>50km</span>
+        </div>
+      </div>
+
+      {/* Crowd Votes Section */}
+      <div className="mb-6">
+        <div className="flex items-center space-x-2 mb-4">
+          <Trophy className="h-5 w-5 text-purple-400" />
+          <h2 className="text-lg font-semibold text-white">Crowd Votes</h2>
+        </div>
+        
+        <div className="space-y-4">
+          {votes.map((vote) => (
+            <div
+              key={vote.id}
+              className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <h3 className="text-lg font-semibold text-white">{vote.question}</h3>
+                <div className="text-xs text-orange-400">
+                  Ends in {formatTimeUntilVoteEnd(vote.endsAt)}
+                </div>
+              </div>
+
+              <div className="space-y-3 mb-4">
+                {vote.options.map((option) => {
+                  const percentage = vote.totalVotes > 0 ? (option.votes / vote.totalVotes) * 100 : 0;
+                  const isUserVote = vote.userVoted === option.id;
+                  
+                  return (
+                    <button
+                      key={option.id}
+                      onClick={() => !vote.userVoted && handleVote(vote.id, option.id)}
+                      disabled={!!vote.userVoted}
+                      className={`w-full p-3 rounded-xl border transition-all duration-300 ${
+                        isUserVote
+                          ? 'bg-cyan-500/20 border-cyan-400/30 text-cyan-400'
+                          : vote.userVoted
+                          ? 'bg-white/5 border-white/10 text-gray-400 cursor-not-allowed'
+                          : 'bg-white/5 border-white/10 text-white hover:border-white/20 hover:bg-white/10'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium">{option.text}</span>
+                        <span className="text-xs">{option.votes} votes</span>
+                      </div>
+                      <div className="w-full h-2 bg-gray-700 rounded-full">
+                        <div
+                          className={`h-2 rounded-full transition-all duration-500 ${
+                            isUserVote ? 'bg-gradient-to-r from-cyan-400 to-blue-500' : 'bg-gray-600'
+                          }`}
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="text-center text-sm text-gray-400">
+                Total votes: {vote.totalVotes}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
