@@ -4,7 +4,8 @@ import {
   Eye, Star, Heart, Camera, Clock, Users, Zap,
   Compass, Globe, Footprints, AlertTriangle, Bell,
   TrendingUp, Award, RefreshCw, Settings, Map,
-  Utensils, TreePine, X, Trophy
+  Utensils, TreePine, X, Trophy, Route, Car, Coffee,
+  Mountain, Fuel, Building, Sunrise, Camera as CameraIcon
 } from 'lucide-react';
 
 interface NearbyLocation {
@@ -42,12 +43,41 @@ interface CrowdVote {
   userVoted?: string;
 }
 
+interface RouteRecommendation {
+  id: string;
+  name: string;
+  description: string;
+  type: 'scenic' | 'food' | 'historical' | 'fuel' | 'rest' | 'viewpoint';
+  distanceFromRoute: number;
+  estimatedDetour: string;
+  rating: number;
+  reviews: number;
+  image: string;
+  highlights: string[];
+  bestTime: string;
+  coordinates: { lat: number; lng: number };
+}
+
+interface RouteSegment {
+  from: string;
+  to: string;
+  distance: string;
+  estimatedTime: string;
+  recommendations: RouteRecommendation[];
+}
+
 function DiscoveryPage() {
   const [currentLocation, setCurrentLocation] = useState('New York, NY');
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
   const [showLocationNotification, setShowLocationNotification] = useState(true);
   const [searchRadius, setSearchRadius] = useState(25); // km
   const [isLocationTracking, setIsLocationTracking] = useState(true);
+  
+  // Route-based recommendation states
+  const [routeInput, setRouteInput] = useState({ from: '', to: '' });
+  const [showRouteRecommendations, setShowRouteRecommendations] = useState(false);
+  const [selectedRouteType, setSelectedRouteType] = useState<string>('all');
+  const [isCalculatingRoute, setIsCalculatingRoute] = useState(false);
 
   // Mock crowd votes data
   const mockVotes: CrowdVote[] = [
@@ -74,6 +104,74 @@ function DiscoveryPage() {
       ],
       totalVotes: 58,
       endsAt: new Date(Date.now() + 6 * 60 * 60 * 1000)
+    }
+  ];
+
+  // Mock route recommendations data
+  const mockRouteRecommendations: RouteSegment[] = [
+    {
+      from: 'New York, NY',
+      to: 'Boston, MA',
+      distance: '215 miles',
+      estimatedTime: '4h 30m',
+      recommendations: [
+        {
+          id: 'r1',
+          name: 'Mystic Seaport Museum',
+          description: 'Historic maritime museum with authentic 19th-century village and tall ships',
+          type: 'historical',
+          distanceFromRoute: 2.5,
+          estimatedDetour: '+45 min',
+          rating: 4.6,
+          reviews: 1234,
+          image: 'https://images.pexels.com/photos/1486861/pexels-photo-1486861.jpeg?auto=compress&cs=tinysrgb&w=400',
+          highlights: ['Historic ships', 'Maritime artifacts', 'Coastal village'],
+          bestTime: 'Morning (9-11 AM)',
+          coordinates: { lat: 41.3614, lng: -71.9640 }
+        },
+        {
+          id: 'r2',
+          name: 'Frank Pepe Pizzeria',
+          description: 'Original New Haven apizza institution serving coal-fired thin crust since 1925',
+          type: 'food',
+          distanceFromRoute: 1.2,
+          estimatedDetour: '+20 min',
+          rating: 4.8,
+          reviews: 2156,
+          image: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400',
+          highlights: ['Coal-fired pizza', 'Historic location', 'Local legend'],
+          bestTime: 'Lunch (12-2 PM)',
+          coordinates: { lat: 41.3083, lng: -72.9279 }
+        },
+        {
+          id: 'r3',
+          name: 'Gillette Castle State Park',
+          description: 'Medieval-style castle overlooking the Connecticut River with hiking trails',
+          type: 'scenic',
+          distanceFromRoute: 3.8,
+          estimatedDetour: '+1h 15m',
+          rating: 4.4,
+          reviews: 856,
+          image: 'https://images.pexels.com/photos/1366919/pexels-photo-1366919.jpeg?auto=compress&cs=tinysrgb&w=400',
+          highlights: ['Castle architecture', 'River views', 'Hiking trails'],
+          bestTime: 'Afternoon (2-5 PM)',
+          coordinates: { lat: 41.4284, lng: -72.4253 }
+        },
+        {
+          id: 'r4',
+          name: 'Essex Steam Train',
+          description: 'Vintage steam locomotive ride through Connecticut River Valley',
+          type: 'scenic',
+          distanceFromRoute: 4.1,
+          estimatedDetour: '+2h 30m',
+          rating: 4.7,
+          reviews: 743,
+          image: 'https://images.pexels.com/photos/258867/pexels-photo-258867.jpeg?auto=compress&cs=tinysrgb&w=400',
+          highlights: ['Steam train ride', 'Valley scenery', 'Historic experience'],
+          bestTime: 'Morning departure',
+          coordinates: { lat: 41.3515, lng: -72.3931 }
+        }
+      ]
     }
   ];
 
@@ -211,9 +309,19 @@ function DiscoveryPage() {
     { id: 'hidden-gem', label: 'Hidden Gems', icon: Eye }
   ];
 
+  const routeFilterOptions = [
+    { id: 'all', label: 'All Stops', icon: Globe },
+    { id: 'scenic', label: 'Scenic Views', icon: Mountain },
+    { id: 'food', label: 'Food Spots', icon: Utensils },
+    { id: 'historical', label: 'Historical', icon: Star },
+    { id: 'fuel', label: 'Fuel & Rest', icon: Fuel },
+    { id: 'viewpoint', label: 'Viewpoints', icon: Sunrise }
+  ];
+
   const [nearbyLocations] = useState(mockNearbyLocations);
   const [suggestions] = useState(mockLocationSuggestions);
   const [votes, setVotes] = useState(mockVotes);
+  const [routeSegments] = useState(mockRouteRecommendations);
 
   // Simulate location change detection
   useEffect(() => {
@@ -247,6 +355,10 @@ function DiscoveryPage() {
       case 'adventure': return 'from-yellow-400 to-orange-500';
       case 'hidden-gem': return 'from-pink-400 to-rose-500';
       case 'poi': return 'from-blue-400 to-cyan-500';
+      case 'scenic': return 'from-cyan-400 to-blue-500';
+      case 'fuel': return 'from-gray-400 to-gray-600';
+      case 'rest': return 'from-indigo-400 to-purple-500';
+      case 'viewpoint': return 'from-yellow-400 to-orange-500';
       default: return 'from-gray-400 to-gray-500';
     }
   };
@@ -259,6 +371,10 @@ function DiscoveryPage() {
       case 'adventure': return Zap;
       case 'hidden-gem': return Eye;
       case 'poi': return MapPin;
+      case 'scenic': return Mountain;
+      case 'fuel': return Fuel;
+      case 'rest': return Building;
+      case 'viewpoint': return Sunrise;
       default: return MapPin;
     }
   };
@@ -317,6 +433,22 @@ function DiscoveryPage() {
     const diffInDays = Math.floor(diffInHours / 24);
     return `${diffInDays}d`;
   };
+
+  const handleCalculateRoute = () => {
+    if (!routeInput.from || !routeInput.to) return;
+    
+    setIsCalculatingRoute(true);
+    
+    // Simulate API call delay
+    setTimeout(() => {
+      setIsCalculatingRoute(false);
+      setShowRouteRecommendations(true);
+    }, 2000);
+  };
+
+  const filteredRouteRecommendations = selectedRouteType === 'all' 
+    ? routeSegments[0]?.recommendations || []
+    : routeSegments[0]?.recommendations?.filter(rec => rec.type === selectedRouteType) || [];
 
   return (
     <div className="p-4 pb-20 lg:pb-4">
@@ -382,6 +514,185 @@ function DiscoveryPage() {
           <Search className="h-5 w-5 text-white" />
           <span className="text-white font-medium">What's Nearby?</span>
         </button>
+      </div>
+
+      {/* Route-Based Recommendations Section */}
+      <div className="mb-6">
+        <div className="flex items-center space-x-2 mb-4">
+          <Route className="h-5 w-5 text-orange-400" />
+          <h2 className="text-lg font-semibold text-white">Route Recommendations</h2>
+        </div>
+        
+        <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 mb-4">
+          <div className="text-center mb-4">
+            <Car className="h-8 w-8 text-orange-400 mx-auto mb-2" />
+            <h3 className="text-white font-medium">Plan Your Journey</h3>
+            <p className="text-gray-400 text-sm">Get AI-powered stops along your route</p>
+          </div>
+          
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-3">
+              <input
+                type="text"
+                placeholder="From (e.g., New York, NY)"
+                value={routeInput.from}
+                onChange={(e) => setRouteInput(prev => ({ ...prev, from: e.target.value }))}
+                className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:border-orange-400 focus:outline-none"
+              />
+              <input
+                type="text"
+                placeholder="To (e.g., Boston, MA)"
+                value={routeInput.to}
+                onChange={(e) => setRouteInput(prev => ({ ...prev, to: e.target.value }))}
+                className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:border-orange-400 focus:outline-none"
+              />
+            </div>
+            
+            <button
+              onClick={handleCalculateRoute}
+              disabled={!routeInput.from || !routeInput.to || isCalculatingRoute}
+              className="w-full bg-gradient-to-r from-orange-500 to-red-500 px-4 py-3 rounded-xl text-white font-medium hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+            >
+              {isCalculatingRoute ? (
+                <>
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                  <span>Calculating Route...</span>
+                </>
+              ) : (
+                <>
+                  <Route className="h-4 w-4" />
+                  <span>Get Route Recommendations</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Route Recommendations Display */}
+        {showRouteRecommendations && routeSegments[0] && (
+          <div className="space-y-4">
+            <div className="bg-gradient-to-r from-green-500/10 to-teal-500/10 backdrop-blur-sm rounded-2xl p-4 border border-green-400/30">
+              <div className="flex items-center space-x-2 mb-2">
+                <Map className="h-4 w-4 text-green-400" />
+                <span className="text-green-400 font-medium">Route Found</span>
+              </div>
+              <div className="text-white text-sm">
+                <span className="font-medium">{routeSegments[0].from}</span> → <span className="font-medium">{routeSegments[0].to}</span>
+              </div>
+              <div className="text-gray-300 text-xs mt-1">
+                {routeSegments[0].distance} • {routeSegments[0].estimatedTime} • {routeSegments[0].recommendations.length} stops found
+              </div>
+            </div>
+
+            {/* Route Filters */}
+            <div className="flex overflow-x-auto space-x-2 pb-2">
+              {routeFilterOptions.map((filter) => (
+                <button
+                  key={filter.id}
+                  onClick={() => setSelectedRouteType(filter.id)}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-2xl font-medium text-sm whitespace-nowrap transition-all duration-300 ${
+                    selectedRouteType === filter.id
+                      ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg'
+                      : 'bg-white/10 text-gray-400 hover:text-white hover:bg-white/20'
+                  }`}
+                >
+                  <filter.icon className="h-4 w-4" />
+                  <span>{filter.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Route Recommendations List */}
+            <div className="space-y-3">
+              {filteredRouteRecommendations.map((recommendation) => {
+                const IconComponent = getTypeIcon(recommendation.type);
+                return (
+                  <div
+                    key={recommendation.id}
+                    className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden hover:border-white/20 transition-all duration-300"
+                  >
+                    <div className="h-32 overflow-hidden">
+                      <img
+                        src={recommendation.image}
+                        alt={recommendation.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+
+                    <div className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <div className={`w-6 h-6 rounded-full bg-gradient-to-r ${getTypeColor(recommendation.type)} flex items-center justify-center`}>
+                              <IconComponent className="h-3 w-3 text-white" />
+                            </div>
+                            <h3 className="text-white font-semibold">{recommendation.name}</h3>
+                          </div>
+                          <p className="text-gray-400 text-sm mb-2">{recommendation.description}</p>
+                        </div>
+                        
+                        <div className="text-right ml-4">
+                          <div className="flex items-center space-x-1">
+                            <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                            <span className="text-yellow-400 text-sm">{recommendation.rating}</span>
+                          </div>
+                          <div className="text-gray-400 text-xs">{recommendation.reviews} reviews</div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 text-xs text-gray-400 mb-3">
+                        <div className="flex items-center space-x-1">
+                          <Navigation className="h-3 w-3" />
+                          <span>{recommendation.distanceFromRoute}km off route</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <Clock className="h-3 w-3" />
+                          <span>{recommendation.estimatedDetour} detour</span>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap gap-1 mb-3">
+                        {recommendation.highlights.slice(0, 3).map((highlight, index) => (
+                          <span
+                            key={index}
+                            className="px-2 py-1 bg-gradient-to-r from-orange-500/20 to-red-500/20 rounded-full text-xs text-orange-400 border border-orange-400/30"
+                          >
+                            {highlight}
+                          </span>
+                        ))}
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm text-gray-300">
+                          Best time: {recommendation.bestTime}
+                        </div>
+                        
+                        <div className="flex items-center space-x-2">
+                          <button className="p-2 bg-white/10 rounded-xl hover:bg-white/20 transition-colors">
+                            <Heart className="h-4 w-4 text-gray-400 hover:text-pink-400" />
+                          </button>
+                          
+                          <button className="flex items-center space-x-1 px-3 py-2 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl text-white text-sm font-medium hover:shadow-lg transition-all duration-300">
+                            <Navigation className="h-4 w-4" />
+                            <span>Add to Route</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {filteredRouteRecommendations.length === 0 && (
+              <div className="text-center py-8">
+                <Route className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                <h3 className="text-white font-medium mb-2">No {selectedRouteType} stops found</h3>
+                <p className="text-gray-400 text-sm">Try a different filter or check another route</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Search Radius Control */}
@@ -637,21 +948,6 @@ function DiscoveryPage() {
             </div>
           );
         })}
-      </div>
-
-      {/* Future: Route-Based Recommendations */}
-      <div className="mt-8 bg-gradient-to-r from-purple-500/10 to-pink-500/10 backdrop-blur-sm rounded-2xl p-6 border border-purple-400/30">
-        <div className="text-center">
-          <TrendingUp className="h-12 w-12 text-purple-400 mx-auto mb-3" />
-          <h3 className="text-lg font-bold text-white mb-2">Route-Based Recommendations</h3>
-          <p className="text-gray-400 text-sm mb-4">
-            Coming soon: AI-powered suggestions based on your travel route with stops for scenic spots and food joints
-          </p>
-          <div className="flex items-center justify-center space-x-2 text-purple-400 text-sm">
-            <RefreshCw className="h-4 w-4" />
-            <span>Future Phase Feature</span>
-          </div>
-        </div>
       </div>
     </div>
   );
