@@ -21,6 +21,7 @@ import AIAssistantPage from '../features/AIAssistantPage';
 import TravelJournalPage from '../features/TravelJournalPage';
 import LiveEventsPage from '../features/LiveEventsPage';
 import NomadNetworkPage from '../features/NomadNetworkPage';
+import PlacesRatingPage from '../features/PlacesRatingPage';
 import OfflineBuddyBeaconPage from '../features/OfflineBuddyBeaconPage';
 
 function Dashboard() {
@@ -46,6 +47,7 @@ function Dashboard() {
     { path: '/dashboard/food-discovery', icon: Utensils, label: 'Food & Utilities' },
     { path: '/dashboard/safety', icon: AlertTriangle, label: 'Safety Center' },
     { path: '/dashboard/rewards', icon: Trophy, label: 'Rewards' },
+    { path: '/dashboard/places-rating', icon: Star, label: 'Places & Reviews' },
     { path: '/dashboard/ai-assistant', icon: Bot, label: 'AI Assistant' },
     { path: '/dashboard/buddy-beacon', icon: Radar, label: 'Buddy Beacon' }
   ];
@@ -230,6 +232,7 @@ function Dashboard() {
             <Route path="/food-discovery" element={<FoodDiscoveryPage />} />
             <Route path="/safety" element={<SafetyAlertsPage />} />
             <Route path="/rewards" element={<GamificationPage />} />
+            <Route path="/places-rating" element={<PlacesRatingPage />} />
             <Route path="/ai-assistant" element={<AIAssistantPage />} />
             <Route path="/buddy-beacon" element={<OfflineBuddyBeaconPage />} />
           </Routes>
@@ -295,6 +298,7 @@ function DashboardHome() {
   const quickActions = [
     { icon: Plus, label: 'Drop Footprint', color: 'from-orange-400 to-pink-500', path: '/dashboard/footprints' },
     { icon: Radar, label: 'Find Buddies', color: 'from-cyan-400 to-blue-500', path: '/dashboard/radar' },
+    { icon: Star, label: 'Rate Places', color: 'from-yellow-400 to-orange-500', path: '/dashboard/places-rating' },
     { icon: RouteIcon, label: 'Buddy Beacon', color: 'from-green-400 to-teal-500', path: '/dashboard/buddy-beacon' },
     { icon: Bot, label: 'AI Assistant', color: 'from-blue-400 to-purple-500', path: '/dashboard/ai-assistant' },
     { icon: Calendar, label: 'Live Events', color: 'from-red-400 to-orange-500', path: '/dashboard/events' }

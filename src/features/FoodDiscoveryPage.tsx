@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { 
   Utensils, MapPin, Star, Clock, Filter, Search, 
   Navigation, Phone, DollarSign, Heart, Camera, 
-  Users, Truck, Coffee, Wifi, Car, Zap, Plus
+  Users, Truck, Coffee, Wifi, Car, Zap, Plus, MessageCircle, ThumbsUp, Edit
 } from 'lucide-react';
+import PlaceRatingCard from '../components/PlaceRatingCard';
 
 interface FoodSpot {
   id: string;
@@ -23,6 +24,14 @@ interface FoodSpot {
   amenities: string[];
   travelerReviewed: boolean;
   isLiked: boolean;
+  userRating?: number;
+  userReview?: {
+    rating: number;
+    comment: string;
+    photos: string[];
+    timestamp: Date;
+  };
+  canRate: boolean;
 }
 
 interface UtilitySpot {
@@ -44,6 +53,7 @@ function FoodDiscoveryPage() {
   const [selectedSpot, setSelectedSpot] = useState<FoodSpot | null>(null);
   const [selectedUtility, setSelectedUtility] = useState<UtilitySpot | null>(null);
   const [showAddFoodModal, setShowAddFoodModal] = useState(false);
+  const [showRatingModal, setShowRatingModal] = useState<FoodSpot | null>(null);
 
   const mockFoodSpots: FoodSpot[] = [
     {
@@ -63,7 +73,8 @@ function FoodDiscoveryPage() {
       image: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400',
       amenities: ['Parking', 'Clean Washrooms', 'Truck Parking'],
       travelerReviewed: true,
-      isLiked: false
+      isLiked: false,
+      canRate: true
     },
     {
       id: '2',
@@ -82,7 +93,15 @@ function FoodDiscoveryPage() {
       image: 'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg?auto=compress&cs=tinysrgb&w=400',
       amenities: ['WiFi', 'Sea View', 'Live Music'],
       travelerReviewed: true,
-      isLiked: true
+      isLiked: true,
+      userRating: 5,
+      userReview: {
+        rating: 5,
+        comment: 'Amazing seafood and perfect sunset view!',
+        photos: [],
+        timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000)
+      },
+      canRate: false
     },
     {
       id: '3',
@@ -101,7 +120,8 @@ function FoodDiscoveryPage() {
       image: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400',
       amenities: ['Mountain View', 'Organic Food', 'Cozy Seating'],
       travelerReviewed: true,
-      isLiked: false
+      isLiked: false,
+      canRate: true
     }
   ];
 
@@ -481,11 +501,58 @@ function FoodDiscoveryPage() {
                     
                     <button
                       onClick={() => setSelectedSpot(spot)}
-                      className="px-3 py-2 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl text-white text-sm font-medium hover:shadow-lg transition-all duration-300"
+                      className="px-3 py-2 border border-white/20 rounded-xl text-gray-300 text-sm font-medium hover:bg-white/5 transition-colors"
                     >
                       View Details
                     </button>
+                    
+                    {spot.canRate ? (
+                      <button
+                        onClick={() => handleRateSpot(spot)}
+                        className="px-3 py-2 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl text-white text-sm font-medium hover:shadow-lg transition-all duration-300"
+                      >
+                        Rate & Review
+                      </button>
+                    ) : (
+                      <div className="px-3 py-2 bg-green-500/20 rounded-xl border border-green-400/30">
+                        <span className="text-green-400 text-sm font-medium">You reviewed</span>
+                      </div>
+                    )}
                   </div>
+                  
+                  {/* User's Review Display */}
+                  {spot.userReview && (
+                    <div className="mt-3 p-3 bg-blue-500/10 rounded-xl border border-blue-400/30">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              className={`h-3 w-3 ${
+                                star <= spot.userReview!.rating 
+                                  ? 'text-yellow-400 fill-current' 
+                                  : 'text-gray-600'
+                              }`}
+                            />
+                          ))}
+                        <div className="flex items-center space-x-1">
+                          <RatingStars rating={spot.userReview.rating} size="sm" />
+                          <span className="text-blue-400 text-xs ml-1">Your rating</span>
+                        </div>
+                        <button className="p-1 rounded-full text-gray-400 hover:text-blue-400 transition-colors">
+                          <Edit className="h-3 w-3" />
+                        </button>
+                      </div>
+                      <p className="text-gray-300 text-xs">{spot.userReview.comment}</p>
+                      <div className="flex items-center justify-between text-xs text-gray-400 mt-2">
+                        <span>{new Date(spot.userReview.timestamp).toLocaleDateString()}</span>
+                        <div className="flex items-center space-x-1">
+                          <ThumbsUp className="h-3 w-3" />
+                          <span>12 people found this helpful</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -574,6 +641,14 @@ function FoodDiscoveryPage() {
         <AddSpotModal
           onClose={() => setShowAddFoodModal(false)}
           spotType={activeTab}
+        />
+      )}
+      
+      {/* Rate Spot Modal */}
+      {showRatingModal && (
+        <RateSpotModal
+          spot={showRatingModal}
+          onClose={() => setShowRatingModal(null)}
         />
       )}
     </div>
@@ -750,6 +825,164 @@ function UtilityDetailModal({ utility, onClose }: { utility: UtilitySpot; onClos
   );
 }
 
+function RateSpotModal({ spot, onClose }: { spot: FoodSpot; onClose: () => void }) {
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState('');
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    console.log('Submitting review:', {
+      spotId: spot.id,
+      rating,
+      comment,
+      tags
+    });
+    
+    // Here you would submit the review to your backend
+    onClose();
+  };
+  
+  const addTag = () => {
+    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
+      setTags([...tags, tagInput.trim()]);
+      setTagInput('');
+    }
+  };
+  
+  return (
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-slate-900/95 backdrop-blur-md rounded-3xl border border-white/20 max-w-md w-full max-h-[80vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-white">Rate & Review</h2>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+            >
+              ✕
+            </button>
+          </div>
+          
+          {/* Spot Info */}
+          <div className="flex items-center space-x-3 mb-6 p-3 bg-black/20 rounded-2xl">
+            {spot.image && (
+              <div className="w-12 h-12 rounded-lg overflow-hidden">
+                <img src={spot.image} alt={spot.name} className="w-full h-full object-cover" />
+              </div>
+            )}
+            <div>
+              <h3 className="text-white font-medium">{spot.name}</h3>
+              <div className="flex items-center space-x-1 text-gray-400 text-xs">
+                <MapPin className="h-3 w-3" />
+                <span>{spot.location}</span>
+              </div>
+            </div>
+          </div>
+          
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Rating */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Your Rating</label>
+              <div className="flex items-center space-x-3">
+                <RatingStars
+                  rating={rating}
+                  size="lg"
+                  interactive
+                  onChange={setRating}
+                />
+                <span className="text-white font-medium">{rating}</span>
+              </div>
+            </div>
+            
+            {/* Review */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Your Review</label>
+              <textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-orange-400 focus:outline-none resize-none"
+                rows={4}
+                placeholder="What did you like or dislike? How was the food/service?"
+                required
+              />
+            </div>
+            
+            {/* Tags */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Add Tags</label>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="text"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  className="flex-1 px-4 py-2 bg-black/20 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:border-orange-400 focus:outline-none"
+                  placeholder="e.g., good-value, family-friendly"
+                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+                />
+                <button
+                  type="button"
+                  onClick={addTag}
+                  className="px-3 py-2 bg-white/10 rounded-xl text-gray-400 hover:text-white hover:bg-white/20 transition-colors"
+                >
+                  Add
+                </button>
+              </div>
+              
+              {tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {tags.map((tag, index) => (
+                    <span
+                      key={index}
+                      className="px-2 py-1 bg-orange-500/20 rounded-full text-xs text-orange-400 flex items-center space-x-1"
+                    >
+                      <span>{tag}</span>
+                      <button
+                        type="button"
+                        onClick={() => setTags(tags.filter(t => t !== tag))}
+                        className="text-orange-400 hover:text-white transition-colors"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            {/* Photo upload option */}
+            <button
+              type="button"
+              className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-gray-400 hover:border-orange-400/50 hover:text-orange-400 transition-colors flex items-center justify-center space-x-2"
+            >
+              <Camera className="h-5 w-5" />
+              <span>Add Photos</span>
+            </button>
+            
+            <div className="flex space-x-3 pt-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 px-6 py-3 border border-white/20 rounded-2xl text-gray-300 hover:bg-white/5 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 px-6 py-3 rounded-2xl font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                Submit Review
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AddSpotModal({ onClose, spotType }: { onClose: () => void; spotType: 'food' | 'utilities' }) {
   const [formData, setFormData] = useState({
     name: '',
@@ -761,6 +994,10 @@ function AddSpotModal({ onClose, spotType }: { onClose: () => void; spotType: 'f
     specialties: '',
     openHours: ''
   });
+
+  const handleRateSpot = (spot: FoodSpot) => {
+    setShowRatingModal(spot);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
