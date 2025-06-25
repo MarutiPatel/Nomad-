@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Utensils, MapPin, Star, Clock, Filter, Search, 
   Navigation, Phone, DollarSign, Heart, Camera, 
-  Users, Truck, Coffee, Wifi, Car, Zap, Plus, Share
+  Users, Truck, Coffee, Wifi, Car, Zap, Plus, MessageCircle, ThumbsUp, Edit, X
 } from 'lucide-react';
+import PlaceRatingCard from '../components/PlaceRatingCard';
+import RatingStars from '../components/RatingStars';
 
 interface FoodSpot {
   id: string;
@@ -23,6 +25,14 @@ interface FoodSpot {
   amenities: string[];
   travelerReviewed: boolean;
   isLiked: boolean;
+  userRating?: number;
+  userReview?: {
+    rating: number;
+    comment: string;
+    photos: string[];
+    timestamp: Date;
+  };
+  canRate: boolean;
 }
 
 interface UtilitySpot {
@@ -44,6 +54,7 @@ function FoodDiscoveryPage() {
   const [selectedSpot, setSelectedSpot] = useState<FoodSpot | null>(null);
   const [selectedUtility, setSelectedUtility] = useState<UtilitySpot | null>(null);
   const [showAddFoodModal, setShowAddFoodModal] = useState(false);
+  const [showRatingModal, setShowRatingModal] = useState<FoodSpot | null>(null);
 
   const mockFoodSpots: FoodSpot[] = [
     {
@@ -63,7 +74,8 @@ function FoodDiscoveryPage() {
       image: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400',
       amenities: ['Parking', 'Clean Washrooms', 'Truck Parking'],
       travelerReviewed: true,
-      isLiked: false
+      isLiked: false,
+      canRate: true
     },
     {
       id: '2',
@@ -82,7 +94,15 @@ function FoodDiscoveryPage() {
       image: 'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg?auto=compress&cs=tinysrgb&w=400',
       amenities: ['WiFi', 'Sea View', 'Live Music'],
       travelerReviewed: true,
-      isLiked: true
+      isLiked: true,
+      userRating: 5,
+      userReview: {
+        rating: 5,
+        comment: 'Amazing seafood and perfect sunset view!',
+        photos: [],
+        timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000)
+      },
+      canRate: false
     },
     {
       id: '3',
@@ -101,7 +121,8 @@ function FoodDiscoveryPage() {
       image: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400',
       amenities: ['Mountain View', 'Organic Food', 'Cozy Seating'],
       travelerReviewed: true,
-      isLiked: false
+      isLiked: false,
+      canRate: true
     }
   ];
 
@@ -481,11 +502,47 @@ function FoodDiscoveryPage() {
                     
                     <button
                       onClick={() => setSelectedSpot(spot)}
-                      className="px-3 py-2 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl text-white text-sm font-medium hover:shadow-lg transition-all duration-300"
+                      className="px-3 py-2 border border-white/20 rounded-xl text-gray-300 text-sm font-medium hover:bg-white/5 transition-colors"
                     >
                       View Details
                     </button>
+                    
+                    {spot.canRate ? (
+                      <button
+                        onClick={() => setShowRatingModal(spot)}
+                        className="px-3 py-2 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl text-white text-sm font-medium hover:shadow-lg transition-all duration-300"
+                      >
+                        Rate & Review
+                      </button>
+                    ) : (
+                      <div className="px-3 py-2 bg-green-500/20 rounded-xl border border-green-400/30">
+                        <span className="text-green-400 text-sm font-medium">You reviewed</span>
+                      </div>
+                    )}
                   </div>
+                  
+                  {/* User's Review Display */}
+                  {spot.userReview && (
+                    <div className="mt-3 p-3 bg-blue-500/10 rounded-xl border border-blue-400/30">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-1">
+                          <RatingStars rating={spot.userReview.rating} size="sm" />
+                          <span className="text-blue-400 text-xs ml-1">Your rating</span>
+                        </div>
+                        <button className="p-1 rounded-full text-gray-400 hover:text-blue-400 transition-colors">
+                          <Edit className="h-3 w-3" />
+                        </button>
+                      </div>
+                      <p className="text-gray-300 text-xs">{spot.userReview.comment}</p>
+                      <div className="flex items-center justify-between text-xs text-gray-400 mt-2">
+                        <span>{new Date(spot.userReview.timestamp).toLocaleDateString()}</span>
+                        <div className="flex items-center space-x-1">
+                          <ThumbsUp className="h-3 w-3" />
+                          <span>12 people found this helpful</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -574,6 +631,14 @@ function FoodDiscoveryPage() {
         <AddSpotModal
           onClose={() => setShowAddFoodModal(false)}
           spotType={activeTab}
+        />
+      )}
+      
+      {/* Rate Spot Modal */}
+      {showRatingModal && (
+        <RateSpotModal
+          spot={showRatingModal}
+          onClose={() => setShowRatingModal(null)}
         />
       )}
     </div>
@@ -667,9 +732,6 @@ function FoodSpotModal({ spot, onClose }: { spot: FoodSpot; onClose: () => void 
               
               <button className="px-6 py-3 border border-white/20 rounded-2xl text-gray-300 hover:bg-white/5 transition-colors">
                 <Phone className="h-5 w-5" />
-              </button>
-              <button className="px-6 py-3 border border-white/20 rounded-2xl text-gray-300 hover:bg-white/5 transition-colors">
-                <Share className="h-5 w-5" />
               </button>
             </div>
           </div>
@@ -807,103 +869,4 @@ function AddSpotModal({ onClose, spotType }: { onClose: () => void; spotType: 'f
                 onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
                 className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white focus:border-cyan-400 focus:outline-none"
               >
-                {(spotType === 'food' ? foodCategories : utilityCategories).map(category => (
-                  <option key={category} value={category} className="bg-slate-800">
-                    {category.charAt(0).toUpperCase() + category.slice(1)}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Location</label>
-              <input
-                type="text"
-                value={formData.location}
-                onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-                className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none"
-                placeholder="Where is it located?"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none resize-none"
-                rows={3}
-                placeholder="Tell others about this spot..."
-                required
-              />
-            </div>
-
-            {spotType === 'food' && (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Price Range</label>
-                  <select
-                    value={formData.priceRange}
-                    onChange={(e) => setFormData(prev => ({ ...prev, priceRange: e.target.value }))}
-                    className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white focus:border-cyan-400 focus:outline-none"
-                  >
-                    <option value="$" className="bg-slate-800">$ - Budget</option>
-                    <option value="$$" className="bg-slate-800">$$ - Mid-range</option>
-                    <option value="$$$" className="bg-slate-800">$$$ - Expensive</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Specialties</label>
-                  <input
-                    type="text"
-                    value={formData.specialties}
-                    onChange={(e) => setFormData(prev => ({ ...prev, specialties: e.target.value }))}
-                    className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none"
-                    placeholder="e.g., Butter Chicken, Pizza, Local Fish"
-                  />
-                </div>
-              </>
-            )}
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                {spotType === 'food' ? 'Amenities/Features' : 'Amenities'}
-              </label>
-              <input
-                type="text"
-                value={formData.amenities}
-                onChange={(e) => setFormData(prev => ({ ...prev, amenities: e.target.value }))}
-                className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none"
-                placeholder={spotType === 'food' ? 'WiFi, Parking, AC, Outdoor Seating' : 'Clean, 24/7, Security, WiFi'}
-              />
-            </div>
-
-            <div className="flex space-x-3 pt-4">
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex-1 px-6 py-3 border border-white/20 rounded-2xl text-gray-300 hover:bg-white/5 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className={`flex-1 px-6 py-3 rounded-2xl font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 ${
-                  spotType === 'food' 
-                    ? 'bg-gradient-to-r from-orange-500 to-red-500'
-                    : 'bg-gradient-to-r from-blue-500 to-cyan-500'
-                }`}
-              >
-                Add Spot
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export default FoodDiscoveryPage;
+                
