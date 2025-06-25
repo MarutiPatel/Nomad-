@@ -7,6 +7,7 @@ import {
   RefreshCw, Waves
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 
 interface TravelBuddy {
   id: string;
@@ -24,6 +25,7 @@ interface TravelBuddy {
   languages: string[];
   currentTrip?: string;
   coordinates: { lat: number; lng: number };
+  canReceiveChatInvites?: boolean;
 }
 
 // Move getCompatibilityColor function outside of components so it's accessible to both
@@ -60,6 +62,7 @@ function BuddyRadarPage() {
       languages: ['English', 'Hindi', 'Spanish'],
       currentTrip: 'Goa Beach Hopping',
       coordinates: { lat: 15.2993, lng: 74.1240 }
+      canReceiveChatInvites: true
     },
     {
       id: '2',
@@ -76,7 +79,8 @@ function BuddyRadarPage() {
       age: 29,
       languages: ['English', 'French'],
       currentTrip: 'Spiritual Journey',
-      coordinates: { lat: 15.6885, lng: 73.7384 }
+      coordinates: { lat: 15.6885, lng: 73.7384 },
+      canReceiveChatInvites: false
     },
     {
       id: '3',
@@ -93,7 +97,8 @@ function BuddyRadarPage() {
       age: 31,
       languages: ['English', 'German', 'Portuguese'],
       currentTrip: 'Digital Nomad Life',
-      coordinates: { lat: 15.5736, lng: 73.7370 }
+      coordinates: { lat: 15.5736, lng: 73.7370 },
+      canReceiveChatInvites: true
     }
   ];
 
@@ -148,6 +153,11 @@ function BuddyRadarPage() {
   };
 
   const handleStartChat = (buddy: TravelBuddy) => {
+    if (!buddy.canReceiveChatInvites) {
+      alert(`${buddy.displayName} has disabled chat invitations.`);
+      return;
+    }
+    
     console.log('Starting chat with:', buddy.displayName);
     
     // Create a new chat session and navigate to chat page
@@ -424,10 +434,15 @@ function BuddyRadarPage() {
                     
                     <button 
                       onClick={() => handleStartChat(buddy)}
-                      className="flex items-center space-x-1 px-3 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl text-white text-sm font-medium hover:shadow-lg transition-all duration-300 hover:scale-105"
+                      disabled={!buddy.canReceiveChatInvites}
+                      className={`flex items-center space-x-1 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
+                        buddy.canReceiveChatInvites
+                          ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:scale-105'
+                          : 'bg-gray-500/20 text-gray-400 cursor-not-allowed'
+                      }`}
                     >
                       <MessageCircle className="h-4 w-4" />
-                      <span>Chat</span>
+                      <span>{buddy.canReceiveChatInvites ? 'Chat' : 'Chat Disabled'}</span>
                     </button>
                     
                     <button 
@@ -611,12 +626,25 @@ function BuddyDetailModal({
             
             <button 
               onClick={() => onStartChat(buddy)}
-              className="col-span-2 bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-3 rounded-2xl font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center space-x-2"
+              disabled={!buddy.canReceiveChatInvites}
+              className={`col-span-2 px-6 py-3 rounded-2xl font-semibold shadow-lg transition-all duration-300 flex items-center justify-center space-x-2 ${
+                buddy.canReceiveChatInvites
+                  ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-xl'
+                  : 'bg-gray-500/20 text-gray-400 cursor-not-allowed'
+              }`}
             >
               <MessageCircle className="h-5 w-5" />
-              <span>Start Chat</span>
+              <span>{buddy.canReceiveChatInvites ? 'Start Chat' : 'Chat Disabled'}</span>
             </button>
           </div>
+          
+          {!buddy.canReceiveChatInvites && (
+            <div className="mt-3 p-2 bg-orange-500/10 rounded-xl border border-orange-400/30">
+              <p className="text-orange-400 text-xs text-center">
+                This traveler has disabled chat invitations
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

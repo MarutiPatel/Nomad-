@@ -882,7 +882,12 @@ function CreateFootprintModal({ onClose }: { onClose: () => void }) {
     location: '',
     visibility: 'public' as 'public' | 'followers' | 'private',
     tags: '',
-    mediaType: 'photo' as 'photo' | 'video' | 'voice'
+    mediaType: 'photo' as 'photo' | 'video' | 'voice',
+    spotType: 'general' as 'general' | 'food' | 'utility',
+    priceRange: '$' as '$' | '$$' | '$$$',
+    amenities: '',
+    specialties: '',
+    openHours: ''
   });
 
   const [currentLocation, setCurrentLocation] = useState('Detected: New York, NY');
@@ -969,6 +974,20 @@ function CreateFootprintModal({ onClose }: { onClose: () => void }) {
               </div>
             </div>
 
+            {/* Footprint Type */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Footprint Type</label>
+              <select
+                value={formData.spotType}
+                onChange={(e) => setFormData(prev => ({ ...prev, spotType: e.target.value as any }))}
+                className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white focus:border-cyan-400 focus:outline-none"
+              >
+                <option value="general" className="bg-slate-800">General Experience</option>
+                <option value="food" className="bg-slate-800">Food Spot</option>
+                <option value="utility" className="bg-slate-800">Utility/Service</option>
+              </select>
+            </div>
+
             {/* Title */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">Title</label>
@@ -977,7 +996,11 @@ function CreateFootprintModal({ onClose }: { onClose: () => void }) {
                 value={formData.title}
                 onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                 className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none"
-                placeholder="What's this moment about?"
+                placeholder={
+                  formData.spotType === 'food' ? 'Restaurant or food spot name' :
+                  formData.spotType === 'utility' ? 'Utility or service name' :
+                  "What's this moment about?"
+                }
                 required
               />
             </div>
@@ -1033,9 +1056,69 @@ function CreateFootprintModal({ onClose }: { onClose: () => void }) {
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                 className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none resize-none"
                 rows={3}
-                placeholder="Share your story about this moment..."
+                placeholder={
+                  formData.spotType === 'food' ? 'Describe the food, ambiance, and experience...' :
+                  formData.spotType === 'utility' ? 'Describe the facilities, cleanliness, and amenities...' :
+                  'Share your story about this moment...'
+                }
               />
             </div>
+
+            {/* Food-specific fields */}
+            {formData.spotType === 'food' && (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Price Range</label>
+                    <select
+                      value={formData.priceRange}
+                      onChange={(e) => setFormData(prev => ({ ...prev, priceRange: e.target.value as any }))}
+                      className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white focus:border-cyan-400 focus:outline-none"
+                    >
+                      <option value="$" className="bg-slate-800">$ - Budget</option>
+                      <option value="$$" className="bg-slate-800">$$ - Mid-range</option>
+                      <option value="$$$" className="bg-slate-800">$$$ - Expensive</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Open Hours</label>
+                    <input
+                      type="text"
+                      value={formData.openHours}
+                      onChange={(e) => setFormData(prev => ({ ...prev, openHours: e.target.value }))}
+                      className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none"
+                      placeholder="e.g., 9 AM - 11 PM"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Specialties</label>
+                  <input
+                    type="text"
+                    value={formData.specialties}
+                    onChange={(e) => setFormData(prev => ({ ...prev, specialties: e.target.value }))}
+                    className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none"
+                    placeholder="e.g., Butter Chicken, Pizza, Local Fish"
+                  />
+                </div>
+              </>
+            )}
+
+            {/* Utility-specific fields */}
+            {formData.spotType === 'utility' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Amenities/Features</label>
+                <input
+                  type="text"
+                  value={formData.amenities}
+                  onChange={(e) => setFormData(prev => ({ ...prev, amenities: e.target.value }))}
+                  className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none"
+                  placeholder="e.g., Clean, 24/7, Security, WiFi, Parking"
+                />
+              </div>
+            )}
 
             {/* Visibility */}
             <div>
@@ -1059,7 +1142,11 @@ function CreateFootprintModal({ onClose }: { onClose: () => void }) {
                 value={formData.tags}
                 onChange={(e) => setFormData(prev => ({ ...prev, tags: e.target.value }))}
                 className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none"
-                placeholder="adventure, beach, sunset (comma separated)"
+                placeholder={
+                  formData.spotType === 'food' ? 'indian, vegetarian, cheap, spicy (comma separated)' :
+                  formData.spotType === 'utility' ? 'parking, clean, 24x7, secure (comma separated)' :
+                  'adventure, beach, sunset (comma separated)'
+                }
               />
             </div>
 

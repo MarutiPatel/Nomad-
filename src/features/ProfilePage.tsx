@@ -9,6 +9,9 @@ function ProfilePage() {
   const { user, updateProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isGhostMode, setIsGhostMode] = useState(false);
+  const [chatInvitesEnabled, setChatInvitesEnabled] = useState(true);
+  const [profileVisibility, setProfileVisibility] = useState<'public' | 'friends' | 'private'>('public');
+  const [locationPrecision, setLocationPrecision] = useState<'precise' | 'approximate'>('approximate');
   
   const [editForm, setEditForm] = useState({
     displayName: '',
@@ -29,6 +32,9 @@ function ProfilePage() {
         languages: user.languages || []
       });
       setIsGhostMode(!user.isRadarVisible);
+      setChatInvitesEnabled(user.canReceiveChatInvites ?? true);
+      setProfileVisibility(user.profileVisibility || 'public');
+      setLocationPrecision(user.locationSharingPrecision || 'approximate');
     }
   }, [user]);
 
@@ -79,6 +85,22 @@ function ProfilePage() {
     const newVisibility = !user?.isRadarVisible;
     setIsGhostMode(!newVisibility);
     updateProfile({ isRadarVisible: newVisibility });
+  };
+
+  const toggleChatInvites = () => {
+    const newSetting = !chatInvitesEnabled;
+    setChatInvitesEnabled(newSetting);
+    updateProfile({ canReceiveChatInvites: newSetting });
+  };
+
+  const updateProfileVisibility = (visibility: 'public' | 'friends' | 'private') => {
+    setProfileVisibility(visibility);
+    updateProfile({ profileVisibility: visibility });
+  };
+
+  const updateLocationPrecision = (precision: 'precise' | 'approximate') => {
+    setLocationPrecision(precision);
+    updateProfile({ locationSharingPrecision: precision });
   };
 
   const toggleInterest = (interest: string) => {
@@ -368,23 +390,70 @@ function ProfilePage() {
           </div>
           
           <div className="flex items-center justify-between">
-            <span className="text-gray-300 text-sm">Profile Visibility</span>
-            <button className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs border border-green-400/30">
-              Friends Only
+            <div className="flex items-center space-x-2">
+              <Users className="h-4 w-4 text-gray-300" />
+              <span className="text-gray-300 text-sm">Profile Visibility</span>
+            </div>
+            <select
+              value={profileVisibility}
+              onChange={(e) => updateProfileVisibility(e.target.value as any)}
+              className="px-3 py-1 bg-black/20 border border-white/10 rounded-full text-xs text-gray-300 focus:border-cyan-400 focus:outline-none"
+            >
+              <option value="public" className="bg-slate-800">Public</option>
+              <option value="friends" className="bg-slate-800">Friends Only</option>
+              <option value="private" className="bg-slate-800">Private</option>
+            </select>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <MapPin className="h-4 w-4 text-gray-300" />
+              <span className="text-gray-300 text-sm">Location Sharing</span>
+            </div>
+            <select
+              value={locationPrecision}
+              onChange={(e) => updateLocationPrecision(e.target.value as any)}
+              className="px-3 py-1 bg-black/20 border border-white/10 rounded-full text-xs text-gray-300 focus:border-cyan-400 focus:outline-none"
+            >
+              <option value="approximate" className="bg-slate-800">Approximate</option>
+              <option value="precise" className="bg-slate-800">Precise</option>
+            </select>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <MessageCircle className="h-4 w-4 text-gray-300" />
+              <span className="text-gray-300 text-sm">Allow Chat Invitations</span>
+            </div>
+            <button 
+              onClick={toggleChatInvites}
+              className={`px-3 py-1 rounded-full text-xs border transition-colors ${
+                chatInvitesEnabled
+                  ? 'bg-green-500/20 text-green-400 border-green-400/30'
+                  : 'bg-red-500/20 text-red-400 border-red-400/30'
+              }`}
+            >
+              {chatInvitesEnabled ? 'Enabled' : 'Disabled'}
             </button>
           </div>
           
           <div className="flex items-center justify-between">
-            <span className="text-gray-300 text-sm">Location Sharing</span>
-            <button className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs border border-blue-400/30">
-              Approximate
-            </button>
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <span className="text-gray-300 text-sm">Message History</span>
+            <div className="flex items-center space-x-2">
+              <Clock className="h-4 w-4 text-gray-300" />
+              <span className="text-gray-300 text-sm">Message History</span>
+            </div>
             <button className="px-3 py-1 bg-orange-500/20 text-orange-400 rounded-full text-xs border border-orange-400/30">
               Auto-Delete
+            </button>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Globe className="h-4 w-4 text-gray-300" />
+              <span className="text-gray-300 text-sm">Show to Same City Only</span>
+            </div>
+            <button className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs border border-blue-400/30">
+              Enabled
             </button>
           </div>
         </div>
