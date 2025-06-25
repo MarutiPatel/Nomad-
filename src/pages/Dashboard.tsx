@@ -17,12 +17,11 @@ import TimeCapsulePage from '../features/TimeCapsulePage';
 import FoodDiscoveryPage from '../features/FoodDiscoveryPage';
 import SafetyAlertsPage from '../features/SafetyAlertsPage';
 import GamificationPage from '../features/GamificationPage';
-import ARWorldPage from '../features/ARWorldPage';
 import AIAssistantPage from '../features/AIAssistantPage';
 import TravelJournalPage from '../features/TravelJournalPage';
 import LiveEventsPage from '../features/LiveEventsPage';
 import NomadNetworkPage from '../features/NomadNetworkPage';
-import RouteDiscoveryPage from '../features/RouteDiscoveryPage';
+import OfflineBuddyBeaconPage from '../features/OfflineBuddyBeaconPage';
 
 function Dashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -40,7 +39,6 @@ function Dashboard() {
   ];
 
   const additionalFeatures = [
-    { path: '/dashboard/route-discovery', icon: RouteIcon, label: 'Route Discovery' },
     { path: '/dashboard/journal', icon: BookOpen, label: 'Travel Journal' },
     { path: '/dashboard/events', icon: Calendar, label: 'Live Events' },
     { path: '/dashboard/network', icon: Globe, label: 'Nomad Network' },
@@ -48,8 +46,8 @@ function Dashboard() {
     { path: '/dashboard/food-discovery', icon: Utensils, label: 'Food & Utilities' },
     { path: '/dashboard/safety', icon: AlertTriangle, label: 'Safety Center' },
     { path: '/dashboard/rewards', icon: Trophy, label: 'Rewards' },
-    { path: '/dashboard/ar-world', icon: Eye, label: 'AR World' },
-    { path: '/dashboard/ai-assistant', icon: Bot, label: 'AI Assistant' }
+    { path: '/dashboard/ai-assistant', icon: Bot, label: 'AI Assistant' },
+    { path: '/dashboard/buddy-beacon', icon: Radar, label: 'Buddy Beacon' }
   ];
 
   const isActive = (path: string, exact = false) => {
@@ -225,7 +223,6 @@ function Dashboard() {
             <Route path="/discovery" element={<DiscoveryPage />} />
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/route-discovery" element={<RouteDiscoveryPage />} />
             <Route path="/journal" element={<TravelJournalPage />} />
             <Route path="/events" element={<LiveEventsPage />} />
             <Route path="/network" element={<NomadNetworkPage />} />
@@ -233,8 +230,8 @@ function Dashboard() {
             <Route path="/food-discovery" element={<FoodDiscoveryPage />} />
             <Route path="/safety" element={<SafetyAlertsPage />} />
             <Route path="/rewards" element={<GamificationPage />} />
-            <Route path="/ar-world" element={<ARWorldPage />} />
             <Route path="/ai-assistant" element={<AIAssistantPage />} />
+            <Route path="/buddy-beacon" element={<OfflineBuddyBeaconPage />} />
           </Routes>
         </main>
       </div>
@@ -298,8 +295,7 @@ function DashboardHome() {
   const quickActions = [
     { icon: Plus, label: 'Drop Footprint', color: 'from-orange-400 to-pink-500', path: '/dashboard/footprints' },
     { icon: Radar, label: 'Find Buddies', color: 'from-cyan-400 to-blue-500', path: '/dashboard/radar' },
-    { icon: RouteIcon, label: 'Route Discovery', color: 'from-green-400 to-teal-500', path: '/dashboard/route-discovery' },
-    { icon: Camera, label: 'AR World', color: 'from-purple-400 to-pink-500', path: '/dashboard/ar-world' },
+    { icon: RouteIcon, label: 'Buddy Beacon', color: 'from-green-400 to-teal-500', path: '/dashboard/buddy-beacon' },
     { icon: Bot, label: 'AI Assistant', color: 'from-blue-400 to-purple-500', path: '/dashboard/ai-assistant' },
     { icon: Calendar, label: 'Live Events', color: 'from-red-400 to-orange-500', path: '/dashboard/events' }
   ];

@@ -64,11 +64,23 @@ interface Footprint {
   travelBuddies?: User[];
   altitude?: number;
   isEditing?: boolean;
+  // Stealth Features
+  isStealthMode?: boolean;
+  allowedViewers?: string[];
+  stealthTags?: string[];
+  expiryDate?: Date;
+  // Place Pulse Features
+  placePulse?: {
+    friendliness: number; // 1-5
+    cleanliness: number; // 1-5
+    safety: number; // 1-5
+    signalStrength: number; // 1-5
+    foodQuality: number; // 1-5
+  };
   // Stealth mode features
   stealthMode: boolean;
   allowedViewers: 'everyone' | 'friends' | 'tags' | 'custom';
   allowedTags?: string[];
-  expiryDate?: Date;
   secretTrail?: string;
   // Place pulse ratings
   placePulse?: {
@@ -169,6 +181,14 @@ function FootprintsPage() {
       isBookmarked: false,
       mood: 'excited',
       weather: 'clear',
+      isStealthMode: false,
+      placePulse: {
+        friendliness: 5,
+        cleanliness: 4,
+        safety: 5,
+        signalStrength: 3,
+        foodQuality: 4
+      },
       stealthMode: false,
       allowedViewers: 'everyone',
       placePulse: {
@@ -219,12 +239,23 @@ function FootprintsPage() {
       tags: ['meditation', 'yoga', 'sunrise', 'central-park', 'peaceful'],
       isLiked: false,
       isBookmarked: true,
+      isStealthMode: true,
+      allowedViewers: ['friends'],
+      stealthTags: ['zen-seekers'],
       mood: 'peaceful',
       weather: 'sunny',
+      placePulse: {
+        friendliness: 4,
+        cleanliness: 5,
+        safety: 5,
+        signalStrength: 4,
+        foodQuality: 3
+      },
       travelBuddies: [mockUsers[2]],
       isFeatured: true,
-      stealthMode: false,
+      stealthMode: true,
       allowedViewers: 'friends',
+      secretTrail: 'Alpine Adventurers',
       placePulse: {
         friendliness: 5,
         cleanliness: 4,
@@ -329,6 +360,13 @@ function FootprintsPage() {
       tags: ['gaudi', 'architecture', 'barcelona', 'digital-nomad', 'art'],
       isLiked: false,
       isBookmarked: false,
+      placePulse: {
+        friendliness: 5,
+        cleanliness: 4,
+        safety: 4,
+        signalStrength: 5,
+        foodQuality: 5
+      },
       mood: 'inspired',
       weather: 'sunny',
       isFeatured: true,
@@ -631,6 +669,78 @@ function FootprintsPage() {
             {footprint.altitude && <span className="text-xs">⛰️ {footprint.altitude}m</span>}
           </div>
         </div>
+
+        {/* Stealth Mode Indicator */}
+        {footprint.isStealthMode && (
+          <div className="bg-gradient-to-r from-purple-500/10 to-indigo-500/10 rounded-xl p-3 mb-3 border border-purple-400/30">
+            <div className="flex items-center space-x-2 mb-2">
+              <Eye className="h-4 w-4 text-purple-400" />
+              <span className="text-purple-400 text-sm font-medium">Stealth Mode</span>
+            </div>
+            <div className="text-purple-300 text-xs">
+              Visible to: {footprint.allowedViewers?.join(', ') || 'Custom viewers'}
+              {footprint.stealthTags && (
+                <span className="ml-2">• Tags: {footprint.stealthTags.join(', ')}</span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Place Pulse Rating */}
+        {footprint.placePulse && (
+          <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-xl p-3 mb-3 border border-blue-400/30">
+            <div className="flex items-center space-x-2 mb-3">
+              <Users className="h-4 w-4 text-blue-400" />
+              <span className="text-blue-400 text-sm font-medium">Place Pulse</span>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-300">Friendliness</span>
+                <div className="flex space-x-1">
+                  {[1,2,3,4,5].map(i => (
+                    <div key={i} className={`w-1.5 h-1.5 rounded-full ${
+                      i <= footprint.placePulse!.friendliness ? 'bg-green-400' : 'bg-gray-600'
+                    }`} />
+                  ))}
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <span className="text-gray-300">Cleanliness</span>
+                <div className="flex space-x-1">
+                  {[1,2,3,4,5].map(i => (
+                    <div key={i} className={`w-1.5 h-1.5 rounded-full ${
+                      i <= footprint.placePulse!.cleanliness ? 'bg-blue-400' : 'bg-gray-600'
+                    }`} />
+                  ))}
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <span className="text-gray-300">Safety</span>
+                <div className="flex space-x-1">
+                  {[1,2,3,4,5].map(i => (
+                    <div key={i} className={`w-1.5 h-1.5 rounded-full ${
+                      i <= footprint.placePulse!.safety ? 'bg-yellow-400' : 'bg-gray-600'
+                    }`} />
+                  ))}
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <span className="text-gray-300">Signal</span>
+                <div className="flex space-x-1">
+                  {[1,2,3,4,5].map(i => (
+                    <div key={i} className={`w-1.5 h-1.5 rounded-full ${
+                      i <= footprint.placePulse!.signalStrength ? 'bg-cyan-400' : 'bg-gray-600'
+                    }`} />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Stealth Mode Indicator */}
         {footprint.stealthMode && (
@@ -1022,7 +1132,12 @@ function CreateFootprintModal({ onClose }: { onClose: () => void }) {
     cleanliness: 3,
     safety: 3,
     signalStrength: 3,
-    foodQuality: 3
+    foodQuality: 3,
+    // Stealth features
+    isStealthMode: false,
+    allowedViewers: '',
+    stealthTags: '',
+    expiryDate: ''
   });
 
   const [currentLocation, setCurrentLocation] = useState('Detected: New York, NY');
@@ -1254,6 +1369,146 @@ function CreateFootprintModal({ onClose }: { onClose: () => void }) {
                 />
               </div>
             )}
+
+            {/* Stealth Mode Section */}
+            <div className="bg-gradient-to-r from-purple-500/10 to-indigo-500/10 backdrop-blur-sm rounded-2xl p-4 border border-purple-400/30">
+              <div className="flex items-center space-x-3 mb-3">
+                <input
+                  type="checkbox"
+                  id="stealthMode"
+                  checked={formData.isStealthMode}
+                  onChange={(e) => setFormData(prev => ({ ...prev, isStealthMode: e.target.checked }))}
+                  className="w-4 h-4 text-purple-600 bg-black/20 border-white/10 rounded focus:ring-purple-500"
+                />
+                <label htmlFor="stealthMode" className="text-purple-400 font-medium">
+                  Enable Stealth Mode
+                </label>
+              </div>
+              
+              {formData.isStealthMode && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-purple-300 mb-2">Allowed Viewers</label>
+                    <select
+                      value={formData.allowedViewers}
+                      onChange={(e) => setFormData(prev => ({ ...prev, allowedViewers: e.target.value }))}
+                      className="w-full px-4 py-3 bg-black/20 border border-purple-400/30 rounded-2xl text-purple-300 focus:border-purple-400 focus:outline-none"
+                    >
+                      <option value="friends" className="bg-slate-800">Friends Only</option>
+                      <option value="followers" className="bg-slate-800">Followers Only</option>
+                      <option value="custom" className="bg-slate-800">Custom List</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-purple-300 mb-2">Stealth Tags</label>
+                    <input
+                      type="text"
+                      value={formData.stealthTags}
+                      onChange={(e) => setFormData(prev => ({ ...prev, stealthTags: e.target.value }))}
+                      className="w-full px-4 py-3 bg-black/20 border border-purple-400/30 rounded-2xl text-purple-300 placeholder-purple-400/50 focus:border-purple-400 focus:outline-none"
+                      placeholder="zen-seekers, photographers, foodies"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-purple-300 mb-2">Expiry Date (Optional)</label>
+                    <input
+                      type="date"
+                      value={formData.expiryDate}
+                      onChange={(e) => setFormData(prev => ({ ...prev, expiryDate: e.target.value }))}
+                      className="w-full px-4 py-3 bg-black/20 border border-purple-400/30 rounded-2xl text-purple-300 focus:border-purple-400 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Place Pulse Rating Section */}
+            <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 backdrop-blur-sm rounded-2xl p-4 border border-blue-400/30">
+              <h3 className="text-blue-400 font-medium mb-3">Rate This Place (Place Pulse)</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm text-blue-300 mb-2">Local Friendliness</label>
+                  <div className="flex items-center space-x-2">
+                    {[1,2,3,4,5].map(rating => (
+                      <button
+                        key={rating}
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, friendliness: rating }))}
+                        className={`w-8 h-8 rounded-full border-2 transition-colors ${
+                          rating <= formData.friendliness
+                            ? 'bg-green-400 border-green-400'
+                            : 'border-gray-600 hover:border-green-400'
+                        }`}
+                      >
+                        <span className="text-xs font-bold text-slate-900">{rating}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm text-blue-300 mb-2">Cleanliness</label>
+                  <div className="flex items-center space-x-2">
+                    {[1,2,3,4,5].map(rating => (
+                      <button
+                        key={rating}
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, cleanliness: rating }))}
+                        className={`w-8 h-8 rounded-full border-2 transition-colors ${
+                          rating <= formData.cleanliness
+                            ? 'bg-blue-400 border-blue-400'
+                            : 'border-gray-600 hover:border-blue-400'
+                        }`}
+                      >
+                        <span className="text-xs font-bold text-white">{rating}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm text-blue-300 mb-2">Solo Travel Safety</label>
+                  <div className="flex items-center space-x-2">
+                    {[1,2,3,4,5].map(rating => (
+                      <button
+                        key={rating}
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, safety: rating }))}
+                        className={`w-8 h-8 rounded-full border-2 transition-colors ${
+                          rating <= formData.safety
+                            ? 'bg-yellow-400 border-yellow-400'
+                            : 'border-gray-600 hover:border-yellow-400'
+                        }`}
+                      >
+                        <span className="text-xs font-bold text-slate-900">{rating}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm text-blue-300 mb-2">Mobile Signal Strength</label>
+                  <div className="flex items-center space-x-2">
+                    {[1,2,3,4,5].map(rating => (
+                      <button
+                        key={rating}
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, signalStrength: rating }))}
+                        className={`w-8 h-8 rounded-full border-2 transition-colors ${
+                          rating <= formData.signalStrength
+                            ? 'bg-cyan-400 border-cyan-400'
+                            : 'border-gray-600 hover:border-cyan-400'
+                        }`}
+                      >
+                        <span className="text-xs font-bold text-slate-900">{rating}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
 
             {/* Stealth Mode Toggle */}
             <div className="bg-purple-500/10 backdrop-blur-sm rounded-2xl p-4 border border-purple-400/30">
