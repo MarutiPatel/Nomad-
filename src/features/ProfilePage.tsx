@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   User, Edit, Settings, Shield, Eye, EyeOff, MapPin, 
-  Calendar, Globe, Heart, Star, Trophy, Camera, Save, X, Radar
+  Calendar, Globe, Heart, Star, Trophy, Camera, Save, X, Radar, Crown, Users, MessageCircle, Clock
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -176,6 +176,74 @@ function ProfilePage() {
           </p>
         </div>
       )}
+
+      {/* Creator Dashboard */}
+      {user?.isCreator && (
+        <div className="bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-orange-500/10 backdrop-blur-sm rounded-3xl p-6 border border-white/10 mb-6">
+          <div className="flex items-center space-x-2 mb-4">
+            <Crown className="h-6 w-6 text-purple-400" />
+            <h2 className="text-lg font-semibold text-white">Creator Dashboard</h2>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="text-center">
+              <div className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
+                {user.creatorContent?.followers || 0}
+              </div>
+              <div className="text-xs text-gray-400">Followers</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+                {user.creatorContent?.guides || 0}
+              </div>
+              <div className="text-xs text-gray-400">Travel Guides</div>
+            </div>
+          </div>
+          
+          <button className="w-full bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-3 rounded-2xl font-medium text-white hover:shadow-lg transition-all duration-300">
+            Manage Creator Content
+          </button>
+        </div>
+      )}
+
+      {/* Trust Score Display */}
+      <div className="bg-gradient-to-r from-green-500/10 via-teal-500/10 to-cyan-500/10 backdrop-blur-sm rounded-3xl p-6 border border-white/10 mb-6">
+        <div className="flex items-center space-x-2 mb-4">
+          <Shield className="h-6 w-6 text-green-400" />
+          <h2 className="text-lg font-semibold text-white">Trust & Reputation</h2>
+        </div>
+        
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-green-400 font-medium">Trust Score</span>
+            <span className={`text-2xl font-bold ${
+              (user?.trustScore || 0) >= 80 ? 'text-green-400' :
+              (user?.trustScore || 0) >= 60 ? 'text-yellow-400' :
+              'text-orange-400'
+            }`}>
+              {user?.trustScore || 0}%
+            </span>
+          </div>
+          <div className="w-full h-3 bg-gray-700 rounded-full">
+            <div
+              className={`h-3 rounded-full ${
+                (user?.trustScore || 0) >= 80 ? 'bg-gradient-to-r from-green-400 to-teal-500' :
+                (user?.trustScore || 0) >= 60 ? 'bg-gradient-to-r from-yellow-400 to-orange-500' :
+                'bg-gradient-to-r from-orange-400 to-red-500'
+              }`}
+              style={{ width: `${user?.trustScore || 0}%` }}
+            />
+          </div>
+        </div>
+        
+        <div className="text-sm text-gray-300 mb-4">
+          Trust circles: {user?.trustCircles?.length || 0}
+        </div>
+        
+        <button className="w-full bg-gradient-to-r from-green-500 to-teal-500 px-4 py-3 rounded-2xl font-medium text-white hover:shadow-lg transition-all duration-300">
+          Build Trust Network
+        </button>
+      </div>
 
       {/* Profile Card */}
       <div className="bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 p-6 mb-6">
