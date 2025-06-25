@@ -1,5 +1,5 @@
 import React from 'react';
-import { ThumbsUp, Flag, MessageCircle, Share, Camera, Star } from 'lucide-react';
+import { ThumbsUp, Flag, MessageCircle, Share, Star } from 'lucide-react';
 import RatingStars from './RatingStars';
 
 interface ReviewProps {
@@ -152,6 +152,13 @@ export default function PlaceReviewItem({
             >
               <Flag className="h-3 w-3" />
               <span>Report</span>
+            </button>
+            
+            <button
+              className="flex items-center space-x-1 text-xs text-gray-400 hover:text-purple-400 transition-colors ml-auto"
+            >
+              <Share className="h-3 w-3" />
+              <span>Share</span>
             </button>
           </div>
         </div>
