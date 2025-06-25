@@ -25,6 +25,7 @@ import NomadNetworkPage from '../features/NomadNetworkPage';
 import PlacesRatingPage from '../features/PlacesRatingPage';
 import OfflineBuddyBeaconPage from '../features/OfflineBuddyBeaconPage';
 import ARWorldPage from '../features/ARWorldPage';
+import RouteDiscoveryPage from '../features/RouteDiscoveryPage';
 
 function Dashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -45,6 +46,7 @@ function Dashboard() {
     { path: '/dashboard/journal', icon: BookOpen, label: 'Travel Journal' },
     { path: '/dashboard/events', icon: Calendar, label: 'Live Events' },
     { path: '/dashboard/network', icon: Globe, label: 'Nomad Network' },
+    { path: '/dashboard/route-discovery', icon: RouteIcon, label: 'Route Discovery' },
     { path: '/dashboard/ar-world', icon: Camera, label: 'AR World Tags' },
     { path: '/dashboard/time-capsules', icon: Clock, label: 'Time Capsules' },
     { path: '/dashboard/food-discovery', icon: Utensils, label: 'Food & Utilities' },
@@ -236,6 +238,7 @@ function Dashboard() {
             <Route path="/journal" element={<TravelJournalPage />} />
             <Route path="/events" element={<LiveEventsPage />} />
             <Route path="/network" element={<NomadNetworkPage />} />
+            <Route path="/route-discovery" element={<RouteDiscoveryPage />} />
             <Route path="/ar-world" element={<ARWorldPage />} />
             <Route path="/time-capsules" element={<TimeCapsulePage />} />
             <Route path="/food-discovery" element={<FoodDiscoveryPage />} />
@@ -307,6 +310,7 @@ function DashboardHome() {
   const quickActions = [
     { icon: Plus, label: 'Drop Footprint', color: 'from-orange-400 to-pink-500', path: '/dashboard/footprints' },
     { icon: Radar, label: 'Find Buddies', color: 'from-cyan-400 to-blue-500', path: '/dashboard/radar' },
+    { icon: RouteIcon, label: 'Route Discovery', color: 'from-green-400 to-teal-500', path: '/dashboard/route-discovery' },
     { icon: Camera, label: 'AR World Tags', color: 'from-purple-400 to-pink-500', path: '/dashboard/ar-world' },
     { icon: Star, label: 'Rate Places', color: 'from-yellow-400 to-orange-500', path: '/dashboard/places-rating' },
     { icon: Bot, label: 'AI Assistant', color: 'from-blue-400 to-purple-500', path: '/dashboard/ai-assistant' },
@@ -317,6 +321,7 @@ function DashboardHome() {
     { type: 'account', message: `Welcome ${user?.displayName}! Your account was created`, time: 'Just now', icon: User },
     { type: 'system', message: 'Random travel name assigned for privacy', time: 'Just now', icon: Shield },
     { type: 'ar', message: 'AR World Tags ready - leave messages in AR!', time: 'Now', icon: Camera },
+    { type: 'route', message: 'Route Discovery available - find curated travel routes', time: 'Now', icon: RouteIcon },
     { type: 'discovery', message: 'Explore all 80+ features across 9 categories', time: 'Now', icon: Target },
     { type: 'community', message: 'Ready to find your travel twin?', time: 'Now', icon: Users },
     { type: 'journey', message: 'Your nomadic journey begins here', time: 'Now', icon: Compass }
