@@ -35,26 +35,26 @@ function Dashboard() {
 
   const navigationItems = [
     { path: '/dashboard', icon: Compass, label: 'Explore', exact: true },
+    { path: '/dashboard/profile', icon: User, label: 'Profile' },
     { path: '/dashboard/footprints', icon: Footprints, label: 'Footprints' },
-    { path: '/dashboard/radar', icon: Radar, label: 'Buddy Radar' },
-    { path: '/dashboard/discovery', icon: Target, label: 'Discovery' },
+    { path: '/dashboard/network', icon: Globe, label: 'Nomad Network' },
     { path: '/dashboard/chat', icon: MessageCircle, label: 'Chats' },
-    { path: '/dashboard/profile', icon: User, label: 'Profile' }
+    { path: '/dashboard/radar', icon: Radar, label: 'Buddy Radar' }
   ];
 
   const additionalFeatures = [
+    { path: '/dashboard/route-discovery', icon: RouteIcon, label: 'Route Discovery' },
+    { path: '/dashboard/discovery', icon: Target, label: 'Discovery' },
+    { path: '/dashboard/food-discovery', icon: Utensils, label: 'Food & Utilities' },
     { path: '/dashboard/journal', icon: BookOpen, label: 'Travel Journal' },
     { path: '/dashboard/events', icon: Calendar, label: 'Live Events' },
-    { path: '/dashboard/network', icon: Globe, label: 'Nomad Network' },
-    { path: '/dashboard/route-discovery', icon: RouteIcon, label: 'Route Discovery' },
     { path: '/dashboard/ar-world', icon: Camera, label: 'AR World Tags' },
     { path: '/dashboard/time-capsules', icon: Clock, label: 'Time Capsules' },
-    { path: '/dashboard/food-discovery', icon: Utensils, label: 'Food & Utilities' },
-    { path: '/dashboard/safety', icon: AlertTriangle, label: 'Safety Center' },
-    { path: '/dashboard/rewards', icon: Trophy, label: 'Rewards' },
-    { path: '/dashboard/places-rating', icon: Star, label: 'Places & Reviews' },
     { path: '/dashboard/ai-assistant', icon: Bot, label: 'AI Assistant' },
-    { path: '/dashboard/buddy-beacon', icon: Radar, label: 'Buddy Beacon' }
+    { path: '/dashboard/places-rating', icon: Star, label: 'Places & Reviews' },
+    { path: '/dashboard/buddy-beacon', icon: Smartphone, label: 'Buddy Beacon' },
+    { path: '/dashboard/safety', icon: AlertTriangle, label: 'Safety Center' },
+    { path: '/dashboard/rewards', icon: Trophy, label: 'Rewards' }
   ];
 
   const isActive = (path: string, exact = false) => {
@@ -254,7 +254,13 @@ function Dashboard() {
       {/* Mobile Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 bg-black/40 backdrop-blur-md border-t border-white/10 px-4 py-2 lg:hidden">
         <div className="flex items-center justify-around">
-          {navigationItems.slice(0, 5).map((item) => (
+          {[
+            navigationItems[0], // Explore
+            navigationItems[1], // Profile
+            navigationItems[2], // Footprints
+            navigationItems[4], // Chat
+            navigationItems[5]  // Buddy Radar
+          ].map((item) => (
             <Link
               key={item.path}
               to={item.path}
@@ -308,23 +314,22 @@ function DashboardHome() {
   const { user } = useAuth();
 
   const quickActions = [
-    { icon: Plus, label: 'Drop Footprint', color: 'from-orange-400 to-pink-500', path: '/dashboard/footprints' },
-    { icon: Radar, label: 'Find Buddies', color: 'from-cyan-400 to-blue-500', path: '/dashboard/radar' },
+    { icon: User, label: 'View Profile', color: 'from-purple-400 to-pink-500', path: '/dashboard/profile' },
+    { icon: Plus, label: 'Drop Footprint', color: 'from-orange-400 to-red-500', path: '/dashboard/footprints' },
+    { icon: Globe, label: 'Nomad Network', color: 'from-blue-400 to-cyan-500', path: '/dashboard/network' },
     { icon: RouteIcon, label: 'Route Discovery', color: 'from-green-400 to-teal-500', path: '/dashboard/route-discovery' },
-    { icon: Camera, label: 'AR World Tags', color: 'from-purple-400 to-pink-500', path: '/dashboard/ar-world' },
-    { icon: Star, label: 'Rate Places', color: 'from-yellow-400 to-orange-500', path: '/dashboard/places-rating' },
+    { icon: Camera, label: 'AR World Tags', color: 'from-pink-400 to-purple-500', path: '/dashboard/ar-world' },
     { icon: Bot, label: 'AI Assistant', color: 'from-blue-400 to-purple-500', path: '/dashboard/ai-assistant' },
-    { icon: Calendar, label: 'Live Events', color: 'from-red-400 to-orange-500', path: '/dashboard/events' }
   ];
 
   const recentActivity = [
     { type: 'account', message: `Welcome ${user?.displayName}! Your account was created`, time: 'Just now', icon: User },
     { type: 'system', message: 'Random travel name assigned for privacy', time: 'Just now', icon: Shield },
-    { type: 'ar', message: 'AR World Tags ready - leave messages in AR!', time: 'Now', icon: Camera },
-    { type: 'route', message: 'Route Discovery available - find curated travel routes', time: 'Now', icon: RouteIcon },
-    { type: 'discovery', message: 'Explore all 80+ features across 9 categories', time: 'Now', icon: Target },
+    { type: 'network', message: 'Join the global nomad network community', time: 'Now', icon: Globe },
+    { type: 'footprints', message: 'Ready to drop your first travel footprint?', time: 'Now', icon: Footprints },
+    { type: 'ar', message: 'AR World Tags ready - leave messages in AR space!', time: 'Now', icon: Camera },
     { type: 'community', message: 'Ready to find your travel twin?', time: 'Now', icon: Users },
-    { type: 'journey', message: 'Your nomadic journey begins here', time: 'Now', icon: Compass }
+    { type: 'discovery', message: 'Explore 80+ features across 9 categories', time: 'Now', icon: Target }
   ];
 
   return (
