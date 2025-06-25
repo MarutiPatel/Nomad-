@@ -28,7 +28,7 @@ interface FoodSpot {
 interface UtilitySpot {
   id: string;
   name: string;
-  type: 'camping' | 'parking' | 'restroom' | 'emergency' | 'charging' | 'coworking';
+  type: 'camping' | 'parking' | 'restroom' | 'emergency' | 'charging' | 'coworking' | 'laundry' | 'water-refill' | 'wifi-hotspot' | 'pharmacy' | 'atm' | 'post-office' | 'fuel-station' | 'tourist-info' | 'luggage-storage' | 'shower-facilities';
   location: string;
   distance: number;
   rating: number;
@@ -141,6 +141,126 @@ function FoodDiscoveryPage() {
       amenities: ['Clean Washrooms', 'Hand Sanitizer', 'Baby Changing'],
       description: 'Well-maintained rest facilities',
       verified: true
+    },
+    {
+      id: '4',
+      name: 'Quick Wash Laundromat',
+      type: 'laundry',
+      location: 'Paharganj, New Delhi',
+      distance: 1.8,
+      rating: 4.3,
+      isOpen: true,
+      amenities: ['Self-service', 'Detergent available', 'Drying facility', 'Attendant help'],
+      description: 'Convenient laundry service for travelers',
+      verified: true
+    },
+    {
+      id: '5',
+      name: 'Mountain Spring Water Station',
+      type: 'water-refill',
+      location: 'Rishikesh Main Market',
+      distance: 0.3,
+      rating: 4.8,
+      isOpen: true,
+      amenities: ['Filtered water', 'Free refills', 'Multiple taps', 'Clean area'],
+      description: 'Pure mountain water refill station',
+      verified: true
+    },
+    {
+      id: '6',
+      name: 'Digital Nomad Hub',
+      type: 'wifi-hotspot',
+      location: 'Cafe Coffee Day, Bangalore',
+      distance: 0.7,
+      rating: 4.4,
+      isOpen: true,
+      amenities: ['High-speed WiFi', 'Power outlets', 'Comfortable seating', 'Food available'],
+      description: 'Reliable internet spot for remote work',
+      verified: false
+    },
+    {
+      id: '7',
+      name: 'City Care Pharmacy',
+      type: 'pharmacy',
+      location: 'MG Road, Goa',
+      distance: 2.1,
+      rating: 4.6,
+      isOpen: true,
+      amenities: ['24/7 service', 'Prescription medicines', 'First aid', 'English speaking'],
+      description: 'Well-stocked pharmacy with travel medications',
+      verified: true
+    },
+    {
+      id: '8',
+      name: 'SBI ATM',
+      type: 'atm',
+      location: 'Railway Station Road',
+      distance: 0.4,
+      rating: 4.2,
+      isOpen: true,
+      amenities: ['24/7 access', 'Security guard', 'Multiple currencies', 'Receipt printing'],
+      description: 'Reliable ATM with good cash availability',
+      verified: true
+    },
+    {
+      id: '9',
+      name: 'India Post Office',
+      type: 'post-office',
+      location: 'Central Post Office',
+      distance: 1.5,
+      rating: 3.9,
+      isOpen: false,
+      amenities: ['International mail', 'Parcel service', 'Money orders', 'Stamps'],
+      description: 'Main post office for mail and courier services',
+      verified: true
+    },
+    {
+      id: '10',
+      name: 'Highway Fuel Station',
+      type: 'fuel-station',
+      location: 'NH-48 Highway',
+      distance: 3.2,
+      rating: 4.1,
+      isOpen: true,
+      amenities: ['Petrol & Diesel', 'Air pump', 'Restrooms', 'Snack shop'],
+      description: 'Full-service fuel station on major highway',
+      verified: true
+    },
+    {
+      id: '11',
+      name: 'Tourist Information Center',
+      type: 'tourist-info',
+      location: 'City Center, Jaipur',
+      distance: 1.0,
+      rating: 4.5,
+      isOpen: true,
+      amenities: ['Free maps', 'Tour booking', 'Local guides', 'Multi-language help'],
+      description: 'Official tourism office with travel assistance',
+      verified: true
+    },
+    {
+      id: '12',
+      name: 'Backpacker Storage',
+      type: 'luggage-storage',
+      location: 'Central Railway Station',
+      distance: 0.8,
+      rating: 4.3,
+      isOpen: true,
+      amenities: ['Secure lockers', 'CCTV monitoring', 'Various sizes', 'Day/night rates'],
+      description: 'Safe luggage storage for day trips',
+      verified: true
+    },
+    {
+      id: '13',
+      name: 'Traveler Shower Block',
+      type: 'shower-facilities',
+      location: 'Bus Terminal Complex',
+      distance: 1.3,
+      rating: 4.0,
+      isOpen: true,
+      amenities: ['Hot water', 'Clean towels', 'Soap provided', 'Private cabins'],
+      description: 'Clean shower facilities for travelers',
+      verified: false
     }
   ];
 
@@ -158,7 +278,17 @@ function FoodDiscoveryPage() {
     { id: 'all', label: 'All', icon: MapPin },
     { id: 'camping', label: 'Camping', icon: Users },
     { id: 'parking', label: 'Parking', icon: Car },
-    { id: 'charging', label: 'Charging', icon: Zap }
+    { id: 'charging', label: 'Charging', icon: Zap },
+    { id: 'laundry', label: 'Laundry', icon: Coffee },
+    { id: 'water-refill', label: 'Water', icon: Truck },
+    { id: 'wifi-hotspot', label: 'WiFi', icon: Wifi },
+    { id: 'pharmacy', label: 'Pharmacy', icon: Heart },
+    { id: 'atm', label: 'ATM', icon: DollarSign },
+    { id: 'post-office', label: 'Post', icon: Navigation },
+    { id: 'fuel-station', label: 'Fuel', icon: Zap },
+    { id: 'tourist-info', label: 'Info', icon: Star },
+    { id: 'luggage-storage', label: 'Storage', icon: Users },
+    { id: 'shower-facilities', label: 'Showers', icon: Truck }
   ];
 
   const handleLike = (id: string) => {
@@ -640,7 +770,11 @@ function AddSpotModal({ onClose, spotType }: { onClose: () => void; spotType: 'f
   };
 
   const foodCategories = ['restaurant', 'dhaba', 'cafe', 'street', 'hidden-gem'];
-  const utilityCategories = ['camping', 'parking', 'restroom', 'emergency', 'charging', 'coworking'];
+  const utilityCategories = [
+    'camping', 'parking', 'restroom', 'emergency', 'charging', 'coworking',
+    'laundry', 'water-refill', 'wifi-hotspot', 'pharmacy', 'atm', 'post-office',
+    'fuel-station', 'tourist-info', 'luggage-storage', 'shower-facilities'
+  ];
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
