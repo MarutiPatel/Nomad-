@@ -4,6 +4,7 @@ import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { TripProvider } from './contexts/TripContext';
 
 function AppRoutes() {
   const { user, loading } = useAuth();
@@ -34,7 +35,9 @@ function AppRoutes() {
 function App() {
   return (
     <AuthProvider>
-      <AppRoutes />
+      <TripProvider>
+        <AppRoutes />
+      </TripProvider>
     </AuthProvider>
   );
 }

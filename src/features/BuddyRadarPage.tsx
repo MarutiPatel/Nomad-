@@ -2,8 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Radar, MapPin, Heart, MessageCircle, Filter, Settings,
-  User, Clock, Star, Zap, Globe, Camera, Music, Coffee
+  User, Clock, Star, Zap, Globe, Camera, Music, Coffee,
+  UserPlus, Navigation, Send, Eye, EyeOff, AlertTriangle,
+  RefreshCw, Waves
 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 interface TravelBuddy {
   id: string;
@@ -20,6 +23,7 @@ interface TravelBuddy {
   age?: number;
   languages: string[];
   currentTrip?: string;
+  coordinates: { lat: number; lng: number };
 }
 
 // Move getCompatibilityColor function outside of components so it's accessible to both
@@ -32,10 +36,12 @@ const getCompatibilityColor = (score: number) => {
 
 function BuddyRadarPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [isScanning, setIsScanning] = useState(false);
   const [selectedBuddy, setSelectedBuddy] = useState<TravelBuddy | null>(null);
   const [filterRadius, setFilterRadius] = useState(5); // km
   const [compatibilityFilter, setCompatibilityFilter] = useState(70);
+  const [lastUpdateTime, setLastUpdateTime] = useState<Date>(new Date());
 
   const mockBuddies: TravelBuddy[] = [
     {
@@ -52,7 +58,8 @@ function BuddyRadarPage() {
       bio: 'Love exploring hidden beaches and trying local cuisines. Always up for spontaneous adventures!',
       age: 26,
       languages: ['English', 'Hindi', 'Spanish'],
-      currentTrip: 'Goa Beach Hopping'
+      currentTrip: 'Goa Beach Hopping',
+      coordinates: { lat: 15.2993, lng: 74.1240 }
     },
     {
       id: '2',
@@ -68,7 +75,8 @@ function BuddyRadarPage() {
       bio: 'Seeking peace in nature and meaningful connections with fellow travelers.',
       age: 29,
       languages: ['English', 'French'],
-      currentTrip: 'Spiritual Journey'
+      currentTrip: 'Spiritual Journey',
+      coordinates: { lat: 15.6885, lng: 73.7384 }
     },
     {
       id: '3',
@@ -84,13 +92,54 @@ function BuddyRadarPage() {
       bio: 'Remote developer exploring the world while building cool projects.',
       age: 31,
       languages: ['English', 'German', 'Portuguese'],
-      currentTrip: 'Digital Nomad Life'
+      currentTrip: 'Digital Nomad Life',
+      coordinates: { lat: 15.5736, lng: 73.7370 }
     }
   ];
 
   const [nearbyBuddies, setNearbyBuddies] = useState(mockBuddies);
 
+  // Simulate live GPS updates for buddy locations
+  useEffect(() => {
+    if (!user?.isRadarVisible) return;
+
+    const interval = setInterval(() => {
+      setNearbyBuddies(prev => prev.map(buddy => {
+        // Simulate small movements (within 0.01 degrees ~ 1km)
+        const latChange = (Math.random() - 0.5) * 0.002;
+        const lngChange = (Math.random() - 0.5) * 0.002;
+        const newCoordinates = {
+          lat: buddy.coordinates.lat + latChange,
+          lng: buddy.coordinates.lng + lngChange
+        };
+
+        // Recalculate distance based on new coordinates
+        const newDistance = buddy.distance + (Math.random() - 0.5) * 0.5;
+        const clampedDistance = Math.max(0.1, Math.min(10, newDistance));
+
+        // Randomly update online status
+        const shouldToggleOnline = Math.random() < 0.05; // 5% chance
+        const newIsOnline = shouldToggleOnline ? !buddy.isOnline : buddy.isOnline;
+
+        return {
+          ...buddy,
+          coordinates: newCoordinates,
+          distance: clampedDistance,
+          isOnline: newIsOnline,
+          lastSeen: newIsOnline ? new Date() : buddy.lastSeen
+        };
+      }));
+      setLastUpdateTime(new Date());
+    }, 3000); // Update every 3 seconds
+
+    return () => clearInterval(interval);
+  }, [user?.isRadarVisible]);
+
   const startScanning = () => {
+    if (!user?.isRadarVisible) {
+      return;
+    }
+
     setIsScanning(true);
     // Simulate scanning animation
     setTimeout(() => {
@@ -99,7 +148,7 @@ function BuddyRadarPage() {
   };
 
   const handleStartChat = (buddy: TravelBuddy) => {
-    console.log('Starting chat with:', buddy.displayName); // Debug log
+    console.log('Starting chat with:', buddy.displayName);
     
     // Create a new chat session and navigate to chat page
     const chatData = {
@@ -112,6 +161,38 @@ function BuddyRadarPage() {
     localStorage.setItem('newChatBuddy', JSON.stringify(chatData));
     
     // Navigate to chat page
+    navigate('/dashboard/chat');
+  };
+
+  const handleWave = (buddy: TravelBuddy) => {
+    console.log('Sending wave to:', buddy.displayName);
+    
+    // Create wave message
+    const waveData = {
+      buddyId: buddy.id,
+      buddyName: buddy.displayName,
+      buddyAvatar: buddy.avatar,
+      messageType: 'wave',
+      message: `👋 Wave from ${user?.displayName}!`
+    };
+    
+    localStorage.setItem('newChatBuddy', JSON.stringify(waveData));
+    navigate('/dashboard/chat');
+  };
+
+  const handleInviteToExplore = (buddy: TravelBuddy) => {
+    console.log('Inviting to explore:', buddy.displayName);
+    
+    // Create invite message
+    const inviteData = {
+      buddyId: buddy.id,
+      buddyName: buddy.displayName,
+      buddyAvatar: buddy.avatar,
+      messageType: 'invite',
+      message: `Let's explore ${user?.location || 'this amazing place'} together! 🗺️✨`
+    };
+    
+    localStorage.setItem('newChatBuddy', JSON.stringify(inviteData));
     navigate('/dashboard/chat');
   };
 
@@ -133,6 +214,49 @@ function BuddyRadarPage() {
     buddy.distance <= filterRadius && buddy.compatibility >= compatibilityFilter
   );
 
+  // Check if user has radar visibility disabled
+  if (!user?.isRadarVisible) {
+    return (
+      <div className="p-4 pb-20 lg:pb-4">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="w-20 h-20 mx-auto bg-gradient-to-r from-purple-400 to-pink-500 rounded-full flex items-center justify-center mb-4">
+            <EyeOff className="h-10 w-10 text-white" />
+          </div>
+          
+          <h1 className="text-2xl font-bold text-white mb-2">Ghost Mode Active</h1>
+          <p className="text-gray-400 text-sm mb-6">
+            You're invisible to other travelers on Buddy Radar
+          </p>
+          
+          <div className="bg-purple-500/10 backdrop-blur-sm rounded-2xl p-6 border border-purple-400/30 mb-6">
+            <div className="space-y-3 text-sm text-purple-300">
+              <div className="flex items-center space-x-2">
+                <EyeOff className="h-4 w-4" />
+                <span>Your location is hidden from other travelers</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Eye className="h-4 w-4" />
+                <span>You can still see others, but they can't see you</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <AlertTriangle className="h-4 w-4" />
+                <span>Radar scanning is disabled in Ghost Mode</span>
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={() => navigate('/dashboard/profile')}
+            className="bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-3 rounded-2xl font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+          >
+            Enable Radar in Profile
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 pb-20 lg:pb-4">
       {/* Header */}
@@ -149,8 +273,11 @@ function BuddyRadarPage() {
         </div>
         
         <h1 className="text-2xl font-bold text-white mb-2">Buddy Radar</h1>
-        <p className="text-gray-400 text-sm mb-4">
+        <p className="text-gray-400 text-sm mb-2">
           Discover travel souls nearby who share your vibe
+        </p>
+        <p className="text-xs text-gray-500 mb-4">
+          Last updated: {lastUpdateTime.toLocaleTimeString()}
         </p>
         
         <button
@@ -237,7 +364,7 @@ function BuddyRadarPage() {
                       <h3 className="text-white font-semibold">{buddy.displayName}</h3>
                       <div className="flex items-center space-x-1 text-gray-400 text-sm">
                         <MapPin className="h-3 w-3" />
-                        <span>{buddy.location} • {buddy.distance} km away</span>
+                        <span>{buddy.location} • {buddy.distance.toFixed(1)} km away</span>
                       </div>
                     </div>
                     
@@ -278,13 +405,29 @@ function BuddyRadarPage() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2">
+                    <button 
+                      onClick={() => handleWave(buddy)}
+                      className="flex items-center space-x-1 px-3 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl text-white text-sm font-medium hover:shadow-lg transition-all duration-300 hover:scale-105"
+                    >
+                      <Waves className="h-4 w-4" />
+                      <span>Wave</span>
+                    </button>
+                    
+                    <button 
+                      onClick={() => handleInviteToExplore(buddy)}
+                      className="flex items-center space-x-1 px-3 py-2 bg-gradient-to-r from-green-500 to-teal-500 rounded-xl text-white text-sm font-medium hover:shadow-lg transition-all duration-300 hover:scale-105"
+                    >
+                      <Navigation className="h-4 w-4" />
+                      <span>Explore</span>
+                    </button>
+                    
                     <button 
                       onClick={() => handleStartChat(buddy)}
-                      className="flex items-center space-x-1 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl text-white text-sm font-medium hover:shadow-lg transition-all duration-300 hover:scale-105"
+                      className="flex items-center space-x-1 px-3 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl text-white text-sm font-medium hover:shadow-lg transition-all duration-300 hover:scale-105"
                     >
                       <MessageCircle className="h-4 w-4" />
-                      <span>Start Chat</span>
+                      <span>Chat</span>
                     </button>
                     
                     <button 
@@ -292,7 +435,7 @@ function BuddyRadarPage() {
                       className="flex items-center space-x-1 px-3 py-2 bg-white/10 rounded-xl text-gray-300 text-sm font-medium hover:bg-white/20 transition-colors"
                     >
                       <User className="h-4 w-4" />
-                      <span>View Profile</span>
+                      <span>Profile</span>
                     </button>
                   </div>
                 </div>
@@ -324,6 +467,8 @@ function BuddyRadarPage() {
           buddy={selectedBuddy}
           onClose={() => setSelectedBuddy(null)}
           onStartChat={handleStartChat}
+          onWave={handleWave}
+          onInviteToExplore={handleInviteToExplore}
         />
       )}
     </div>
@@ -333,11 +478,15 @@ function BuddyRadarPage() {
 function BuddyDetailModal({ 
   buddy, 
   onClose, 
-  onStartChat 
+  onStartChat,
+  onWave,
+  onInviteToExplore
 }: { 
   buddy: TravelBuddy; 
   onClose: () => void;
   onStartChat: (buddy: TravelBuddy) => void;
+  onWave: (buddy: TravelBuddy) => void;
+  onInviteToExplore: (buddy: TravelBuddy) => void;
 }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
@@ -360,7 +509,7 @@ function BuddyDetailModal({
               <h2 className="text-xl font-bold text-white">{buddy.displayName}</h2>
               <div className="flex items-center space-x-1 text-gray-400 text-sm">
                 <MapPin className="h-3 w-3" />
-                <span>{buddy.location} • {buddy.distance} km away</span>
+                <span>{buddy.location} • {buddy.distance.toFixed(1)} km away</span>
               </div>
               {buddy.age && (
                 <div className="text-gray-400 text-sm">{buddy.age} years old</div>
@@ -443,17 +592,29 @@ function BuddyDetailModal({
           </div>
 
           {/* Actions */}
-          <div className="flex space-x-3">
+          <div className="grid grid-cols-2 gap-3">
+            <button 
+              onClick={() => onWave(buddy)}
+              className="bg-gradient-to-r from-yellow-500 to-orange-500 px-4 py-3 rounded-2xl font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center space-x-2"
+            >
+              <Waves className="h-5 w-5" />
+              <span>Wave</span>
+            </button>
+            
+            <button 
+              onClick={() => onInviteToExplore(buddy)}
+              className="bg-gradient-to-r from-green-500 to-teal-500 px-4 py-3 rounded-2xl font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center space-x-2"
+            >
+              <Navigation className="h-5 w-5" />
+              <span>Explore</span>
+            </button>
+            
             <button 
               onClick={() => onStartChat(buddy)}
-              className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-3 rounded-2xl font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center space-x-2"
+              className="col-span-2 bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-3 rounded-2xl font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center space-x-2"
             >
               <MessageCircle className="h-5 w-5" />
               <span>Start Chat</span>
-            </button>
-            
-            <button className="px-6 py-3 border border-white/20 rounded-2xl text-gray-300 hover:bg-white/5 transition-colors">
-              <Heart className="h-5 w-5" />
             </button>
           </div>
         </div>

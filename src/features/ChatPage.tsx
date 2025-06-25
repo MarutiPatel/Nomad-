@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { 
   MessageCircle, Send, Clock, Shield, Eye, EyeOff,
-  User, Search, Filter, MoreVertical, Camera, Mic, Smile
+  User, Search, Filter, MoreVertical, Camera, Mic, Smile,
+  Flag, UserX, AlertTriangle, CheckCircle, X
 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Chat {
   id: string;
@@ -17,7 +19,7 @@ interface Chat {
     content: string;
     timestamp: Date;
     isOwn: boolean;
-    type: 'text' | 'image' | 'voice';
+    type: 'text' | 'image' | 'voice' | 'wave' | 'invite';
   };
   unreadCount: number;
   isDisappearing: boolean;
@@ -29,17 +31,20 @@ interface Message {
   content: string;
   timestamp: Date;
   isOwn: boolean;
-  type: 'text' | 'image' | 'voice' | 'system';
+  type: 'text' | 'image' | 'voice' | 'system' | 'wave' | 'invite';
   expiresAt?: Date;
   isExpired?: boolean;
 }
 
 function ChatPage() {
+  const { user, blockUser, reportUser } = useAuth();
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [messageInput, setMessageInput] = useState('');
   const [isDisappearingMode, setIsDisappearingMode] = useState(true);
   const [chats, setChats] = useState<Chat[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [showBlockConfirm, setShowBlockConfirm] = useState(false);
 
   const mockChats: Chat[] = [
     {
@@ -164,10 +169,10 @@ function ChatPage() {
           lastSeen: new Date()
         },
         lastMessage: {
-          content: 'Chat started from Buddy Radar',
+          content: buddyData.message || 'Chat started from Buddy Radar',
           timestamp: new Date(),
           isOwn: false,
-          type: 'text'
+          type: buddyData.messageType || 'text'
         },
         unreadCount: 0,
         isDisappearing: true,
@@ -186,7 +191,36 @@ function ChatPage() {
       
       // Select the chat
       setSelectedChat(newChat);
-      setMessages(mockMessages);
+      
+      // Create initial message based on type
+      let initialMessage: Message;
+      if (buddyData.messageType === 'wave') {
+        initialMessage = {
+          id: Date.now().toString(),
+          content: buddyData.message,
+          timestamp: new Date(),
+          isOwn: false,
+          type: 'wave'
+        };
+      } else if (buddyData.messageType === 'invite') {
+        initialMessage = {
+          id: Date.now().toString(),
+          content: buddyData.message,
+          timestamp: new Date(),
+          isOwn: false,
+          type: 'invite'
+        };
+      } else {
+        initialMessage = {
+          id: Date.now().toString(),
+          content: 'Chat started from Buddy Radar',
+          timestamp: new Date(),
+          isOwn: false,
+          type: 'system'
+        };
+      }
+      
+      setMessages([...mockMessages, initialMessage]);
       
       // Clear the stored data
       localStorage.removeItem('newChatBuddy');
@@ -267,6 +301,94 @@ function ChatPage() {
     }
   };
 
+  const handleReportUser = (reason: string) => {
+    if (selectedChat && user) {
+      reportUser(selectedChat.participant.id, reason);
+      setShowReportModal(false);
+      console.log(`Reported ${selectedChat.participant.displayName} for: ${reason}`);
+    }
+  };
+
+  const handleBlockUser = () => {
+    if (selectedChat && user) {
+      blockUser(selectedChat.participant.id);
+      setShowBlockConfirm(false);
+      
+      // Remove chat from list
+      setChats(prev => prev.filter(chat => chat.id !== selectedChat.id));
+      setSelectedChat(null);
+      
+      console.log(`Blocked ${selectedChat.participant.displayName}`);
+    }
+  };
+
+  const renderMessage = (message: Message) => {
+    if (message.type === 'wave') {
+      return (
+        <div className="mx-auto max-w-xs">
+          <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-2xl p-4 text-center border border-yellow-400/30">
+            <div className="text-2xl mb-2">👋</div>
+            <div className="text-yellow-400 font-medium text-sm">{message.content}</div>
+          </div>
+        </div>
+      );
+    }
+
+    if (message.type === 'invite') {
+      return (
+        <div className="mx-auto max-w-xs">
+          <div className="bg-gradient-to-r from-green-500/20 to-teal-500/20 rounded-2xl p-4 text-center border border-green-400/30">
+            <div className="text-2xl mb-2">🗺️</div>
+            <div className="text-green-400 font-medium text-sm">{message.content}</div>
+          </div>
+        </div>
+      );
+    }
+
+    if (message.type === 'system') {
+      return (
+        <div className="text-center">
+          <div className="inline-flex items-center space-x-2 px-3 py-2 bg-orange-500/20 rounded-full text-orange-400 text-xs border border-orange-400/30">
+            <Clock className="h-3 w-3" />
+            <span>{message.content}</span>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className={`max-w-xs lg:max-w-md ${message.isOwn ? 'ml-auto' : 'mr-auto'}`}>
+        <div className={`rounded-2xl px-4 py-3 ${
+          message.isOwn
+            ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white'
+            : 'bg-white/10 text-white border border-white/10'
+        }`}>
+          <p className="text-sm">{message.content}</p>
+          <div className="flex items-center justify-between mt-2">
+            <span className={`text-xs ${
+              message.isOwn ? 'text-white/70' : 'text-gray-400'
+            }`}>
+              {formatMessageTime(message.timestamp)}
+            </span>
+            
+            {message.expiresAt && (
+              <div className="flex items-center space-x-1">
+                <Clock className={`h-3 w-3 ${
+                  message.isOwn ? 'text-white/70' : 'text-orange-400'
+                }`} />
+                <span className={`text-xs ${
+                  message.isOwn ? 'text-white/70' : 'text-orange-400'
+                }`}>
+                  {getTimeUntilExpiry(message.expiresAt)}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   if (!selectedChat) {
     return (
       <div className="p-4 pb-20 lg:pb-4">
@@ -341,6 +463,8 @@ function ChatPage() {
                   {/* Last Message */}
                   <div className="flex items-center justify-between">
                     <p className="text-gray-400 text-sm truncate flex-1">
+                      {chat.lastMessage.type === 'wave' && '👋 '}
+                      {chat.lastMessage.type === 'invite' && '🗺️ '}
                       {chat.lastMessage.isOwn && 'You: '}
                       {chat.lastMessage.content}
                     </p>
@@ -430,9 +554,23 @@ function ChatPage() {
             </div>
           </div>
           
-          <button className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
-            <MoreVertical className="h-4 w-4 text-gray-400" />
-          </button>
+          <div className="flex items-center space-x-2">
+            <button 
+              onClick={() => setShowReportModal(true)}
+              className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+            >
+              <Flag className="h-4 w-4 text-gray-400" />
+            </button>
+            <button 
+              onClick={() => setShowBlockConfirm(true)}
+              className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+            >
+              <UserX className="h-4 w-4 text-gray-400" />
+            </button>
+            <button className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+              <MoreVertical className="h-4 w-4 text-gray-400" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -441,52 +579,11 @@ function ChatPage() {
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`flex ${message.isOwn ? 'justify-end' : 'justify-start'}`}
+            className={`flex ${message.isOwn ? 'justify-end' : 'justify-start'} ${
+              message.type === 'system' || message.type === 'wave' || message.type === 'invite' ? 'justify-center' : ''
+            }`}
           >
-            <div className={`max-w-xs lg:max-w-md ${
-              message.type === 'system' 
-                ? 'mx-auto'
-                : message.isOwn 
-                ? 'ml-auto' 
-                : 'mr-auto'
-            }`}>
-              {message.type === 'system' ? (
-                <div className="text-center">
-                  <div className="inline-flex items-center space-x-2 px-3 py-2 bg-orange-500/20 rounded-full text-orange-400 text-xs border border-orange-400/30">
-                    <Clock className="h-3 w-3" />
-                    <span>{message.content}</span>
-                  </div>
-                </div>
-              ) : (
-                <div className={`rounded-2xl px-4 py-3 ${
-                  message.isOwn
-                    ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white'
-                    : 'bg-white/10 text-white border border-white/10'
-                }`}>
-                  <p className="text-sm">{message.content}</p>
-                  <div className="flex items-center justify-between mt-2">
-                    <span className={`text-xs ${
-                      message.isOwn ? 'text-white/70' : 'text-gray-400'
-                    }`}>
-                      {formatMessageTime(message.timestamp)}
-                    </span>
-                    
-                    {message.expiresAt && (
-                      <div className="flex items-center space-x-1">
-                        <Clock className={`h-3 w-3 ${
-                          message.isOwn ? 'text-white/70' : 'text-orange-400'
-                        }`} />
-                        <span className={`text-xs ${
-                          message.isOwn ? 'text-white/70' : 'text-orange-400'
-                        }`}>
-                          {getTimeUntilExpiry(message.expiresAt)}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
+            {renderMessage(message)}
           </div>
         ))}
       </div>
@@ -542,6 +639,141 @@ function ChatPage() {
           >
             <Send className="h-5 w-5 text-white" />
           </button>
+        </div>
+      </div>
+
+      {/* Report Modal */}
+      {showReportModal && (
+        <ReportModal
+          userName={selectedChat.participant.displayName}
+          onReport={handleReportUser}
+          onClose={() => setShowReportModal(false)}
+        />
+      )}
+
+      {/* Block Confirmation Modal */}
+      {showBlockConfirm && (
+        <BlockConfirmModal
+          userName={selectedChat.participant.displayName}
+          onBlock={handleBlockUser}
+          onClose={() => setShowBlockConfirm(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+function ReportModal({ userName, onReport, onClose }: { 
+  userName: string; 
+  onReport: (reason: string) => void; 
+  onClose: () => void; 
+}) {
+  const [selectedReason, setSelectedReason] = useState('');
+  const [customReason, setCustomReason] = useState('');
+
+  const reportReasons = [
+    'Inappropriate behavior',
+    'Harassment or bullying',
+    'Spam or fake profile',
+    'Inappropriate content',
+    'Violation of safety guidelines',
+    'Other'
+  ];
+
+  const handleSubmit = () => {
+    const reason = selectedReason === 'Other' ? customReason : selectedReason;
+    if (reason) {
+      onReport(reason);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-slate-900/95 backdrop-blur-md rounded-3xl border border-white/20 max-w-md w-full">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-white">Report {userName}</h2>
+            <button onClick={onClose} className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+              <X className="h-5 w-5 text-white" />
+            </button>
+          </div>
+
+          <div className="space-y-3 mb-6">
+            {reportReasons.map((reason) => (
+              <button
+                key={reason}
+                onClick={() => setSelectedReason(reason)}
+                className={`w-full p-3 text-left rounded-xl border transition-colors ${
+                  selectedReason === reason
+                    ? 'bg-red-500/20 border-red-400/30 text-red-400'
+                    : 'bg-white/5 border-white/10 text-gray-300 hover:border-white/20'
+                }`}
+              >
+                {reason}
+              </button>
+            ))}
+          </div>
+
+          {selectedReason === 'Other' && (
+            <textarea
+              value={customReason}
+              onChange={(e) => setCustomReason(e.target.value)}
+              placeholder="Please describe the issue..."
+              className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none resize-none mb-6"
+              rows={3}
+            />
+          )}
+
+          <div className="flex space-x-3">
+            <button
+              onClick={onClose}
+              className="flex-1 px-6 py-3 border border-white/20 rounded-2xl text-gray-300 hover:bg-white/5 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={!selectedReason || (selectedReason === 'Other' && !customReason.trim())}
+              className="flex-1 bg-gradient-to-r from-red-500 to-pink-500 px-6 py-3 rounded-2xl font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Submit Report
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BlockConfirmModal({ userName, onBlock, onClose }: { 
+  userName: string; 
+  onBlock: () => void; 
+  onClose: () => void; 
+}) {
+  return (
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-slate-900/95 backdrop-blur-md rounded-3xl border border-white/20 max-w-sm w-full">
+        <div className="p-6 text-center">
+          <UserX className="h-12 w-12 text-red-400 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-white mb-2">Block {userName}?</h2>
+          <p className="text-gray-400 text-sm mb-6">
+            They won't be able to message you or see your profile anymore. This action cannot be undone.
+          </p>
+          
+          <div className="flex space-x-3">
+            <button
+              onClick={onClose}
+              className="flex-1 px-6 py-3 border border-white/20 rounded-2xl text-gray-300 hover:bg-white/5 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onBlock}
+              className="flex-1 bg-gradient-to-r from-red-500 to-pink-500 px-6 py-3 rounded-2xl font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300"
+            >
+              Block User
+            </button>
+          </div>
         </div>
       </div>
     </div>

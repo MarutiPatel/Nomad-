@@ -5,8 +5,11 @@ import {
   Compass, Globe, Footprints, AlertTriangle, Bell,
   TrendingUp, Award, RefreshCw, Settings, Map,
   Utensils, TreePine, X, Trophy, Route, Car, Coffee,
-  Mountain, Fuel, Building, Sunrise, Camera as CameraIcon
+  Mountain, Fuel, Building, Sunrise, Camera as CameraIcon,
+  Play, Pause, Square
 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { useTrip } from '../contexts/TripContext';
 
 interface NearbyLocation {
   id: string;
@@ -34,15 +37,6 @@ interface LocationSuggestion {
   distance: number;
 }
 
-interface CrowdVote {
-  id: string;
-  question: string;
-  options: { id: string; text: string; votes: number }[];
-  totalVotes: number;
-  endsAt: Date;
-  userVoted?: string;
-}
-
 interface RouteRecommendation {
   id: string;
   name: string;
@@ -67,6 +61,8 @@ interface RouteSegment {
 }
 
 function DiscoveryPage() {
+  const { user } = useAuth();
+  const { activeTrip, startTrip, endTrip, isInTripMode } = useTrip();
   const [currentLocation, setCurrentLocation] = useState('New York, NY');
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
   const [showLocationNotification, setShowLocationNotification] = useState(true);
@@ -79,196 +75,185 @@ function DiscoveryPage() {
   const [selectedRouteType, setSelectedRouteType] = useState<string>('all');
   const [isCalculatingRoute, setIsCalculatingRoute] = useState(false);
 
-  // Mock crowd votes data
-  const mockVotes: CrowdVote[] = [
-    {
-      id: '1',
-      question: 'Where should we have tonight\'s group dinner?',
-      options: [
-        { id: 'a', text: 'Beach Shack Restaurant', votes: 15 },
-        { id: 'b', text: 'Rooftop Cafe', votes: 8 },
-        { id: 'c', text: 'Local Street Food', votes: 23 },
-        { id: 'd', text: 'Hotel Restaurant', votes: 4 }
-      ],
-      totalVotes: 50,
-      endsAt: new Date(Date.now() + 2 * 60 * 60 * 1000),
-      userVoted: 'c'
-    },
-    {
-      id: '2',
-      question: 'Best time for tomorrow\'s beach volleyball?',
-      options: [
-        { id: 'a', text: '7:00 AM', votes: 12 },
-        { id: 'b', text: '5:00 PM', votes: 28 },
-        { id: 'c', text: '7:00 PM', votes: 18 }
-      ],
-      totalVotes: 58,
-      endsAt: new Date(Date.now() + 6 * 60 * 60 * 1000)
-    }
-  ];
+  // Mock nearby locations with enhanced personalization
+  const generatePersonalizedLocations = (): NearbyLocation[] => {
+    const baseLocations = [
+      {
+        id: '1',
+        name: 'Central Park Secret Garden',
+        type: 'hidden-gem' as const,
+        location: 'Central Park, New York',
+        distance: 0.8,
+        rating: 4.8,
+        reviews: 234,
+        description: 'Hidden conservatory garden that most tourists miss. Perfect for peaceful moments.',
+        image: 'https://images.pexels.com/photos/1643113/pexels-photo-1643113.jpeg?auto=compress&cs=tinysrgb&w=400',
+        isUserDrop: true,
+        author: 'UrbanExplorer23',
+        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
+        tips: 'Visit early morning for best lighting and fewer crowds'
+      },
+      {
+        id: '2',
+        name: 'Brooklyn Bridge Park',
+        type: 'nature' as const,
+        location: 'Brooklyn, New York',
+        distance: 2.3,
+        rating: 4.7,
+        reviews: 892,
+        description: 'Stunning waterfront park with amazing Manhattan skyline views.',
+        image: 'https://images.pexels.com/photos/378570/pexels-photo-378570.jpeg?auto=compress&cs=tinysrgb&w=400',
+        isUserDrop: false
+      },
+      {
+        id: '3',
+        name: 'Joe\'s Pizza - Original',
+        type: 'food' as const,
+        location: 'Greenwich Village, NY',
+        distance: 1.2,
+        rating: 4.9,
+        reviews: 1567,
+        description: 'Authentic NYC pizza slice that locals swear by. No tourists know about this location.',
+        image: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400',
+        isUserDrop: true,
+        author: 'NYCFoodie',
+        timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
+        tips: 'Order the classic cheese - simple perfection'
+      },
+      {
+        id: '4',
+        name: 'Metropolitan Museum Rooftop',
+        type: 'historical' as const,
+        location: 'Upper East Side, NY',
+        distance: 1.8,
+        rating: 4.6,
+        reviews: 456,
+        description: 'Hidden rooftop garden with sculpture installations and city views.',
+        image: 'https://images.pexels.com/photos/1434819/pexels-photo-1434819.jpeg?auto=compress&cs=tinysrgb&w=400',
+        isUserDrop: false
+      },
+      {
+        id: '5',
+        name: 'Rock Climbing Wall',
+        type: 'adventure' as const,
+        location: 'Central Park Recreation',
+        distance: 1.5,
+        rating: 4.4,
+        reviews: 234,
+        description: 'Indoor/outdoor climbing experience perfect for adventure seekers.',
+        image: 'https://images.pexels.com/photos/1366919/pexels-photo-1366919.jpeg?auto=compress&cs=tinysrgb&w=400',
+        isUserDrop: true,
+        author: 'AdventureSeeker',
+        timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000)
+      }
+    ];
 
-  // Mock route recommendations data
-  const mockRouteRecommendations: RouteSegment[] = [
-    {
+    // Filter based on user preferences
+    if (user?.interests && user.interests.length > 0) {
+      const userInterests = user.interests.map(i => i.toLowerCase());
+      return baseLocations.filter(loc => {
+        // Match interests to location types
+        const matches = userInterests.some(interest => {
+          if (interest.includes('food') && loc.type === 'food') return true;
+          if (interest.includes('nature') && loc.type === 'nature') return true;
+          if (interest.includes('history') && loc.type === 'historical') return true;
+          if (interest.includes('adventure') && loc.type === 'adventure') return true;
+          if (interest.includes('photography') && loc.type === 'hidden-gem') return true;
+          return false;
+        });
+        return matches;
+      }).concat(baseLocations.slice(0, 2)); // Always include some general locations
+    }
+
+    return baseLocations;
+  };
+
+  // Mock route recommendations data with personalization
+  const generatePersonalizedRouteRecommendations = (): RouteSegment[] => {
+    const baseRecommendations = [
+      {
+        id: 'r1',
+        name: 'Mystic Seaport Museum',
+        description: 'Historic maritime museum with authentic 19th-century village and tall ships',
+        type: 'historical' as const,
+        distanceFromRoute: 2.5,
+        estimatedDetour: '+45 min',
+        rating: 4.6,
+        reviews: 1234,
+        image: 'https://images.pexels.com/photos/1486861/pexels-photo-1486861.jpeg?auto=compress&cs=tinysrgb&w=400',
+        highlights: ['Historic ships', 'Maritime artifacts', 'Coastal village'],
+        bestTime: 'Morning (9-11 AM)',
+        coordinates: { lat: 41.3614, lng: -71.9640 }
+      },
+      {
+        id: 'r2',
+        name: 'Frank Pepe Pizzeria',
+        description: 'Original New Haven apizza institution serving coal-fired thin crust since 1925',
+        type: 'food' as const,
+        distanceFromRoute: 1.2,
+        estimatedDetour: '+20 min',
+        rating: 4.8,
+        reviews: 2156,
+        image: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400',
+        highlights: ['Coal-fired pizza', 'Historic location', 'Local legend'],
+        bestTime: 'Lunch (12-2 PM)',
+        coordinates: { lat: 41.3083, lng: -72.9279 }
+      },
+      {
+        id: 'r3',
+        name: 'Gillette Castle State Park',
+        description: 'Medieval-style castle overlooking the Connecticut River with hiking trails',
+        type: 'scenic' as const,
+        distanceFromRoute: 3.8,
+        estimatedDetour: '+1h 15m',
+        rating: 4.4,
+        reviews: 856,
+        image: 'https://images.pexels.com/photos/1366919/pexels-photo-1366919.jpeg?auto=compress&cs=tinysrgb&w=400',
+        highlights: ['Castle architecture', 'River views', 'Hiking trails'],
+        bestTime: 'Afternoon (2-5 PM)',
+        coordinates: { lat: 41.4284, lng: -72.4253 }
+      },
+      {
+        id: 'r4',
+        name: 'Essex Steam Train',
+        description: 'Vintage steam locomotive ride through Connecticut River Valley',
+        type: 'scenic' as const,
+        distanceFromRoute: 4.1,
+        estimatedDetour: '+2h 30m',
+        rating: 4.7,
+        reviews: 743,
+        image: 'https://images.pexels.com/photos/258867/pexels-photo-258867.jpeg?auto=compress&cs=tinysrgb&w=400',
+        highlights: ['Steam train ride', 'Valley scenery', 'Historic experience'],
+        bestTime: 'Morning departure',
+        coordinates: { lat: 41.3515, lng: -72.3931 }
+      }
+    ];
+
+    // Prioritize based on user travel style and interests
+    let prioritizedRecommendations = [...baseRecommendations];
+    
+    if (user?.travelStyle === 'Nature Lover' || user?.interests?.includes('Hiking')) {
+      prioritizedRecommendations = prioritizedRecommendations.sort((a, b) => 
+        a.type === 'scenic' ? -1 : b.type === 'scenic' ? 1 : 0
+      );
+    } else if (user?.travelStyle === 'Cultural Enthusiast' || user?.interests?.includes('History')) {
+      prioritizedRecommendations = prioritizedRecommendations.sort((a, b) => 
+        a.type === 'historical' ? -1 : b.type === 'historical' ? 1 : 0
+      );
+    } else if (user?.interests?.includes('Food')) {
+      prioritizedRecommendations = prioritizedRecommendations.sort((a, b) => 
+        a.type === 'food' ? -1 : b.type === 'food' ? 1 : 0
+      );
+    }
+
+    return [{
       from: 'New York, NY',
       to: 'Boston, MA',
       distance: '215 miles',
       estimatedTime: '4h 30m',
-      recommendations: [
-        {
-          id: 'r1',
-          name: 'Mystic Seaport Museum',
-          description: 'Historic maritime museum with authentic 19th-century village and tall ships',
-          type: 'historical',
-          distanceFromRoute: 2.5,
-          estimatedDetour: '+45 min',
-          rating: 4.6,
-          reviews: 1234,
-          image: 'https://images.pexels.com/photos/1486861/pexels-photo-1486861.jpeg?auto=compress&cs=tinysrgb&w=400',
-          highlights: ['Historic ships', 'Maritime artifacts', 'Coastal village'],
-          bestTime: 'Morning (9-11 AM)',
-          coordinates: { lat: 41.3614, lng: -71.9640 }
-        },
-        {
-          id: 'r2',
-          name: 'Frank Pepe Pizzeria',
-          description: 'Original New Haven apizza institution serving coal-fired thin crust since 1925',
-          type: 'food',
-          distanceFromRoute: 1.2,
-          estimatedDetour: '+20 min',
-          rating: 4.8,
-          reviews: 2156,
-          image: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400',
-          highlights: ['Coal-fired pizza', 'Historic location', 'Local legend'],
-          bestTime: 'Lunch (12-2 PM)',
-          coordinates: { lat: 41.3083, lng: -72.9279 }
-        },
-        {
-          id: 'r3',
-          name: 'Gillette Castle State Park',
-          description: 'Medieval-style castle overlooking the Connecticut River with hiking trails',
-          type: 'scenic',
-          distanceFromRoute: 3.8,
-          estimatedDetour: '+1h 15m',
-          rating: 4.4,
-          reviews: 856,
-          image: 'https://images.pexels.com/photos/1366919/pexels-photo-1366919.jpeg?auto=compress&cs=tinysrgb&w=400',
-          highlights: ['Castle architecture', 'River views', 'Hiking trails'],
-          bestTime: 'Afternoon (2-5 PM)',
-          coordinates: { lat: 41.4284, lng: -72.4253 }
-        },
-        {
-          id: 'r4',
-          name: 'Essex Steam Train',
-          description: 'Vintage steam locomotive ride through Connecticut River Valley',
-          type: 'scenic',
-          distanceFromRoute: 4.1,
-          estimatedDetour: '+2h 30m',
-          rating: 4.7,
-          reviews: 743,
-          image: 'https://images.pexels.com/photos/258867/pexels-photo-258867.jpeg?auto=compress&cs=tinysrgb&w=400',
-          highlights: ['Steam train ride', 'Valley scenery', 'Historic experience'],
-          bestTime: 'Morning departure',
-          coordinates: { lat: 41.3515, lng: -72.3931 }
-        }
-      ]
-    }
-  ];
-
-  // Mock nearby locations with global coverage
-  const mockNearbyLocations: NearbyLocation[] = [
-    // New York Area
-    {
-      id: '1',
-      name: 'Central Park Secret Garden',
-      type: 'hidden-gem',
-      location: 'Central Park, New York',
-      distance: 0.8,
-      rating: 4.8,
-      reviews: 234,
-      description: 'Hidden conservatory garden that most tourists miss. Perfect for peaceful moments.',
-      image: 'https://images.pexels.com/photos/1643113/pexels-photo-1643113.jpeg?auto=compress&cs=tinysrgb&w=400',
-      isUserDrop: true,
-      author: 'UrbanExplorer23',
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      tips: 'Visit early morning for best lighting and fewer crowds'
-    },
-    {
-      id: '2',
-      name: 'Brooklyn Bridge Park',
-      type: 'nature',
-      location: 'Brooklyn, New York',
-      distance: 2.3,
-      rating: 4.7,
-      reviews: 892,
-      description: 'Stunning waterfront park with amazing Manhattan skyline views.',
-      image: 'https://images.pexels.com/photos/378570/pexels-photo-378570.jpeg?auto=compress&cs=tinysrgb&w=400',
-      isUserDrop: false
-    },
-    {
-      id: '3',
-      name: 'Joe\'s Pizza - Original',
-      type: 'food',
-      location: 'Greenwich Village, NY',
-      distance: 1.2,
-      rating: 4.9,
-      reviews: 1567,
-      description: 'Authentic NYC pizza slice that locals swear by. No tourists know about this location.',
-      image: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400',
-      isUserDrop: true,
-      author: 'NYCFoodie',
-      timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
-      tips: 'Order the classic cheese - simple perfection'
-    },
-    // Paris Area
-    {
-      id: '4',
-      name: 'Secret Rooftop Vineyard',
-      type: 'hidden-gem',
-      location: 'Montmartre, Paris',
-      distance: 3.4,
-      rating: 4.9,
-      reviews: 89,
-      description: 'Hidden vineyard in the heart of Paris that produces actual wine. Locals only!',
-      image: 'https://images.pexels.com/photos/1434819/pexels-photo-1434819.jpeg?auto=compress&cs=tinysrgb&w=400',
-      isUserDrop: true,
-      author: 'ParisSecret',
-      timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000),
-      tips: 'Visit during harvest season in September'
-    },
-    // Tokyo Area
-    {
-      id: '5',
-      name: 'Underground Ramen Alley',
-      type: 'food',
-      location: 'Shibuya, Tokyo',
-      distance: 1.8,
-      rating: 4.8,
-      reviews: 345,
-      description: 'Tiny underground ramen shop frequented by salarymen. Best tonkotsu in Tokyo.',
-      image: 'https://images.pexels.com/photos/1279330/pexels-photo-1279330.jpeg?auto=compress&cs=tinysrgb&w=400',
-      isUserDrop: true,
-      author: 'TokyoEats',
-      timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000),
-      tips: 'No English menu - point at what others are eating'
-    },
-    // London Area
-    {
-      id: '6',
-      name: 'Thames Secret Beach',
-      type: 'nature',
-      location: 'Rotherhithe, London',
-      distance: 4.2,
-      rating: 4.6,
-      reviews: 156,
-      description: 'Actual sandy beach on the Thames that appears at low tide. Victorian treasure hunting.',
-      image: 'https://images.pexels.com/photos/1680172/pexels-photo-1680172.jpeg?auto=compress&cs=tinysrgb&w=400',
-      isUserDrop: true,
-      author: 'LondonExplorer',
-      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
-      tips: 'Check tide times - only accessible at low tide'
-    }
-  ];
+      recommendations: prioritizedRecommendations
+    }];
+  };
 
   const mockLocationSuggestions: LocationSuggestion[] = [
     {
@@ -276,7 +261,7 @@ function DiscoveryPage() {
       title: `You're now in ${currentLocation}. Want to see what others explored here?`,
       description: 'Discover nearby footprints from fellow travelers and popular points of interest',
       type: 'auto-suggest',
-      locations: mockNearbyLocations.slice(0, 3),
+      locations: generatePersonalizedLocations().slice(0, 3),
       priority: 'high',
       distance: 0
     },
@@ -285,7 +270,7 @@ function DiscoveryPage() {
       title: 'Hidden Gems Within 5km',
       description: 'Secret spots that only locals and experienced travelers know about',
       type: 'nearby-explore',
-      locations: mockNearbyLocations.filter(loc => loc.type === 'hidden-gem'),
+      locations: generatePersonalizedLocations().filter(loc => loc.type === 'hidden-gem'),
       priority: 'medium',
       distance: 5
     },
@@ -294,7 +279,7 @@ function DiscoveryPage() {
       title: 'Food Adventures Nearby',
       description: 'Authentic local eateries discovered by the nomad community',
       type: 'nearby-explore',
-      locations: mockNearbyLocations.filter(loc => loc.type === 'food'),
+      locations: generatePersonalizedLocations().filter(loc => loc.type === 'food'),
       priority: 'medium',
       distance: 3
     }
@@ -318,10 +303,9 @@ function DiscoveryPage() {
     { id: 'viewpoint', label: 'Viewpoints', icon: Sunrise }
   ];
 
-  const [nearbyLocations] = useState(mockNearbyLocations);
+  const [nearbyLocations] = useState(generatePersonalizedLocations());
   const [suggestions] = useState(mockLocationSuggestions);
-  const [votes, setVotes] = useState(mockVotes);
-  const [routeSegments] = useState(mockRouteRecommendations);
+  const [routeSegments] = useState(generatePersonalizedRouteRecommendations());
 
   // Simulate location change detection
   useEffect(() => {
@@ -332,7 +316,7 @@ function DiscoveryPage() {
     ];
     
     const interval = setInterval(() => {
-      if (isLocationTracking) {
+      if (isLocationTracking && !isInTripMode) {
         const newLocation = locations[Math.floor(Math.random() * locations.length)];
         setCurrentLocation(newLocation);
         setShowLocationNotification(true);
@@ -345,7 +329,7 @@ function DiscoveryPage() {
     }, 15000); // Change location every 15 seconds for demo
 
     return () => clearInterval(interval);
-  }, [isLocationTracking]);
+  }, [isLocationTracking, isInTripMode]);
 
   const getTypeColor = (type: string) => {
     switch (type) {
@@ -404,36 +388,6 @@ function DiscoveryPage() {
     return `${diffInDays}d ago`;
   };
 
-  const handleVote = (voteId: string, optionId: string) => {
-    setVotes(prev => prev.map(vote => 
-      vote.id === voteId 
-        ? {
-            ...vote,
-            userVoted: optionId,
-            options: vote.options.map(option => 
-              option.id === optionId 
-                ? { ...option, votes: option.votes + 1 }
-                : option
-            ),
-            totalVotes: vote.totalVotes + 1
-          }
-        : vote
-    ));
-  };
-
-  const formatTimeUntilVoteEnd = (date: Date) => {
-    const now = new Date();
-    const diffInMinutes = Math.floor((date.getTime() - now.getTime()) / (1000 * 60));
-    
-    if (diffInMinutes < 60) return `${diffInMinutes}m`;
-    
-    const diffInHours = Math.floor(diffInMinutes / 60);
-    if (diffInHours < 24) return `${diffInHours}h`;
-    
-    const diffInDays = Math.floor(diffInHours / 24);
-    return `${diffInDays}d`;
-  };
-
   const handleCalculateRoute = () => {
     if (!routeInput.from || !routeInput.to) return;
     
@@ -446,14 +400,68 @@ function DiscoveryPage() {
     }, 2000);
   };
 
+  const handleStartTrip = () => {
+    if (!routeInput.from || !routeInput.to) return;
+    
+    startTrip(
+      { lat: 40.7128, lng: -74.0060, name: routeInput.from },
+      { lat: 42.3601, lng: -71.0589, name: routeInput.to }
+    );
+  };
+
   const filteredRouteRecommendations = selectedRouteType === 'all' 
     ? routeSegments[0]?.recommendations || []
     : routeSegments[0]?.recommendations?.filter(rec => rec.type === selectedRouteType) || [];
 
   return (
     <div className="p-4 pb-20 lg:pb-4">
+      {/* Trip Progress Bar (when in trip mode) */}
+      {isInTripMode && activeTrip && (
+        <div className="fixed top-4 left-4 right-4 z-50 bg-gradient-to-r from-blue-500/90 to-cyan-500/90 backdrop-blur-md rounded-2xl p-4 border border-white/20 shadow-2xl">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center space-x-2">
+              <Navigation className="h-5 w-5 text-white" />
+              <span className="text-white font-semibold">Trip in Progress</span>
+            </div>
+            <button
+              onClick={endTrip}
+              className="p-1 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+            >
+              <Square className="h-4 w-4 text-white" />
+            </button>
+          </div>
+          
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-white text-sm">
+              <span>{activeTrip.from.name} → {activeTrip.to.name}</span>
+              <span>{activeTrip.progress.toFixed(1)}%</span>
+            </div>
+            
+            <div className="w-full h-2 bg-white/20 rounded-full">
+              <div
+                className="h-2 bg-white rounded-full transition-all duration-300"
+                style={{ width: `${activeTrip.progress}%` }}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between text-white/80 text-xs">
+              <span>{activeTrip.distanceRemaining} remaining</span>
+              <span>ETA: {activeTrip.estimatedTimeRemaining}</span>
+            </div>
+            
+            {activeTrip.nextStop && (
+              <div className="bg-white/10 rounded-lg p-2 mt-2">
+                <div className="text-white text-xs">
+                  <strong>Next Stop:</strong> {activeTrip.nextStop.name} ({activeTrip.nextStop.distance})
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Location Change Notification */}
-      {showLocationNotification && (
+      {showLocationNotification && !isInTripMode && (
         <div className="fixed top-4 left-4 right-4 z-50 bg-gradient-to-r from-cyan-500/90 to-blue-500/90 backdrop-blur-md rounded-2xl p-4 border border-white/20 shadow-2xl animate-fade-in-up">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
@@ -482,11 +490,11 @@ function DiscoveryPage() {
       )}
 
       {/* Header */}
-      <div className="text-center mb-6">
+      <div className="text-center mb-6" style={{ marginTop: isInTripMode ? '120px' : '0' }}>
         <h1 className="text-2xl font-bold text-white mb-2">Discovery Hub</h1>
         <div className="flex items-center justify-center space-x-2 text-gray-400 text-sm mb-4">
           <MapPin className="h-4 w-4" />
-          <span>Current location: {currentLocation}</span>
+          <span>Current location: {isInTripMode ? activeTrip?.currentLocation.name : currentLocation}</span>
           <button
             onClick={() => setIsLocationTracking(!isLocationTracking)}
             className={`p-1 rounded-full ${isLocationTracking ? 'text-green-400' : 'text-gray-400'}`}
@@ -494,7 +502,9 @@ function DiscoveryPage() {
             <Navigation className="h-4 w-4" />
           </button>
         </div>
-        <p className="text-gray-400 text-sm">Auto-suggestions and nearby drops from fellow travelers</p>
+        <p className="text-gray-400 text-sm">
+          {isInTripMode ? 'In-trip mode: Dynamic suggestions based on your route' : 'Auto-suggestions and nearby drops from fellow travelers'}
+        </p>
       </div>
 
       {/* Quick Actions */}
@@ -520,7 +530,7 @@ function DiscoveryPage() {
       <div className="mb-6">
         <div className="flex items-center space-x-2 mb-4">
           <Route className="h-5 w-5 text-orange-400" />
-          <h2 className="text-lg font-semibold text-white">Route Recommendations</h2>
+          <h2 className="text-lg font-semibold text-white">Trip Planning & Route Recommendations</h2>
         </div>
         
         <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 mb-4">
@@ -548,23 +558,36 @@ function DiscoveryPage() {
               />
             </div>
             
-            <button
-              onClick={handleCalculateRoute}
-              disabled={!routeInput.from || !routeInput.to || isCalculatingRoute}
-              className="w-full bg-gradient-to-r from-orange-500 to-red-500 px-4 py-3 rounded-xl text-white font-medium hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-            >
-              {isCalculatingRoute ? (
-                <>
-                  <RefreshCw className="h-4 w-4 animate-spin" />
-                  <span>Calculating Route...</span>
-                </>
-              ) : (
-                <>
-                  <Route className="h-4 w-4" />
-                  <span>Get Route Recommendations</span>
-                </>
+            <div className="flex space-x-2">
+              <button
+                onClick={handleCalculateRoute}
+                disabled={!routeInput.from || !routeInput.to || isCalculatingRoute}
+                className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 px-4 py-3 rounded-xl text-white font-medium hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+              >
+                {isCalculatingRoute ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    <span>Calculating...</span>
+                  </>
+                ) : (
+                  <>
+                    <Route className="h-4 w-4" />
+                    <span>Get Recommendations</span>
+                  </>
+                )}
+              </button>
+              
+              {showRouteRecommendations && !isInTripMode && (
+                <button
+                  onClick={handleStartTrip}
+                  disabled={!routeInput.from || !routeInput.to}
+                  className="bg-gradient-to-r from-green-500 to-teal-500 px-4 py-3 rounded-xl text-white font-medium hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                >
+                  <Play className="h-4 w-4" />
+                  <span>Start Trip</span>
+                </button>
               )}
-            </button>
+            </div>
           </div>
         </div>
 
@@ -715,74 +738,11 @@ function DiscoveryPage() {
         </div>
       </div>
 
-      {/* Crowd Votes Section */}
-      <div className="mb-6">
-        <div className="flex items-center space-x-2 mb-4">
-          <Trophy className="h-5 w-5 text-purple-400" />
-          <h2 className="text-lg font-semibold text-white">Crowd Votes</h2>
-        </div>
-        
-        <div className="space-y-4">
-          {votes.map((vote) => (
-            <div
-              key={vote.id}
-              className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4"
-            >
-              <div className="flex items-start justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white">{vote.question}</h3>
-                <div className="text-xs text-orange-400">
-                  Ends in {formatTimeUntilVoteEnd(vote.endsAt)}
-                </div>
-              </div>
-
-              <div className="space-y-3 mb-4">
-                {vote.options.map((option) => {
-                  const percentage = vote.totalVotes > 0 ? (option.votes / vote.totalVotes) * 100 : 0;
-                  const isUserVote = vote.userVoted === option.id;
-                  
-                  return (
-                    <button
-                      key={option.id}
-                      onClick={() => !vote.userVoted && handleVote(vote.id, option.id)}
-                      disabled={!!vote.userVoted}
-                      className={`w-full p-3 rounded-xl border transition-all duration-300 ${
-                        isUserVote
-                          ? 'bg-cyan-500/20 border-cyan-400/30 text-cyan-400'
-                          : vote.userVoted
-                          ? 'bg-white/5 border-white/10 text-gray-400 cursor-not-allowed'
-                          : 'bg-white/5 border-white/10 text-white hover:border-white/20 hover:bg-white/10'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium">{option.text}</span>
-                        <span className="text-xs">{option.votes} votes</span>
-                      </div>
-                      <div className="w-full h-2 bg-gray-700 rounded-full">
-                        <div
-                          className={`h-2 rounded-full transition-all duration-500 ${
-                            isUserVote ? 'bg-gradient-to-r from-cyan-400 to-blue-500' : 'bg-gray-600'
-                          }`}
-                          style={{ width: `${percentage}%` }}
-                        />
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="text-center text-sm text-gray-400">
-                Total votes: {vote.totalVotes}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* Auto-Suggestions */}
       <div className="mb-6">
         <h2 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
           <Zap className="h-5 w-5 text-yellow-400" />
-          <span>Auto-Suggestions</span>
+          <span>Personalized Suggestions</span>
         </h2>
         
         <div className="space-y-4">

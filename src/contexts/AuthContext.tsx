@@ -16,6 +16,9 @@ interface User {
   connections: number;
   interests: string[];
   languages: string[];
+  isRadarVisible: boolean;
+  blockedUsers: string[];
+  reportedUsers: string[];
 }
 
 interface AuthContextType {
@@ -29,6 +32,8 @@ interface AuthContextType {
   logout: () => void;
   updateProfile: (updates: Partial<User>) => void;
   clearError: () => void;
+  blockUser: (userId: string) => void;
+  reportUser: (userId: string, reason: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -104,6 +109,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!parsedUser.interests) parsedUser.interests = [];
         if (!parsedUser.languages) parsedUser.languages = [];
         if (!parsedUser.bio) parsedUser.bio = '';
+        if (parsedUser.isRadarVisible === undefined) parsedUser.isRadarVisible = true;
+        if (!parsedUser.blockedUsers) parsedUser.blockedUsers = [];
+        if (!parsedUser.reportedUsers) parsedUser.reportedUsers = [];
         
         setUser(parsedUser);
       } catch (err) {
@@ -130,7 +138,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       footprints: Math.floor(Math.random() * 20),
       connections: Math.floor(Math.random() * 10),
       interests: [],
-      languages: []
+      languages: [],
+      isRadarVisible: true,
+      blockedUsers: [],
+      reportedUsers: []
     };
     return newUser;
   };
@@ -165,6 +176,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!existingUser.interests) existingUser.interests = [];
       if (!existingUser.languages) existingUser.languages = [];
       if (!existingUser.bio) existingUser.bio = '';
+      if (existingUser.isRadarVisible === undefined) existingUser.isRadarVisible = true;
+      if (!existingUser.blockedUsers) existingUser.blockedUsers = [];
+      if (!existingUser.reportedUsers) existingUser.reportedUsers = [];
       
       setUser(existingUser);
       localStorage.setItem('nomad_user', JSON.stringify(existingUser));
@@ -203,6 +217,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!existingUser.interests) existingUser.interests = [];
       if (!existingUser.languages) existingUser.languages = [];
       if (!existingUser.bio) existingUser.bio = '';
+      if (existingUser.isRadarVisible === undefined) existingUser.isRadarVisible = true;
+      if (!existingUser.blockedUsers) existingUser.blockedUsers = [];
+      if (!existingUser.reportedUsers) existingUser.reportedUsers = [];
       
       setUser(existingUser);
       localStorage.setItem('nomad_user', JSON.stringify(existingUser));
@@ -312,6 +329,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const blockUser = (userId: string) => {
+    if (user) {
+      const updatedBlockedUsers = [...user.blockedUsers, userId];
+      updateProfile({ blockedUsers: updatedBlockedUsers });
+    }
+  };
+
+  const reportUser = (userId: string, reason: string) => {
+    if (user) {
+      const updatedReportedUsers = [...user.reportedUsers, userId];
+      updateProfile({ reportedUsers: updatedReportedUsers });
+      
+      // In a real app, this would send the report to backend
+      console.log(`User ${userId} reported for: ${reason}`);
+    }
+  };
+
   const clearError = () => {
     setError(null);
   };
@@ -327,7 +361,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       registerWithPhone,
       logout,
       updateProfile,
-      clearError
+      clearError,
+      blockUser,
+      reportUser
     }}>
       {children}
     </AuthContext.Provider>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   User, Edit, Settings, Shield, Eye, EyeOff, MapPin, 
-  Calendar, Globe, Heart, Star, Trophy, Camera, Save, X
+  Calendar, Globe, Heart, Star, Trophy, Camera, Save, X, Radar
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -28,6 +28,7 @@ function ProfilePage() {
         interests: user.interests || [],
         languages: user.languages || []
       });
+      setIsGhostMode(!user.isRadarVisible);
     }
   }, [user]);
 
@@ -74,6 +75,12 @@ function ProfilePage() {
     setIsEditing(false);
   };
 
+  const toggleRadarVisibility = () => {
+    const newVisibility = !user?.isRadarVisible;
+    setIsGhostMode(!newVisibility);
+    updateProfile({ isRadarVisible: newVisibility });
+  };
+
   const toggleInterest = (interest: string) => {
     setEditForm(prev => ({
       ...prev,
@@ -106,11 +113,11 @@ function ProfilePage() {
         <h1 className="text-2xl font-bold text-white">Profile</h1>
         <div className="flex items-center space-x-2">
           <button
-            onClick={() => setIsGhostMode(!isGhostMode)}
+            onClick={toggleRadarVisibility}
             className={`flex items-center space-x-2 px-3 py-2 rounded-full text-xs font-medium transition-colors ${
               isGhostMode
                 ? 'bg-purple-500/20 text-purple-400 border border-purple-400/30'
-                : 'bg-white/10 text-gray-400 border border-white/10'
+                : 'bg-green-500/20 text-green-400 border border-green-400/30'
             }`}
           >
             {isGhostMode ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
@@ -134,6 +141,19 @@ function ProfilePage() {
           )}
         </div>
       </div>
+
+      {/* Ghost Mode Info */}
+      {isGhostMode && (
+        <div className="bg-purple-500/10 backdrop-blur-sm rounded-2xl p-4 border border-purple-400/30 mb-6">
+          <div className="flex items-center space-x-2 mb-2">
+            <EyeOff className="h-5 w-5 text-purple-400" />
+            <span className="text-purple-400 font-medium">Ghost Mode Active</span>
+          </div>
+          <p className="text-purple-300 text-sm">
+            You're invisible on Buddy Radar. Other travelers won't see you in their nearby search.
+          </p>
+        </div>
+      )}
 
       {/* Profile Card */}
       <div className="bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 p-6 mb-6">
@@ -163,8 +183,10 @@ function ProfilePage() {
           )}
           
           <div className="flex items-center justify-center space-x-2 mt-2">
-            <div className="w-2 h-2 rounded-full bg-green-400"></div>
-            <span className="text-gray-400 text-sm">Active Traveler</span>
+            <div className={`w-2 h-2 rounded-full ${isGhostMode ? 'bg-purple-400' : 'bg-green-400'}`}></div>
+            <span className={`text-sm ${isGhostMode ? 'text-purple-400' : 'text-green-400'}`}>
+              {isGhostMode ? 'Ghost Mode' : 'Active Traveler'}
+            </span>
           </div>
         </div>
 
@@ -328,6 +350,23 @@ function ProfilePage() {
         </div>
         
         <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Radar className="h-4 w-4 text-gray-300" />
+              <span className="text-gray-300 text-sm">Buddy Radar Visibility</span>
+            </div>
+            <button 
+              onClick={toggleRadarVisibility}
+              className={`px-3 py-1 rounded-full text-xs border transition-colors ${
+                user?.isRadarVisible
+                  ? 'bg-green-500/20 text-green-400 border-green-400/30'
+                  : 'bg-purple-500/20 text-purple-400 border-purple-400/30'
+              }`}
+            >
+              {user?.isRadarVisible ? 'Visible' : 'Ghost Mode'}
+            </button>
+          </div>
+          
           <div className="flex items-center justify-between">
             <span className="text-gray-300 text-sm">Profile Visibility</span>
             <button className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs border border-green-400/30">
