@@ -60,7 +60,7 @@ function BuddyRadarPage() {
       age: 26,
       languages: ['English', 'Hindi', 'Spanish'],
       currentTrip: 'Goa Beach Hopping',
-      coordinates: { lat: 15.2993, lng: 74.1240 }
+      coordinates: { lat: 15.2993, lng: 74.1240 },
       canReceiveChatInvites: true
     },
     {
