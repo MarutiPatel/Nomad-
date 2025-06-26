@@ -33,7 +33,7 @@ function Dashboard() {
   const location = useLocation();
 
   const navigationItems = [
-    { path: '/dashboard', icon: Compass, label: 'Explore', exact: true },
+    { path: '/dashboard/discovery', icon: Target, label: 'Explore & Plan' },
     { path: '/dashboard/profile', icon: User, label: 'Profile' },
     { path: '/dashboard/footprints', icon: Footprints, label: 'Footprints' },
     { path: '/dashboard/network', icon: Globe, label: 'Nomad Network' },
@@ -42,7 +42,6 @@ function Dashboard() {
   ];
 
   const additionalFeatures = [
-    { path: '/dashboard/discovery', icon: Target, label: 'Explore & Plan' },
     { path: '/dashboard/food-discovery', icon: Utensils, label: 'Food & Utilities' },
     { path: '/dashboard/journal', icon: BookOpen, label: 'Travel Journal' },
     { path: '/dashboard/events', icon: Calendar, label: 'Live Events' },
@@ -227,7 +226,7 @@ function Dashboard() {
         {/* Main Content */}
         <main className="flex-1 lg:ml-0">
           <Routes>
-            <Route path="/" element={<DashboardHome />} />
+            <Route path="/" element={<DiscoveryPage />} />
             <Route path="/footprints" element={<FootprintsPage />} />
             <Route path="/radar" element={<BuddyRadarPage />} />
             <Route path="/discovery" element={<DiscoveryPage />} />
@@ -252,7 +251,7 @@ function Dashboard() {
       <nav className="fixed bottom-0 left-0 right-0 bg-black/40 backdrop-blur-md border-t border-white/10 px-4 py-2 lg:hidden">
         <div className="flex items-center justify-around">
           {[
-            navigationItems[0], // Explore
+            navigationItems[0], // Explore & Plan
             navigationItems[1], // Profile
             navigationItems[2], // Footprints
             navigationItems[4], // Chat
