@@ -83,7 +83,6 @@ function DiscoveryPage() {
   // Nearby exploration states
   const [currentLocation, setCurrentLocation] = useState('New York, NY');
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
-  const [showLocationNotification, setShowLocationNotification] = useState(true);
   const [searchRadius, setSearchRadius] = useState(25); // km
   const [isLocationTracking, setIsLocationTracking] = useState(true);
   
@@ -361,12 +360,6 @@ function DiscoveryPage() {
       if (isLocationTracking && !isInTripMode && activeTab === 'nearby') {
         const newLocation = locations[Math.floor(Math.random() * locations.length)];
         setCurrentLocation(newLocation);
-        setShowLocationNotification(true);
-        
-        setTimeout(() => {
-          setShowLocationNotification(false);
-        }, 5000);
-      }
     }, 15000);
 
     return () => clearInterval(interval);
@@ -504,34 +497,6 @@ function DiscoveryPage() {
         </div>
       )}
 
-      {/* Location Change Notification */}
-      {showLocationNotification && !isInTripMode && activeTab === 'nearby' && (
-        <div className="fixed top-4 left-4 right-4 z-50 bg-gradient-to-r from-cyan-500/90 to-blue-500/90 backdrop-blur-md rounded-2xl p-4 border border-white/20 shadow-2xl animate-fade-in-up">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-              <MapPin className="h-4 w-4 text-white" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-white font-semibold text-sm">Location Detected</h3>
-              <p className="text-white/80 text-xs">You're now in {currentLocation}. Want to see what others explored here?</p>
-            </div>
-            <div className="flex space-x-2">
-              <button 
-                onClick={() => setShowLocationNotification(false)}
-                className="px-3 py-1 bg-white/20 rounded-lg text-white text-xs font-medium hover:bg-white/30 transition-colors"
-              >
-                Explore
-              </button>
-              <button 
-                onClick={() => setShowLocationNotification(false)}
-                className="p-1 hover:bg-white/20 rounded-lg transition-colors"
-              >
-                <X className="h-4 w-4 text-white" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Header */}
       <div className="text-center mb-6" style={{ marginTop: isInTripMode ? '120px' : '0' }}>
