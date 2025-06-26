@@ -6,7 +6,8 @@ import {
   TrendingUp, Award, RefreshCw, Settings, Map,
   Utensils, TreePine, X, Trophy, Route, Car, Coffee,
   Mountain, Fuel, Building, Sunrise, Camera as CameraIcon,
-  Play, Pause, Square
+  Play, Pause, Square, Activity, CloudRain, Navigation2,
+  Bookmark, Share, Download, Upload, CheckCircle, Info
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTrip } from '../contexts/TripContext';
@@ -50,6 +51,7 @@ interface RouteRecommendation {
   highlights: string[];
   bestTime: string;
   coordinates: { lat: number; lng: number };
+  isAdded?: boolean;
 }
 
 interface RouteSegment {
@@ -58,24 +60,48 @@ interface RouteSegment {
   distance: string;
   estimatedTime: string;
   recommendations: RouteRecommendation[];
+  totalCost?: string;
+  fuelCost?: string;
+  tollCost?: string;
+}
+
+interface RouteOptions {
+  optimization: 'fastest' | 'scenic' | 'economical' | 'eco-friendly';
+  avoidTolls: boolean;
+  avoidHighways: boolean;
+  includeStops: boolean;
+  maxDetourTime: number; // in minutes
 }
 
 function DiscoveryPage() {
   const { user } = useAuth();
   const { activeTrip, startTrip, endTrip, isInTripMode } = useTrip();
+  
+  // Main tab state
+  const [activeTab, setActiveTab] = useState<'nearby' | 'route-planning'>('nearby');
+  
+  // Nearby exploration states
   const [currentLocation, setCurrentLocation] = useState('New York, NY');
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
   const [showLocationNotification, setShowLocationNotification] = useState(true);
   const [searchRadius, setSearchRadius] = useState(25); // km
   const [isLocationTracking, setIsLocationTracking] = useState(true);
   
-  // Route-based recommendation states
+  // Route planning states
   const [routeInput, setRouteInput] = useState({ from: '', to: '' });
   const [showRouteRecommendations, setShowRouteRecommendations] = useState(false);
   const [selectedRouteType, setSelectedRouteType] = useState<string>('all');
   const [isCalculatingRoute, setIsCalculatingRoute] = useState(false);
+  const [routeOptions, setRouteOptions] = useState<RouteOptions>({
+    optimization: 'fastest',
+    avoidTolls: false,
+    avoidHighways: false,
+    includeStops: true,
+    maxDetourTime: 30
+  });
+  const [savedRoutes, setSavedRoutes] = useState<string[]>([]);
 
-  // Mock nearby locations with enhanced personalization
+  // Generate personalized locations based on user preferences
   const generatePersonalizedLocations = (): NearbyLocation[] => {
     const baseLocations = [
       {
@@ -152,7 +178,6 @@ function DiscoveryPage() {
     if (user?.interests && user.interests.length > 0) {
       const userInterests = user.interests.map(i => i.toLowerCase());
       return baseLocations.filter(loc => {
-        // Match interests to location types
         const matches = userInterests.some(interest => {
           if (interest.includes('food') && loc.type === 'food') return true;
           if (interest.includes('nature') && loc.type === 'nature') return true;
@@ -162,13 +187,13 @@ function DiscoveryPage() {
           return false;
         });
         return matches;
-      }).concat(baseLocations.slice(0, 2)); // Always include some general locations
+      }).concat(baseLocations.slice(0, 2));
     }
 
     return baseLocations;
   };
 
-  // Mock route recommendations data with personalization
+  // Generate personalized route recommendations
   const generatePersonalizedRouteRecommendations = (): RouteSegment[] => {
     const baseRecommendations = [
       {
@@ -226,6 +251,20 @@ function DiscoveryPage() {
         highlights: ['Steam train ride', 'Valley scenery', 'Historic experience'],
         bestTime: 'Morning departure',
         coordinates: { lat: 41.3515, lng: -72.3931 }
+      },
+      {
+        id: 'r5',
+        name: 'Shell Gas Station & Market',
+        description: 'Full-service gas station with convenience store and clean facilities',
+        type: 'fuel' as const,
+        distanceFromRoute: 0.3,
+        estimatedDetour: '+5 min',
+        rating: 4.2,
+        reviews: 89,
+        image: 'https://images.pexels.com/photos/1366919/pexels-photo-1366919.jpeg?auto=compress&cs=tinysrgb&w=400',
+        highlights: ['24/7 service', 'Clean restrooms', 'Convenience store'],
+        bestTime: 'Any time',
+        coordinates: { lat: 41.2033, lng: -72.5759 }
       }
     ];
 
@@ -247,11 +286,14 @@ function DiscoveryPage() {
     }
 
     return [{
-      from: 'New York, NY',
-      to: 'Boston, MA',
+      from: routeInput.from || 'New York, NY',
+      to: routeInput.to || 'Boston, MA',
       distance: '215 miles',
       estimatedTime: '4h 30m',
-      recommendations: prioritizedRecommendations
+      recommendations: prioritizedRecommendations,
+      totalCost: '$45-65',
+      fuelCost: '$25-35',
+      tollCost: '$15-25'
     }];
   };
 
@@ -316,20 +358,19 @@ function DiscoveryPage() {
     ];
     
     const interval = setInterval(() => {
-      if (isLocationTracking && !isInTripMode) {
+      if (isLocationTracking && !isInTripMode && activeTab === 'nearby') {
         const newLocation = locations[Math.floor(Math.random() * locations.length)];
         setCurrentLocation(newLocation);
         setShowLocationNotification(true);
         
-        // Auto-hide notification after 5 seconds
         setTimeout(() => {
           setShowLocationNotification(false);
         }, 5000);
       }
-    }, 15000); // Change location every 15 seconds for demo
+    }, 15000);
 
     return () => clearInterval(interval);
-  }, [isLocationTracking, isInTripMode]);
+  }, [isLocationTracking, isInTripMode, activeTab]);
 
   const getTypeColor = (type: string) => {
     switch (type) {
@@ -368,13 +409,7 @@ function DiscoveryPage() {
     : nearbyLocations.filter(loc => loc.type === selectedFilter);
 
   const handleDropFootprint = () => {
-    console.log('Opening footprint creation modal');
-    // Navigate to footprints page and open create modal
     window.location.href = '/dashboard/footprints';
-  };
-
-  const handleExploreNearby = () => {
-    console.log('Exploring nearby locations');
   };
 
   const formatTimeAgo = (date: Date) => {
@@ -393,7 +428,6 @@ function DiscoveryPage() {
     
     setIsCalculatingRoute(true);
     
-    // Simulate API call delay
     setTimeout(() => {
       setIsCalculatingRoute(false);
       setShowRouteRecommendations(true);
@@ -407,6 +441,16 @@ function DiscoveryPage() {
       { lat: 40.7128, lng: -74.0060, name: routeInput.from },
       { lat: 42.3601, lng: -71.0589, name: routeInput.to }
     );
+  };
+
+  const handleSaveRoute = () => {
+    const routeName = `${routeInput.from} → ${routeInput.to}`;
+    setSavedRoutes(prev => [...prev, routeName]);
+  };
+
+  const handleAddToRoute = (recommendationId: string) => {
+    // Update recommendation as added
+    console.log('Adding to route:', recommendationId);
   };
 
   const filteredRouteRecommendations = selectedRouteType === 'all' 
@@ -461,7 +505,7 @@ function DiscoveryPage() {
       )}
 
       {/* Location Change Notification */}
-      {showLocationNotification && !isInTripMode && (
+      {showLocationNotification && !isInTripMode && activeTab === 'nearby' && (
         <div className="fixed top-4 left-4 right-4 z-50 bg-gradient-to-r from-cyan-500/90 to-blue-500/90 backdrop-blur-md rounded-2xl p-4 border border-white/20 shadow-2xl animate-fade-in-up">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
@@ -491,7 +535,7 @@ function DiscoveryPage() {
 
       {/* Header */}
       <div className="text-center mb-6" style={{ marginTop: isInTripMode ? '120px' : '0' }}>
-        <h1 className="text-2xl font-bold text-white mb-2">Discovery Hub</h1>
+        <h1 className="text-2xl font-bold text-white mb-2">Explore & Plan</h1>
         <div className="flex items-center justify-center space-x-2 text-gray-400 text-sm mb-4">
           <MapPin className="h-4 w-4" />
           <span>Current location: {isInTripMode ? activeTrip?.currentLocation.name : currentLocation}</span>
@@ -503,290 +547,568 @@ function DiscoveryPage() {
           </button>
         </div>
         <p className="text-gray-400 text-sm">
-          {isInTripMode ? 'In-trip mode: Dynamic suggestions based on your route' : 'Auto-suggestions and nearby drops from fellow travelers'}
+          {isInTripMode ? 'In-trip mode: Dynamic suggestions based on your route' : 'Discover nearby places and plan your perfect route'}
         </p>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-2 gap-3 mb-6">
+      {/* Tab Navigation */}
+      <div className="flex rounded-2xl bg-black/20 p-1 mb-6">
         <button
-          onClick={handleDropFootprint}
-          className="bg-gradient-to-r from-cyan-500 to-blue-500 p-4 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex items-center justify-center space-x-2"
+          onClick={() => setActiveTab('nearby')}
+          className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl transition-all duration-300 ${
+            activeTab === 'nearby'
+              ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg'
+              : 'text-gray-400 hover:text-white'
+          }`}
         >
-          <Plus className="h-5 w-5 text-white" />
-          <span className="text-white font-medium">Drop Footprint</span>
+          <Compass className="h-4 w-4" />
+          <span className="text-sm font-medium">Nearby Exploration</span>
         </button>
-        
-        <button 
-          onClick={handleExploreNearby}
-          className="bg-gradient-to-r from-purple-500 to-pink-500 p-4 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex items-center justify-center space-x-2"
+        <button
+          onClick={() => setActiveTab('route-planning')}
+          className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl transition-all duration-300 ${
+            activeTab === 'route-planning'
+              ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg'
+              : 'text-gray-400 hover:text-white'
+          }`}
         >
-          <Search className="h-5 w-5 text-white" />
-          <span className="text-white font-medium">What's Nearby?</span>
+          <Route className="h-4 w-4" />
+          <span className="text-sm font-medium">Route Planning</span>
         </button>
       </div>
 
-      {/* Route-Based Recommendations Section */}
-      <div className="mb-6">
-        <div className="flex items-center space-x-2 mb-4">
-          <Route className="h-5 w-5 text-orange-400" />
-          <h2 className="text-lg font-semibold text-white">Trip Planning & Route Recommendations</h2>
-        </div>
-        
-        <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 mb-4">
-          <div className="text-center mb-4">
-            <Car className="h-8 w-8 text-orange-400 mx-auto mb-2" />
-            <h3 className="text-white font-medium">Plan Your Journey</h3>
-            <p className="text-gray-400 text-sm">Get AI-powered stops along your route</p>
-          </div>
-          
-          <div className="space-y-3">
-            <div className="grid grid-cols-1 gap-3">
-              <input
-                type="text"
-                placeholder="From (e.g., New York, NY)"
-                value={routeInput.from}
-                onChange={(e) => setRouteInput(prev => ({ ...prev, from: e.target.value }))}
-                className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:border-orange-400 focus:outline-none"
-              />
-              <input
-                type="text"
-                placeholder="To (e.g., Boston, MA)"
-                value={routeInput.to}
-                onChange={(e) => setRouteInput(prev => ({ ...prev, to: e.target.value }))}
-                className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:border-orange-400 focus:outline-none"
-              />
-            </div>
+      {/* Nearby Exploration Tab */}
+      {activeTab === 'nearby' && (
+        <div>
+          {/* Quick Actions */}
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            <button
+              onClick={handleDropFootprint}
+              className="bg-gradient-to-r from-cyan-500 to-blue-500 p-4 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex items-center justify-center space-x-2"
+            >
+              <Plus className="h-5 w-5 text-white" />
+              <span className="text-white font-medium">Drop Footprint</span>
+            </button>
             
-            <div className="flex space-x-2">
-              <button
-                onClick={handleCalculateRoute}
-                disabled={!routeInput.from || !routeInput.to || isCalculatingRoute}
-                className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 px-4 py-3 rounded-xl text-white font-medium hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-              >
-                {isCalculatingRoute ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 animate-spin" />
-                    <span>Calculating...</span>
-                  </>
-                ) : (
-                  <>
-                    <Route className="h-4 w-4" />
-                    <span>Get Recommendations</span>
-                  </>
-                )}
-              </button>
-              
-              {showRouteRecommendations && !isInTripMode && (
-                <button
-                  onClick={handleStartTrip}
-                  disabled={!routeInput.from || !routeInput.to}
-                  className="bg-gradient-to-r from-green-500 to-teal-500 px-4 py-3 rounded-xl text-white font-medium hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-                >
-                  <Play className="h-4 w-4" />
-                  <span>Start Trip</span>
-                </button>
-              )}
+            <button className="bg-gradient-to-r from-purple-500 to-pink-500 p-4 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex items-center justify-center space-x-2">
+              <Search className="h-5 w-5 text-white" />
+              <span className="text-white font-medium">What's Nearby?</span>
+            </button>
+          </div>
+
+          {/* Search Radius Control */}
+          <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-white font-medium">Search Radius</span>
+              <span className="text-cyan-400 font-bold">{searchRadius} km</span>
+            </div>
+            <input
+              type="range"
+              min="1"
+              max="50"
+              value={searchRadius}
+              onChange={(e) => setSearchRadius(Number(e.target.value))}
+              className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+            />
+            <div className="flex justify-between text-xs text-gray-400 mt-1">
+              <span>1km</span>
+              <span>50km</span>
             </div>
           </div>
-        </div>
 
-        {/* Route Recommendations Display */}
-        {showRouteRecommendations && routeSegments[0] && (
-          <div className="space-y-4">
-            <div className="bg-gradient-to-r from-green-500/10 to-teal-500/10 backdrop-blur-sm rounded-2xl p-4 border border-green-400/30">
-              <div className="flex items-center space-x-2 mb-2">
-                <Map className="h-4 w-4 text-green-400" />
-                <span className="text-green-400 font-medium">Route Found</span>
-              </div>
-              <div className="text-white text-sm">
-                <span className="font-medium">{routeSegments[0].from}</span> → <span className="font-medium">{routeSegments[0].to}</span>
-              </div>
-              <div className="text-gray-300 text-xs mt-1">
-                {routeSegments[0].distance} • {routeSegments[0].estimatedTime} • {routeSegments[0].recommendations.length} stops found
-              </div>
-            </div>
-
-            {/* Route Filters */}
-            <div className="flex overflow-x-auto space-x-2 pb-2">
-              {routeFilterOptions.map((filter) => (
-                <button
-                  key={filter.id}
-                  onClick={() => setSelectedRouteType(filter.id)}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-2xl font-medium text-sm whitespace-nowrap transition-all duration-300 ${
-                    selectedRouteType === filter.id
-                      ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg'
-                      : 'bg-white/10 text-gray-400 hover:text-white hover:bg-white/20'
+          {/* Auto-Suggestions */}
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
+              <Zap className="h-5 w-5 text-yellow-400" />
+              <span>Personalized Suggestions</span>
+            </h2>
+            
+            <div className="space-y-4">
+              {suggestions.map((suggestion) => (
+                <div
+                  key={suggestion.id}
+                  className={`bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 ${
+                    suggestion.priority === 'high' ? 'border-cyan-400/30 bg-gradient-to-r from-cyan-500/5 to-blue-500/5' : ''
                   }`}
                 >
-                  <filter.icon className="h-4 w-4" />
-                  <span>{filter.label}</span>
-                </button>
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <h3 className="text-white font-semibold mb-1">{suggestion.title}</h3>
+                      <p className="text-gray-400 text-sm">{suggestion.description}</p>
+                    </div>
+                    {suggestion.priority === 'high' && (
+                      <Award className="h-5 w-5 text-yellow-400" />
+                    )}
+                  </div>
+                  
+                  <div className="grid grid-cols-1 gap-3">
+                    {suggestion.locations.slice(0, 2).map((location) => {
+                      const IconComponent = getTypeIcon(location.type);
+                      return (
+                        <div
+                          key={location.id}
+                          className="bg-black/20 rounded-xl p-3 hover:bg-black/30 transition-colors cursor-pointer"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className={`w-8 h-8 rounded-full bg-gradient-to-r ${getTypeColor(location.type)} flex items-center justify-center`}>
+                              <IconComponent className="h-4 w-4 text-white" />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="text-white font-medium text-sm">{location.name}</h4>
+                              <div className="flex items-center space-x-2 text-xs text-gray-400">
+                                <span>{location.distance}km away</span>
+                                <span>•</span>
+                                <div className="flex items-center space-x-1">
+                                  <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                                  <span>{location.rating}</span>
+                                </div>
+                                {location.isUserDrop && (
+                                  <span className="text-cyan-400">• User Drop</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  <button className="w-full mt-3 py-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-400/30 rounded-xl text-cyan-400 text-sm font-medium hover:bg-gradient-to-r hover:from-cyan-500/30 hover:to-blue-500/30 transition-colors">
+                    Explore All ({suggestion.locations.length} locations)
+                  </button>
+                </div>
               ))}
             </div>
+          </div>
 
-            {/* Route Recommendations List */}
-            <div className="space-y-3">
-              {filteredRouteRecommendations.map((recommendation) => {
-                const IconComponent = getTypeIcon(recommendation.type);
-                return (
-                  <div
-                    key={recommendation.id}
-                    className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden hover:border-white/20 transition-all duration-300"
-                  >
-                    <div className="h-32 overflow-hidden">
-                      <img
-                        src={recommendation.image}
-                        alt={recommendation.name}
-                        className="w-full h-full object-cover"
-                      />
+          {/* Filters */}
+          <div className="flex items-center space-x-2 mb-4">
+            <h2 className="text-lg font-semibold text-white">Nearby Explorer</h2>
+            <button className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
+              <Filter className="h-4 w-4 text-gray-400" />
+            </button>
+          </div>
+
+          <div className="flex overflow-x-auto space-x-2 mb-6 pb-2">
+            {filterOptions.map((filter) => (
+              <button
+                key={filter.id}
+                onClick={() => setSelectedFilter(filter.id)}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-2xl font-medium text-sm whitespace-nowrap transition-all duration-300 ${
+                  selectedFilter === filter.id
+                    ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg'
+                    : 'bg-white/10 text-gray-400 hover:text-white hover:bg-white/20'
+                }`}
+              >
+                <filter.icon className="h-4 w-4" />
+                <span>{filter.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Nearby Locations */}
+          <div className="space-y-4">
+            {filteredLocations.map((location) => {
+              const IconComponent = getTypeIcon(location.type);
+              return (
+                <div
+                  key={location.id}
+                  className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden hover:border-white/20 transition-all duration-300"
+                >
+                  <div className="h-32 overflow-hidden">
+                    <img
+                      src={location.image}
+                      alt={location.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+
+                  <div className="p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <div className={`w-6 h-6 rounded-full bg-gradient-to-r ${getTypeColor(location.type)} flex items-center justify-center`}>
+                            <IconComponent className="h-3 w-3 text-white" />
+                          </div>
+                          <h3 className="text-white font-semibold">{location.name}</h3>
+                          {location.isUserDrop && (
+                            <div className="bg-cyan-500/20 px-2 py-1 rounded-full">
+                              <span className="text-cyan-400 text-xs font-medium">Drop</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-gray-400 text-sm mb-2">{location.location} • {location.distance}km away</div>
+                      </div>
+                      
+                      <div className="text-right">
+                        <div className="flex items-center space-x-1">
+                          <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                          <span className="text-yellow-400 text-sm">{location.rating}</span>
+                        </div>
+                        <div className="text-gray-400 text-xs">{location.reviews} reviews</div>
+                      </div>
                     </div>
 
-                    <div className="p-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <div className={`w-6 h-6 rounded-full bg-gradient-to-r ${getTypeColor(recommendation.type)} flex items-center justify-center`}>
-                              <IconComponent className="h-3 w-3 text-white" />
-                            </div>
-                            <h3 className="text-white font-semibold">{recommendation.name}</h3>
-                          </div>
-                          <p className="text-gray-400 text-sm mb-2">{recommendation.description}</p>
-                        </div>
-                        
-                        <div className="text-right ml-4">
-                          <div className="flex items-center space-x-1">
-                            <Star className="h-3 w-3 text-yellow-400 fill-current" />
-                            <span className="text-yellow-400 text-sm">{recommendation.rating}</span>
-                          </div>
-                          <div className="text-gray-400 text-xs">{recommendation.reviews} reviews</div>
-                        </div>
-                      </div>
+                    <p className="text-gray-300 text-sm mb-3">{location.description}</p>
 
-                      <div className="grid grid-cols-2 gap-3 text-xs text-gray-400 mb-3">
-                        <div className="flex items-center space-x-1">
-                          <Navigation className="h-3 w-3" />
-                          <span>{recommendation.distanceFromRoute}km off route</span>
+                    {location.tips && (
+                      <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-xl p-3 mb-3 border border-blue-400/30">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <Zap className="h-3 w-3 text-blue-400" />
+                          <span className="text-blue-400 text-xs font-medium">Local Tip</span>
                         </div>
-                        <div className="flex items-center space-x-1">
-                          <Clock className="h-3 w-3" />
-                          <span>{recommendation.estimatedDetour} detour</span>
-                        </div>
+                        <p className="text-blue-300 text-xs">{location.tips}</p>
                       </div>
+                    )}
 
-                      <div className="flex flex-wrap gap-1 mb-3">
-                        {recommendation.highlights.slice(0, 3).map((highlight, index) => (
-                          <span
-                            key={index}
-                            className="px-2 py-1 bg-gradient-to-r from-orange-500/20 to-red-500/20 rounded-full text-xs text-orange-400 border border-orange-400/30"
-                          >
-                            {highlight}
-                          </span>
-                        ))}
+                    {location.isUserDrop && location.author && (
+                      <div className="flex items-center justify-between text-xs text-gray-400 mb-3">
+                        <span>by {location.author}</span>
+                        <span>{formatTimeAgo(location.timestamp!)}</span>
                       </div>
+                    )}
 
-                      <div className="flex items-center justify-between">
-                        <div className="text-sm text-gray-300">
-                          Best time: {recommendation.bestTime}
-                        </div>
-                        
-                        <div className="flex items-center space-x-2">
-                          <button className="p-2 bg-white/10 rounded-xl hover:bg-white/20 transition-colors">
-                            <Heart className="h-4 w-4 text-gray-400 hover:text-pink-400" />
-                          </button>
-                          
-                          <button className="flex items-center space-x-1 px-3 py-2 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl text-white text-sm font-medium hover:shadow-lg transition-all duration-300">
-                            <Navigation className="h-4 w-4" />
-                            <span>Add to Route</span>
-                          </button>
-                        </div>
-                      </div>
+                    <div className="flex items-center space-x-3">
+                      <button className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500 px-4 py-2 rounded-xl text-white font-medium hover:shadow-lg transition-all duration-300 flex items-center justify-center space-x-2">
+                        <Navigation className="h-4 w-4" />
+                        <span>Get Directions</span>
+                      </button>
+                      
+                      <button className="p-2 bg-white/10 rounded-xl hover:bg-white/20 transition-colors">
+                        <Heart className="h-4 w-4 text-gray-400 hover:text-pink-400" />
+                      </button>
+                      
+                      <button className="p-2 bg-white/10 rounded-xl hover:bg-white/20 transition-colors">
+                        <Camera className="h-4 w-4 text-gray-400 hover:text-white" />
+                      </button>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-
-            {filteredRouteRecommendations.length === 0 && (
-              <div className="text-center py-8">
-                <Route className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                <h3 className="text-white font-medium mb-2">No {selectedRouteType} stops found</h3>
-                <p className="text-gray-400 text-sm">Try a different filter or check another route</p>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Search Radius Control */}
-      <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-white font-medium">Search Radius</span>
-          <span className="text-cyan-400 font-bold">{searchRadius} km</span>
-        </div>
-        <input
-          type="range"
-          min="1"
-          max="50"
-          value={searchRadius}
-          onChange={(e) => setSearchRadius(Number(e.target.value))}
-          className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
-        />
-        <div className="flex justify-between text-xs text-gray-400 mt-1">
-          <span>1km</span>
-          <span>50km</span>
-        </div>
-      </div>
-
-      {/* Auto-Suggestions */}
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
-          <Zap className="h-5 w-5 text-yellow-400" />
-          <span>Personalized Suggestions</span>
-        </h2>
-        
-        <div className="space-y-4">
-          {suggestions.map((suggestion) => (
-            <div
-              key={suggestion.id}
-              className={`bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 ${
-                suggestion.priority === 'high' ? 'border-cyan-400/30 bg-gradient-to-r from-cyan-500/5 to-blue-500/5' : ''
-              }`}
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1">
-                  <h3 className="text-white font-semibold mb-1">{suggestion.title}</h3>
-                  <p className="text-gray-400 text-sm">{suggestion.description}</p>
                 </div>
-                {suggestion.priority === 'high' && (
-                  <Award className="h-5 w-5 text-yellow-400" />
-                )}
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Route Planning Tab */}
+      {activeTab === 'route-planning' && (
+        <div>
+          {/* Route Input Section */}
+          <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 mb-6">
+            <div className="text-center mb-4">
+              <Car className="h-8 w-8 text-orange-400 mx-auto mb-2" />
+              <h3 className="text-white font-medium">Plan Your Journey</h3>
+              <p className="text-gray-400 text-sm">Get AI-powered stops along your route</p>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 gap-3">
+                <input
+                  type="text"
+                  placeholder="From (e.g., New York, NY)"
+                  value={routeInput.from}
+                  onChange={(e) => setRouteInput(prev => ({ ...prev, from: e.target.value }))}
+                  className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:border-orange-400 focus:outline-none"
+                />
+                <input
+                  type="text"
+                  placeholder="To (e.g., Boston, MA)"
+                  value={routeInput.to}
+                  onChange={(e) => setRouteInput(prev => ({ ...prev, to: e.target.value }))}
+                  className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:border-orange-400 focus:outline-none"
+                />
+              </div>
+
+              {/* Route Options */}
+              <div className="bg-black/20 rounded-xl p-4">
+                <h4 className="text-white font-medium mb-3 text-sm">Route Preferences</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Optimization</label>
+                    <select
+                      value={routeOptions.optimization}
+                      onChange={(e) => setRouteOptions(prev => ({ ...prev, optimization: e.target.value as any }))}
+                      className="w-full px-3 py-2 bg-black/30 border border-white/10 rounded-lg text-white text-sm focus:border-orange-400 focus:outline-none"
+                    >
+                      <option value="fastest" className="bg-slate-800">Fastest Route</option>
+                      <option value="scenic" className="bg-slate-800">Most Scenic</option>
+                      <option value="economical" className="bg-slate-800">Most Economical</option>
+                      <option value="eco-friendly" className="bg-slate-800">Eco-Friendly</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Max Detour</label>
+                    <select
+                      value={routeOptions.maxDetourTime}
+                      onChange={(e) => setRouteOptions(prev => ({ ...prev, maxDetourTime: Number(e.target.value) }))}
+                      className="w-full px-3 py-2 bg-black/30 border border-white/10 rounded-lg text-white text-sm focus:border-orange-400 focus:outline-none"
+                    >
+                      <option value={15} className="bg-slate-800">15 minutes</option>
+                      <option value={30} className="bg-slate-800">30 minutes</option>
+                      <option value={60} className="bg-slate-800">1 hour</option>
+                      <option value={120} className="bg-slate-800">2 hours</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-4 mt-3">
+                  <label className="flex items-center space-x-2 text-sm text-gray-300">
+                    <input
+                      type="checkbox"
+                      checked={routeOptions.avoidTolls}
+                      onChange={(e) => setRouteOptions(prev => ({ ...prev, avoidTolls: e.target.checked }))}
+                      className="rounded border-white/20 text-orange-500 focus:ring-orange-500 focus:ring-offset-0"
+                    />
+                    <span>Avoid Tolls</span>
+                  </label>
+                  <label className="flex items-center space-x-2 text-sm text-gray-300">
+                    <input
+                      type="checkbox"
+                      checked={routeOptions.avoidHighways}
+                      onChange={(e) => setRouteOptions(prev => ({ ...prev, avoidHighways: e.target.checked }))}
+                      className="rounded border-white/20 text-orange-500 focus:ring-orange-500 focus:ring-offset-0"
+                    />
+                    <span>Avoid Highways</span>
+                  </label>
+                </div>
               </div>
               
-              <div className="grid grid-cols-1 gap-3">
-                {suggestion.locations.slice(0, 2).map((location) => {
-                  const IconComponent = getTypeIcon(location.type);
+              <div className="flex space-x-2">
+                <button
+                  onClick={handleCalculateRoute}
+                  disabled={!routeInput.from || !routeInput.to || isCalculatingRoute}
+                  className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 px-4 py-3 rounded-xl text-white font-medium hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                >
+                  {isCalculatingRoute ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 animate-spin" />
+                      <span>Calculating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Route className="h-4 w-4" />
+                      <span>Get Recommendations</span>
+                    </>
+                  )}
+                </button>
+                
+                {showRouteRecommendations && !isInTripMode && (
+                  <button
+                    onClick={handleStartTrip}
+                    disabled={!routeInput.from || !routeInput.to}
+                    className="bg-gradient-to-r from-green-500 to-teal-500 px-4 py-3 rounded-xl text-white font-medium hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                  >
+                    <Play className="h-4 w-4" />
+                    <span>Start Trip</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Interactive Map Placeholder */}
+          {showRouteRecommendations && (
+            <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 backdrop-blur-sm rounded-2xl border border-blue-400/30 p-6 mb-6">
+              <div className="text-center">
+                <Map className="h-12 w-12 text-blue-400 mx-auto mb-3" />
+                <h3 className="text-white font-medium mb-2">Interactive Route Map</h3>
+                <p className="text-blue-300 text-sm mb-4">
+                  Full interactive map with route visualization and stop markers would be displayed here
+                </p>
+                <div className="bg-black/20 rounded-xl p-4 text-center">
+                  <div className="text-gray-400 text-sm">
+                    📍 Route: {routeSegments[0]?.from} → {routeSegments[0]?.to}
+                    <br />
+                    🛣️ Distance: {routeSegments[0]?.distance} • ⏱️ Time: {routeSegments[0]?.estimatedTime}
+                    <br />
+                    💰 Total Cost: {routeSegments[0]?.totalCost}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Real-time Info */}
+          {showRouteRecommendations && (
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              <div className="bg-gradient-to-r from-green-500/10 to-teal-500/10 backdrop-blur-sm rounded-2xl border border-green-400/30 p-4">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Activity className="h-4 w-4 text-green-400" />
+                  <span className="text-green-400 font-medium text-sm">Traffic Status</span>
+                </div>
+                <p className="text-green-300 text-xs">Light traffic • +5 min delay</p>
+              </div>
+              
+              <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 backdrop-blur-sm rounded-2xl border border-blue-400/30 p-4">
+                <div className="flex items-center space-x-2 mb-2">
+                  <CloudRain className="h-4 w-4 text-blue-400" />
+                  <span className="text-blue-400 font-medium text-sm">Weather</span>
+                </div>
+                <p className="text-blue-300 text-xs">Partly cloudy • 22°C</p>
+              </div>
+            </div>
+          )}
+
+          {/* Route Recommendations Display */}
+          {showRouteRecommendations && routeSegments[0] && (
+            <div className="space-y-4">
+              <div className="bg-gradient-to-r from-green-500/10 to-teal-500/10 backdrop-blur-sm rounded-2xl p-4 border border-green-400/30">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Map className="h-4 w-4 text-green-400" />
+                  <span className="text-green-400 font-medium">Route Found</span>
+                </div>
+                <div className="text-white text-sm">
+                  <span className="font-medium">{routeSegments[0].from}</span> → <span className="font-medium">{routeSegments[0].to}</span>
+                </div>
+                <div className="text-gray-300 text-xs mt-1">
+                  {routeSegments[0].distance} • {routeSegments[0].estimatedTime} • {routeSegments[0].recommendations.length} stops found
+                </div>
+                
+                {/* Route Actions */}
+                <div className="flex space-x-2 mt-3">
+                  <button
+                    onClick={handleSaveRoute}
+                    className="flex items-center space-x-1 px-3 py-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-400/30 rounded-xl text-purple-400 text-sm font-medium hover:bg-gradient-to-r hover:from-purple-500/30 hover:to-pink-500/30 transition-colors"
+                  >
+                    <Bookmark className="h-3 w-3" />
+                    <span>Save Route</span>
+                  </button>
+                  
+                  <button className="flex items-center space-x-1 px-3 py-2 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-400/30 rounded-xl text-blue-400 text-sm font-medium hover:bg-gradient-to-r hover:from-blue-500/30 hover:to-cyan-500/30 transition-colors">
+                    <Share className="h-3 w-3" />
+                    <span>Share</span>
+                  </button>
+                  
+                  <button className="flex items-center space-x-1 px-3 py-2 bg-gradient-to-r from-green-500/20 to-teal-500/20 border border-green-400/30 rounded-xl text-green-400 text-sm font-medium hover:bg-gradient-to-r hover:from-green-500/30 hover:to-teal-500/30 transition-colors">
+                    <Download className="h-3 w-3" />
+                    <span>Export</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Saved Routes */}
+              {savedRoutes.length > 0 && (
+                <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4">
+                  <h4 className="text-white font-medium mb-3 text-sm">Saved Routes</h4>
+                  <div className="space-y-2">
+                    {savedRoutes.map((route, index) => (
+                      <div key={index} className="flex items-center justify-between bg-black/20 rounded-lg p-2">
+                        <span className="text-gray-300 text-sm">{route}</span>
+                        <button className="text-cyan-400 text-xs hover:text-cyan-300">Load</button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Route Filters */}
+              <div className="flex overflow-x-auto space-x-2 pb-2">
+                {routeFilterOptions.map((filter) => (
+                  <button
+                    key={filter.id}
+                    onClick={() => setSelectedRouteType(filter.id)}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-2xl font-medium text-sm whitespace-nowrap transition-all duration-300 ${
+                      selectedRouteType === filter.id
+                        ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg'
+                        : 'bg-white/10 text-gray-400 hover:text-white hover:bg-white/20'
+                    }`}
+                  >
+                    <filter.icon className="h-4 w-4" />
+                    <span>{filter.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Route Recommendations List */}
+              <div className="space-y-3">
+                {filteredRouteRecommendations.map((recommendation) => {
+                  const IconComponent = getTypeIcon(recommendation.type);
                   return (
                     <div
-                      key={location.id}
-                      className="bg-black/20 rounded-xl p-3 hover:bg-black/30 transition-colors cursor-pointer"
+                      key={recommendation.id}
+                      className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden hover:border-white/20 transition-all duration-300"
                     >
-                      <div className="flex items-center space-x-3">
-                        <div className={`w-8 h-8 rounded-full bg-gradient-to-r ${getTypeColor(location.type)} flex items-center justify-center`}>
-                          <IconComponent className="h-4 w-4 text-white" />
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="text-white font-medium text-sm">{location.name}</h4>
-                          <div className="flex items-center space-x-2 text-xs text-gray-400">
-                            <span>{location.distance}km away</span>
-                            <span>•</span>
+                      <div className="h-32 overflow-hidden">
+                        <img
+                          src={recommendation.image}
+                          alt={recommendation.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+
+                      <div className="p-4">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-2 mb-1">
+                              <div className={`w-6 h-6 rounded-full bg-gradient-to-r ${getTypeColor(recommendation.type)} flex items-center justify-center`}>
+                                <IconComponent className="h-3 w-3 text-white" />
+                              </div>
+                              <h3 className="text-white font-semibold">{recommendation.name}</h3>
+                            </div>
+                            <p className="text-gray-400 text-sm mb-2">{recommendation.description}</p>
+                          </div>
+                          
+                          <div className="text-right ml-4">
                             <div className="flex items-center space-x-1">
                               <Star className="h-3 w-3 text-yellow-400 fill-current" />
-                              <span>{location.rating}</span>
+                              <span className="text-yellow-400 text-sm">{recommendation.rating}</span>
                             </div>
-                            {location.isUserDrop && (
-                              <span className="text-cyan-400">• User Drop</span>
-                            )}
+                            <div className="text-gray-400 text-xs">{recommendation.reviews} reviews</div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 text-xs text-gray-400 mb-3">
+                          <div className="flex items-center space-x-1">
+                            <Navigation2 className="h-3 w-3" />
+                            <span>{recommendation.distanceFromRoute}km off route</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <Clock className="h-3 w-3" />
+                            <span>{recommendation.estimatedDetour} detour</span>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap gap-1 mb-3">
+                          {recommendation.highlights.slice(0, 3).map((highlight, index) => (
+                            <span
+                              key={index}
+                              className="px-2 py-1 bg-gradient-to-r from-orange-500/20 to-red-500/20 rounded-full text-xs text-orange-400 border border-orange-400/30"
+                            >
+                              {highlight}
+                            </span>
+                          ))}
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm text-gray-300">
+                            Best time: {recommendation.bestTime}
+                          </div>
+                          
+                          <div className="flex items-center space-x-2">
+                            <button 
+                              onClick={() => handleAddToRoute(recommendation.id)}
+                              className={`flex items-center space-x-1 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
+                                recommendation.isAdded
+                                  ? 'bg-green-500/20 text-green-400 border border-green-400/30'
+                                  : 'bg-gradient-to-r from-orange-500 to-red-500 text-white hover:shadow-lg'
+                              }`}
+                            >
+                              {recommendation.isAdded ? (
+                                <>
+                                  <CheckCircle className="h-4 w-4" />
+                                  <span>Added</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Plus className="h-4 w-4" />
+                                  <span>Add to Route</span>
+                                </>
+                              )}
+                            </button>
+                            
+                            <button className="p-2 bg-white/10 rounded-xl hover:bg-white/20 transition-colors">
+                              <Info className="h-4 w-4 text-gray-400 hover:text-white" />
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -794,121 +1116,18 @@ function DiscoveryPage() {
                   );
                 })}
               </div>
-              
-              <button className="w-full mt-3 py-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-400/30 rounded-xl text-cyan-400 text-sm font-medium hover:bg-gradient-to-r hover:from-cyan-500/30 hover:to-blue-500/30 transition-colors">
-                Explore All ({suggestion.locations.length} locations)
-              </button>
+
+              {filteredRouteRecommendations.length === 0 && (
+                <div className="text-center py-8">
+                  <Route className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                  <h3 className="text-white font-medium mb-2">No {selectedRouteType} stops found</h3>
+                  <p className="text-gray-400 text-sm">Try a different filter or check another route</p>
+                </div>
+              )}
             </div>
-          ))}
+          )}
         </div>
-      </div>
-
-      {/* Filters */}
-      <div className="flex items-center space-x-2 mb-4">
-        <h2 className="text-lg font-semibold text-white">Nearby Explorer</h2>
-        <button className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
-          <Filter className="h-4 w-4 text-gray-400" />
-        </button>
-      </div>
-
-      <div className="flex overflow-x-auto space-x-2 mb-6 pb-2">
-        {filterOptions.map((filter) => (
-          <button
-            key={filter.id}
-            onClick={() => setSelectedFilter(filter.id)}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-2xl font-medium text-sm whitespace-nowrap transition-all duration-300 ${
-              selectedFilter === filter.id
-                ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg'
-                : 'bg-white/10 text-gray-400 hover:text-white hover:bg-white/20'
-            }`}
-          >
-            <filter.icon className="h-4 w-4" />
-            <span>{filter.label}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* Nearby Locations */}
-      <div className="space-y-4">
-        {filteredLocations.map((location) => {
-          const IconComponent = getTypeIcon(location.type);
-          return (
-            <div
-              key={location.id}
-              className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden hover:border-white/20 transition-all duration-300"
-            >
-              <div className="h-32 overflow-hidden">
-                <img
-                  src={location.image}
-                  alt={location.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-
-              <div className="p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <div className={`w-6 h-6 rounded-full bg-gradient-to-r ${getTypeColor(location.type)} flex items-center justify-center`}>
-                        <IconComponent className="h-3 w-3 text-white" />
-                      </div>
-                      <h3 className="text-white font-semibold">{location.name}</h3>
-                      {location.isUserDrop && (
-                        <div className="bg-cyan-500/20 px-2 py-1 rounded-full">
-                          <span className="text-cyan-400 text-xs font-medium">Drop</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="text-gray-400 text-sm mb-2">{location.location} • {location.distance}km away</div>
-                  </div>
-                  
-                  <div className="text-right">
-                    <div className="flex items-center space-x-1">
-                      <Star className="h-3 w-3 text-yellow-400 fill-current" />
-                      <span className="text-yellow-400 text-sm">{location.rating}</span>
-                    </div>
-                    <div className="text-gray-400 text-xs">{location.reviews} reviews</div>
-                  </div>
-                </div>
-
-                <p className="text-gray-300 text-sm mb-3">{location.description}</p>
-
-                {location.tips && (
-                  <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-xl p-3 mb-3 border border-blue-400/30">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <Zap className="h-3 w-3 text-blue-400" />
-                      <span className="text-blue-400 text-xs font-medium">Local Tip</span>
-                    </div>
-                    <p className="text-blue-300 text-xs">{location.tips}</p>
-                  </div>
-                )}
-
-                {location.isUserDrop && location.author && (
-                  <div className="flex items-center justify-between text-xs text-gray-400 mb-3">
-                    <span>by {location.author}</span>
-                    <span>{formatTimeAgo(location.timestamp!)}</span>
-                  </div>
-                )}
-
-                <div className="flex items-center space-x-3">
-                  <button className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500 px-4 py-2 rounded-xl text-white font-medium hover:shadow-lg transition-all duration-300 flex items-center justify-center space-x-2">
-                    <Navigation className="h-4 w-4" />
-                    <span>Get Directions</span>
-                  </button>
-                  
-                  <button className="p-2 bg-white/10 rounded-xl hover:bg-white/20 transition-colors">
-                    <Heart className="h-4 w-4 text-gray-400 hover:text-pink-400" />
-                  </button>
-                  
-                  <button className="p-2 bg-white/10 rounded-xl hover:bg-white/20 transition-colors">
-                    <Camera className="h-4 w-4 text-gray-400 hover:text-white" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      )}
     </div>
   );
 }

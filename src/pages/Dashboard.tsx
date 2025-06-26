@@ -25,7 +25,6 @@ import NomadNetworkPage from '../features/NomadNetworkPage';
 import PlacesRatingPage from '../features/PlacesRatingPage';
 import OfflineBuddyBeaconPage from '../features/OfflineBuddyBeaconPage';
 import ARWorldPage from '../features/ARWorldPage';
-import RouteDiscoveryPage from '../features/RouteDiscoveryPage';
 
 function Dashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -43,8 +42,7 @@ function Dashboard() {
   ];
 
   const additionalFeatures = [
-    { path: '/dashboard/route-discovery', icon: RouteIcon, label: 'Route Discovery' },
-    { path: '/dashboard/discovery', icon: Target, label: 'Discovery' },
+    { path: '/dashboard/discovery', icon: Target, label: 'Explore & Plan' },
     { path: '/dashboard/food-discovery', icon: Utensils, label: 'Food & Utilities' },
     { path: '/dashboard/journal', icon: BookOpen, label: 'Travel Journal' },
     { path: '/dashboard/events', icon: Calendar, label: 'Live Events' },
@@ -238,7 +236,6 @@ function Dashboard() {
             <Route path="/journal" element={<TravelJournalPage />} />
             <Route path="/events" element={<LiveEventsPage />} />
             <Route path="/network" element={<NomadNetworkPage />} />
-            <Route path="/route-discovery" element={<RouteDiscoveryPage />} />
             <Route path="/ar-world" element={<ARWorldPage />} />
             <Route path="/time-capsules" element={<TimeCapsulePage />} />
             <Route path="/food-discovery" element={<FoodDiscoveryPage />} />
