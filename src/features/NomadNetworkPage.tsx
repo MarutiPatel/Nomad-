@@ -37,25 +37,16 @@ interface NomadProfile {
   };
 }
 
-interface TravelStory {
-  id: string;
-  author: NomadProfile;
-  title: string;
-  content: string;
-  location: string;
-  image: string;
-  timestamp: Date;
-  likes: number;
-  comments: number;
-  isLiked: boolean;
-  isBookmarked: boolean;
-  tags: string[];
-}
-
 function NomadNetworkPage() {
-  const [activeTab, setActiveTab] = useState<'discover' | 'following' | 'stories'>('discover');
+  const [activeTab, setActiveTab] = useState<'discover' | 'following' | 'search'>('discover');
   const [selectedProfile, setSelectedProfile] = useState<NomadProfile | null>(null);
-  const [selectedStory, setSelectedStory] = useState<TravelStory | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchFilters, setSearchFilters] = useState({
+    travelStyle: '',
+    location: '',
+    interests: '',
+    onlineOnly: false
+  });
 
   const mockProfiles: NomadProfile[] = [
     {
@@ -144,62 +135,64 @@ function NomadNetworkPage() {
         guides: 5,
         meetups: 7
       }
-    }
-  ];
-
-  const mockStories: TravelStory[] = [
-    {
-      id: '1',
-      author: mockProfiles[0],
-      title: 'Hidden Beach Paradise in Goa',
-      content: 'Discovered this incredible secluded beach through a local fisherman. The sunset here is absolutely magical, and there\'s not a single tourist in sight. Sometimes the best adventures come from following your curiosity and trusting the locals.',
-      location: 'Secret Beach, Goa',
-      image: 'https://images.pexels.com/photos/1032650/pexels-photo-1032650.jpeg?auto=compress&cs=tinysrgb&w=400',
-      timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000),
-      likes: 34,
-      comments: 12,
-      isLiked: true,
-      isBookmarked: false,
-      tags: ['hidden-gem', 'beach', 'sunset', 'local-tips']
     },
     {
-      id: '2',
-      author: mockProfiles[1],
-      title: 'Meditation at 3000m Above Sea Level',
-      content: 'Woke up at 4 AM to reach this meditation spot before sunrise. The silence at this altitude is profound - you can literally hear your heartbeat. This is why I travel - for moments that change your perspective on life.',
-      location: 'Triund Peak, Himachal Pradesh',
-      image: 'https://images.pexels.com/photos/1366919/pexels-photo-1366919.jpeg?auto=compress&cs=tinysrgb&w=400',
-      timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000),
-      likes: 67,
-      comments: 23,
-      isLiked: false,
-      isBookmarked: true,
-      tags: ['meditation', 'mountains', 'sunrise', 'spiritual']
+      id: '4',
+      displayName: 'SoulfulExplorer',
+      avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=100',
+      location: 'Rishikesh, Uttarakhand',
+      coordinates: { lat: 30.0869, lng: 78.2676 },
+      distance: 12.1,
+      travelStyle: 'Spiritual Seeker',
+      bio: 'On a journey of self-discovery through ancient wisdom and modern adventures.',
+      interests: ['spirituality', 'meditation', 'philosophy', 'music'],
+      languages: ['English', 'Sanskrit', 'Hindi'],
+      currentTrip: 'Spiritual India Quest',
+      joinedAt: new Date('2023-07-05'),
+      footprints: 21,
+      connections: 67,
+      karma: 980,
+      isOnline: false,
+      lastSeen: new Date(Date.now() - 4 * 60 * 60 * 1000),
+      isFollowing: false,
+      isVerified: false,
+      badges: ['Seeker', 'Wisdom Keeper'],
+      trustScore: 88,
+      trustCircles: ['Spiritual Travelers'],
+      isCreator: false
+    },
+    {
+      id: '5',
+      displayName: 'UrbanExplorer23',
+      avatar: 'https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg?auto=compress&cs=tinysrgb&w=100',
+      location: 'Delhi, India',
+      coordinates: { lat: 28.6139, lng: 77.2090 },
+      distance: 5.7,
+      travelStyle: 'Cultural Enthusiast',
+      bio: 'City explorer passionate about street art, local culture, and hidden urban gems.',
+      interests: ['street art', 'architecture', 'culture', 'food'],
+      languages: ['English', 'Hindi', 'French'],
+      currentTrip: 'Indian Heritage Trail',
+      joinedAt: new Date('2023-05-22'),
+      footprints: 38,
+      connections: 94,
+      karma: 720,
+      isOnline: true,
+      lastSeen: new Date(),
+      isFollowing: true,
+      isVerified: true,
+      badges: ['Culture Vulture', 'Art Lover'],
+      trustScore: 81,
+      trustCircles: ['Urban Explorers', 'Art Enthusiasts'],
+      isCreator: false
     }
   ];
 
   const [profiles] = useState(mockProfiles);
-  const [stories, setStories] = useState(mockStories);
 
   const handleFollow = (profileId: string) => {
     // Handle follow functionality
     console.log('Following profile:', profileId);
-  };
-
-  const handleLikeStory = (storyId: string) => {
-    setStories(prev => prev.map(story => 
-      story.id === storyId 
-        ? { ...story, isLiked: !story.isLiked, likes: story.isLiked ? story.likes - 1 : story.likes + 1 }
-        : story
-    ));
-  };
-
-  const handleBookmarkStory = (storyId: string) => {
-    setStories(prev => prev.map(story => 
-      story.id === storyId 
-        ? { ...story, isBookmarked: !story.isBookmarked }
-        : story
-    ));
   };
 
   const formatTimeAgo = (date: Date) => {
@@ -210,6 +203,50 @@ function NomadNetworkPage() {
     
     const diffInDays = Math.floor(diffInHours / 24);
     return `${diffInDays}d ago`;
+  };
+
+  // Search functionality
+  const filteredProfiles = profiles.filter(profile => {
+    const matchesQuery = searchQuery === '' || 
+      profile.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      profile.bio.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      profile.travelStyle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      profile.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      profile.interests.some(interest => interest.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      profile.languages.some(language => language.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    const matchesTravelStyle = searchFilters.travelStyle === '' || 
+      profile.travelStyle.toLowerCase().includes(searchFilters.travelStyle.toLowerCase());
+
+    const matchesLocation = searchFilters.location === '' || 
+      profile.location.toLowerCase().includes(searchFilters.location.toLowerCase());
+
+    const matchesInterests = searchFilters.interests === '' || 
+      profile.interests.some(interest => interest.toLowerCase().includes(searchFilters.interests.toLowerCase()));
+
+    const matchesOnlineStatus = !searchFilters.onlineOnly || profile.isOnline;
+
+    return matchesQuery && matchesTravelStyle && matchesLocation && matchesInterests && matchesOnlineStatus;
+  });
+
+  const getDisplayProfiles = () => {
+    if (activeTab === 'search') {
+      return filteredProfiles;
+    } else if (activeTab === 'following') {
+      return profiles.filter(profile => profile.isFollowing);
+    } else {
+      return profiles;
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchQuery('');
+    setSearchFilters({
+      travelStyle: '',
+      location: '',
+      interests: '',
+      onlineOnly: false
+    });
   };
 
   return (
@@ -245,317 +282,316 @@ function NomadNetworkPage() {
           <span className="text-sm font-medium">Following</span>
         </button>
         <button
-          onClick={() => setActiveTab('stories')}
+          onClick={() => setActiveTab('search')}
           className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl transition-all duration-300 ${
-            activeTab === 'stories'
+            activeTab === 'search'
               ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg'
               : 'text-gray-400 hover:text-white'
           }`}
         >
-          <Camera className="h-4 w-4" />
-          <span className="text-sm font-medium">Stories</span>
+          <Search className="h-4 w-4" />
+          <span className="text-sm font-medium">Search</span>
         </button>
       </div>
 
-      {/* Content */}
-      {(activeTab === 'discover' || activeTab === 'following') && (
-        <div>
-          {/* Controls */}
-          <div className="flex items-center space-x-2 mb-6">
-            <button className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
-              <Search className="h-4 w-4 text-gray-400" />
-            </button>
-            <button className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
-              <Filter className="h-4 w-4 text-gray-400" />
-            </button>
-          </div>
-
-          {/* Profiles Grid */}
+      {/* Search Controls (when search tab is active) */}
+      {activeTab === 'search' && (
+        <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 mb-6">
           <div className="space-y-4">
-            {profiles
-              .filter(profile => activeTab === 'discover' || profile.isFollowing)
-              .map((profile) => (
-                <div
-                  key={profile.id}
-                  className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 hover:border-white/20 transition-all duration-300"
+            {/* Main Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by name, bio, interests, location..."
+                className="w-full pl-10 pr-4 py-3 bg-black/20 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:border-orange-400 focus:outline-none"
+              />
+            </div>
+
+            {/* Advanced Filters */}
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                type="text"
+                value={searchFilters.travelStyle}
+                onChange={(e) => setSearchFilters(prev => ({ ...prev, travelStyle: e.target.value }))}
+                placeholder="Travel style..."
+                className="px-3 py-2 bg-black/20 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:border-orange-400 focus:outline-none text-sm"
+              />
+              <input
+                type="text"
+                value={searchFilters.location}
+                onChange={(e) => setSearchFilters(prev => ({ ...prev, location: e.target.value }))}
+                placeholder="Location..."
+                className="px-3 py-2 bg-black/20 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:border-orange-400 focus:outline-none text-sm"
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <input
+                type="text"
+                value={searchFilters.interests}
+                onChange={(e) => setSearchFilters(prev => ({ ...prev, interests: e.target.value }))}
+                placeholder="Interests..."
+                className="flex-1 px-3 py-2 bg-black/20 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:border-orange-400 focus:outline-none text-sm mr-3"
+              />
+              <label className="flex items-center space-x-2 text-sm text-gray-300">
+                <input
+                  type="checkbox"
+                  checked={searchFilters.onlineOnly}
+                  onChange={(e) => setSearchFilters(prev => ({ ...prev, onlineOnly: e.target.checked }))}
+                  className="w-4 h-4 text-orange-600 bg-black/20 border-white/10 rounded focus:ring-orange-500"
+                />
+                <span>Online only</span>
+              </label>
+            </div>
+
+            {/* Search Results Info */}
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-400">
+                {activeTab === 'search' ? `${filteredProfiles.length} results found` : ''}
+              </span>
+              {(searchQuery || searchFilters.travelStyle || searchFilters.location || searchFilters.interests || searchFilters.onlineOnly) && (
+                <button
+                  onClick={clearSearch}
+                  className="text-sm text-orange-400 hover:text-orange-300 transition-colors"
                 >
-                  <div className="flex items-start space-x-4">
-                    {/* Avatar */}
-                    <div className="relative">
-                      <img
-                        src={profile.avatar}
-                        alt={profile.displayName}
-                        className="w-16 h-16 rounded-full object-cover"
-                      />
-                      <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-slate-900 ${
-                        profile.isOnline ? 'bg-green-400' : 'bg-gray-400'
-                      }`}></div>
-                      {profile.isVerified && (
-                        <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
-                          <Star className="h-3 w-3 text-white fill-current" />
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex-1">
-                      {/* Header */}
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <div className="flex items-center space-x-1">
-                            <span className="text-white font-medium">{profile.displayName}</span>
-                            {profile.isVerified && (
-                              <Star className="h-3 w-3 text-blue-400 fill-current" />
-                            )}
-                            {profile.isCreator && (
-                              <Crown className="h-3 w-3 text-purple-400 fill-current" />
-                            )}
-                          </div>
-                          <div className="flex items-center space-x-1 text-gray-400 text-sm">
-                            <MapPin className="h-3 w-3" />
-                            <span>{profile.location} • {profile.distance}km away</span>
-                          </div>
-                        </div>
-                        
-                        {/* Trust Score */}
-                        <div className="text-right">
-                          <div className={`text-sm font-bold ${
-                            profile.trustScore >= 80 ? 'text-green-400' :
-                            profile.trustScore >= 60 ? 'text-yellow-400' :
-                            'text-orange-400'
-                          }`}>
-                            Trust: {profile.trustScore}%
-                          </div>
-                          <div className="text-xs text-gray-400">
-                            {profile.trustCircles.length} circles
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Creator Badge */}
-                      {profile.isCreator && profile.creatorContent && (
-                        <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl p-3 mb-3 border border-purple-400/30">
-                          <div className="flex items-center space-x-2 mb-2">
-                            <Crown className="h-4 w-4 text-purple-400" />
-                            <span className="text-purple-400 font-medium text-sm">Travel Creator</span>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2 text-xs">
-                            <div className="text-center">
-                              <div className="text-sm font-bold text-purple-400">{profile.creatorContent.followers}</div>
-                              <div className="text-gray-400">Followers</div>
-                            </div>
-                            <div className="text-center">
-                              <div className="text-sm font-bold text-pink-400">{profile.creatorContent.guides}</div>
-                              <div className="text-gray-400">Guides</div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Trust Circles */}
-                      {profile.trustCircles.length > 0 && (
-                        <div className="mb-3">
-                          <h4 className="text-gray-400 text-xs mb-2">Trust Circles</h4>
-                          <div className="flex flex-wrap gap-1">
-                            {profile.trustCircles.slice(0, 2).map((circle, index) => (
-                              <span
-                                key={index}
-                                className="px-2 py-1 bg-gradient-to-r from-green-500/20 to-teal-500/20 rounded-full text-xs text-green-400 border border-green-400/30"
-                              >
-                                {circle}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Travel Style & Bio */}
-                      <div className="mb-3">
-                        <span className="inline-block px-2 py-1 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full text-xs text-purple-400 border border-purple-400/30 mb-2">
-                          {profile.travelStyle}
-                        </span>
-                        <p className="text-gray-300 text-sm">{profile.bio}</p>
-                      </div>
-
-                      {/* Stats */}
-                      <div className="flex items-center space-x-4 mb-3">
-                        <div className="text-center">
-                          <div className="text-sm font-bold text-cyan-400">{profile.footprints}</div>
-                          <div className="text-xs text-gray-400">Footprints</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-sm font-bold text-purple-400">{profile.connections}</div>
-                          <div className="text-xs text-gray-400">Connections</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-sm font-bold text-green-400">{profile.karma}</div>
-                          <div className="text-xs text-gray-400">Karma</div>
-                        </div>
-                      </div>
-
-                      {/* Badges */}
-                      <div className="flex flex-wrap gap-1 mb-3">
-                        {profile.badges.slice(0, 3).map((badge, index) => (
-                          <span
-                            key={index}
-                            className="px-2 py-1 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-full text-xs text-yellow-400 border border-yellow-400/30"
-                          >
-                            {badge}
-                          </span>
-                        ))}
-                      </div>
-
-                      {/* Current Trip */}
-                      {profile.currentTrip && (
-                        <div className="bg-black/20 rounded-xl p-2 mb-3">
-                          <div className="flex items-center space-x-2">
-                            <Zap className="h-3 w-3 text-orange-400" />
-                            <span className="text-orange-400 text-xs font-medium">Current Trip:</span>
-                            <span className="text-gray-300 text-xs">{profile.currentTrip}</span>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Actions */}
-                      <div className="flex items-center space-x-3">
-                        <button
-                          onClick={() => setSelectedProfile(profile)}
-                          className="flex items-center space-x-1 px-3 py-2 bg-white/10 rounded-xl text-gray-300 text-sm font-medium hover:bg-white/20 transition-colors"
-                        >
-                          <Eye className="h-4 w-4" />
-                          <span>View Profile</span>
-                        </button>
-                        
-                        <button className="flex items-center space-x-1 px-3 py-2 bg-gradient-to-r from-green-500 to-teal-500 rounded-xl text-white text-sm font-medium hover:shadow-lg transition-all duration-300">
-                          <MessageCircle className="h-4 w-4" />
-                          <span>Message</span>
-                        </button>
-                        
-                        <button
-                          onClick={() => handleFollow(profile.id)}
-                          className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                            profile.isFollowing
-                              ? 'bg-green-500/20 text-green-400 border border-green-400/30'
-                              : 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg'
-                          }`}
-                        >
-                          {profile.isFollowing ? 'Following' : 'Follow'}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                  Clear filters
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
 
-      {activeTab === 'stories' && (
-        <div className="space-y-6">
-          {stories.map((story) => (
-            <div
-              key={story.id}
-              className="bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 overflow-hidden hover:border-white/20 transition-all duration-300"
-            >
-              {/* Story Image */}
-              <div className="h-64 overflow-hidden">
-                <img
-                  src={story.image}
-                  alt={story.title}
-                  className="w-full h-full object-cover"
-                />
-              </div>
+      {/* Basic Controls (for discover and following tabs) */}
+      {activeTab !== 'search' && (
+        <div className="flex items-center space-x-2 mb-6">
+          <button className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
+            <Search className="h-4 w-4 text-gray-400" />
+          </button>
+          <button className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
+            <Filter className="h-4 w-4 text-gray-400" />
+          </button>
+        </div>
+      )}
 
-              {/* Story Content */}
-              <div className="p-4">
-                {/* Author Info */}
-                <div className="flex items-center space-x-3 mb-4">
+      {/* Content */}
+      <div>
+        {/* Profiles Grid */}
+        <div className="space-y-4">
+          {getDisplayProfiles().map((profile) => (
+            <div
+              key={profile.id}
+              className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 hover:border-white/20 transition-all duration-300"
+            >
+              <div className="flex items-start space-x-4">
+                {/* Avatar */}
+                <div className="relative">
                   <img
-                    src={story.author.avatar}
-                    alt={story.author.displayName}
-                    className="w-10 h-10 rounded-full object-cover"
+                    src={profile.avatar}
+                    alt={profile.displayName}
+                    className="w-16 h-16 rounded-full object-cover"
                   />
-                  <div className="flex-1">
-                    <h4 className="text-white font-medium">{story.author.displayName}</h4>
-                    <div className="flex items-center space-x-2 text-gray-400 text-sm">
-                      <MapPin className="h-3 w-3" />
-                      <span>{story.location}</span>
-                      <span>•</span>
-                      <Clock className="h-3 w-3" />
-                      <span>{formatTimeAgo(story.timestamp)}</span>
+                  <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-slate-900 ${
+                    profile.isOnline ? 'bg-green-400' : 'bg-gray-400'
+                  }`}></div>
+                  {profile.isVerified && (
+                    <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
+                      <Star className="h-3 w-3 text-white fill-current" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex-1">
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <div className="flex items-center space-x-1">
+                        <span className="text-white font-medium">{profile.displayName}</span>
+                        {profile.isVerified && (
+                          <Star className="h-3 w-3 text-blue-400 fill-current" />
+                        )}
+                        {profile.isCreator && (
+                          <Crown className="h-3 w-3 text-purple-400 fill-current" />
+                        )}
+                      </div>
+                      <div className="flex items-center space-x-1 text-gray-400 text-sm">
+                        <MapPin className="h-3 w-3" />
+                        <span>{profile.location} • {profile.distance}km away</span>
+                      </div>
+                    </div>
+                    
+                    {/* Trust Score */}
+                    <div className="text-right">
+                      <div className={`text-sm font-bold ${
+                        profile.trustScore >= 80 ? 'text-green-400' :
+                        profile.trustScore >= 60 ? 'text-yellow-400' :
+                        'text-orange-400'
+                      }`}>
+                        Trust: {profile.trustScore}%
+                      </div>
+                      <div className="text-xs text-gray-400">
+                        {profile.trustCircles.length} circles
+                      </div>
                     </div>
                   </div>
-                  
-                  <button
-                    onClick={() => handleBookmarkStory(story.id)}
-                    className={`p-2 rounded-full transition-colors ${
-                      story.isBookmarked ? 'text-yellow-400' : 'text-gray-400 hover:text-yellow-400'
-                    }`}
-                  >
-                    <Bookmark className={`h-4 w-4 ${story.isBookmarked ? 'fill-current' : ''}`} />
-                  </button>
-                </div>
 
-                {/* Story Title & Content */}
-                <h3 className="text-lg font-semibold text-white mb-2">{story.title}</h3>
-                <p className="text-gray-300 text-sm mb-4 leading-relaxed">{story.content}</p>
+                  {/* Creator Badge */}
+                  {profile.isCreator && profile.creatorContent && (
+                    <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl p-3 mb-3 border border-purple-400/30">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <Crown className="h-4 w-4 text-purple-400" />
+                        <span className="text-purple-400 font-medium text-sm">Travel Creator</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="text-center">
+                          <div className="text-sm font-bold text-purple-400">{profile.creatorContent.followers}</div>
+                          <div className="text-gray-400">Followers</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-sm font-bold text-pink-400">{profile.creatorContent.guides}</div>
+                          <div className="text-gray-400">Guides</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
-                {/* Tags */}
-                <div className="flex flex-wrap gap-1 mb-4">
-                  {story.tags.map((tag, index) => (
-                    <span
-                      key={index}
-                      className="px-2 py-1 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-full text-xs text-cyan-400 border border-cyan-400/30"
-                    >
-                      #{tag}
+                  {/* Trust Circles */}
+                  {profile.trustCircles.length > 0 && (
+                    <div className="mb-3">
+                      <h4 className="text-gray-400 text-xs mb-2">Trust Circles</h4>
+                      <div className="flex flex-wrap gap-1">
+                        {profile.trustCircles.slice(0, 2).map((circle, index) => (
+                          <span
+                            key={index}
+                            className="px-2 py-1 bg-gradient-to-r from-green-500/20 to-teal-500/20 rounded-full text-xs text-green-400 border border-green-400/30"
+                          >
+                            {circle}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Travel Style & Bio */}
+                  <div className="mb-3">
+                    <span className="inline-block px-2 py-1 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full text-xs text-purple-400 border border-purple-400/30 mb-2">
+                      {profile.travelStyle}
                     </span>
-                  ))}
-                </div>
+                    <p className="text-gray-300 text-sm">{profile.bio}</p>
+                  </div>
 
-                {/* Actions */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
+                  {/* Stats */}
+                  <div className="flex items-center space-x-4 mb-3">
+                    <div className="text-center">
+                      <div className="text-sm font-bold text-cyan-400">{profile.footprints}</div>
+                      <div className="text-xs text-gray-400">Footprints</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm font-bold text-purple-400">{profile.connections}</div>
+                      <div className="text-xs text-gray-400">Connections</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm font-bold text-green-400">{profile.karma}</div>
+                      <div className="text-xs text-gray-400">Karma</div>
+                    </div>
+                  </div>
+
+                  {/* Badges */}
+                  <div className="flex flex-wrap gap-1 mb-3">
+                    {profile.badges.slice(0, 3).map((badge, index) => (
+                      <span
+                        key={index}
+                        className="px-2 py-1 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-full text-xs text-yellow-400 border border-yellow-400/30"
+                      >
+                        {badge}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Current Trip */}
+                  {profile.currentTrip && (
+                    <div className="bg-black/20 rounded-xl p-2 mb-3">
+                      <div className="flex items-center space-x-2">
+                        <Zap className="h-3 w-3 text-orange-400" />
+                        <span className="text-orange-400 text-xs font-medium">Current Trip:</span>
+                        <span className="text-gray-300 text-xs">{profile.currentTrip}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="flex items-center space-x-3">
                     <button
-                      onClick={() => handleLikeStory(story.id)}
-                      className={`flex items-center space-x-1 transition-colors ${
-                        story.isLiked ? 'text-pink-400' : 'text-gray-400 hover:text-pink-400'
-                      }`}
+                      onClick={() => setSelectedProfile(profile)}
+                      className="flex items-center space-x-1 px-3 py-2 bg-white/10 rounded-xl text-gray-300 text-sm font-medium hover:bg-white/20 transition-colors"
                     >
-                      <Heart className={`h-4 w-4 ${story.isLiked ? 'fill-current' : ''}`} />
-                      <span className="text-sm">{story.likes}</span>
+                      <Eye className="h-4 w-4" />
+                      <span>View Profile</span>
+                    </button>
+                    
+                    <button className="flex items-center space-x-1 px-3 py-2 bg-gradient-to-r from-green-500 to-teal-500 rounded-xl text-white text-sm font-medium hover:shadow-lg transition-all duration-300">
+                      <MessageCircle className="h-4 w-4" />
+                      <span>Message</span>
                     </button>
                     
                     <button
-                      onClick={() => setSelectedStory(story)}
-                      className="flex items-center space-x-1 text-gray-400 hover:text-blue-400 transition-colors"
+                      onClick={() => handleFollow(profile.id)}
+                      className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                        profile.isFollowing
+                          ? 'bg-green-500/20 text-green-400 border border-green-400/30'
+                          : 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg'
+                      }`}
                     >
-                      <MessageCircle className="h-4 w-4" />
-                      <span className="text-sm">{story.comments}</span>
+                      {profile.isFollowing ? 'Following' : 'Follow'}
                     </button>
                   </div>
-                  
-                  <button className="text-gray-400 hover:text-white transition-colors">
-                    <Share className="h-4 w-4" />
-                  </button>
                 </div>
               </div>
             </div>
           ))}
         </div>
-      )}
+
+        {/* No Results */}
+        {getDisplayProfiles().length === 0 && (
+          <div className="text-center py-12">
+            {activeTab === 'search' ? (
+              <>
+                <Search className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-white mb-2">No Results Found</h3>
+                <p className="text-gray-400 text-sm mb-4">
+                  Try adjusting your search criteria or clearing filters
+                </p>
+                <button
+                  onClick={clearSearch}
+                  className="bg-gradient-to-r from-orange-500 to-red-500 px-6 py-3 rounded-2xl font-semibold text-white"
+                >
+                  Clear Search
+                </button>
+              </>
+            ) : (
+              <>
+                <Users className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-white mb-2">No Travelers Found</h3>
+                <p className="text-gray-400 text-sm">
+                  {activeTab === 'following' 
+                    ? "You're not following anyone yet. Discover travelers to connect with!"
+                    : "No travelers in your area right now. Check back later!"
+                  }
+                </p>
+              </>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Profile Detail Modal */}
       {selectedProfile && (
         <ProfileDetailModal
           profile={selectedProfile}
           onClose={() => setSelectedProfile(null)}
-        />
-      )}
-
-      {/* Story Detail Modal */}
-      {selectedStory && (
-        <StoryDetailModal
-          story={selectedStory}
-          onClose={() => setSelectedStory(null)}
         />
       )}
     </div>
@@ -743,100 +779,6 @@ function ProfileDetailModal({
             <button className="px-6 py-3 border border-white/20 rounded-2xl text-gray-300 hover:bg-white/5 transition-colors">
               <UserPlus className="h-5 w-5" />
             </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function StoryDetailModal({ 
-  story, 
-  onClose 
-}: { 
-  story: TravelStory; 
-  onClose: () => void;
-}) {
-  const formatTimeAgo = (date: Date) => {
-    const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
-    if (diffInHours < 24) return `${diffInHours}h ago`;
-    
-    const diffInDays = Math.floor(diffInHours / 24);
-    return `${diffInDays}d ago`;
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-slate-900/95 backdrop-blur-md rounded-3xl border border-white/20 max-w-md w-full max-h-[80vh] overflow-y-auto">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-white">{story.title}</h2>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-            >
-              ✕
-            </button>
-          </div>
-
-          <div className="mb-4">
-            <img
-              src={story.image}
-              alt={story.title}
-              className="w-full h-48 object-cover rounded-2xl"
-            />
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center space-x-3">
-              <img
-                src={story.author.avatar}
-                alt={story.author.displayName}
-                className="w-10 h-10 rounded-full object-cover"
-              />
-              <div>
-                <h4 className="text-white font-medium">{story.author.displayName}</h4>
-                <div className="flex items-center space-x-2 text-gray-400 text-sm">
-                  <MapPin className="h-3 w-3" />
-                  <span>{story.location}</span>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-white font-medium mb-2">Story</h3>
-              <p className="text-gray-300 text-sm leading-relaxed">{story.content}</p>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              {story.tags.map((tag, index) => (
-                <span
-                  key={index}
-                  className="px-3 py-1 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-full text-xs text-cyan-400 border border-cyan-400/30"
-                >
-                  #{tag}
-                </span>
-              ))}
-            </div>
-
-            <div className="flex items-center justify-between pt-4 border-t border-white/10">
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-1 text-pink-400">
-                  <Heart className="h-4 w-4 fill-current" />
-                  <span className="text-sm">{story.likes}</span>
-                </div>
-                <div className="flex items-center space-x-1 text-blue-400">
-                  <MessageCircle className="h-4 w-4" />
-                  <span className="text-sm">{story.comments}</span>
-                </div>
-              </div>
-              
-              <div className="text-xs text-gray-400">
-                {formatTimeAgo(story.timestamp)}
-              </div>
-            </div>
           </div>
         </div>
       </div>
