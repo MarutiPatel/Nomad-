@@ -226,7 +226,7 @@ function Dashboard() {
         {/* Main Content */}
         <main className="flex-1 lg:ml-0">
           <Routes>
-            <Route path="/" element={<DiscoveryPage />} />
+            <Route path="/" element={<FootprintsPage />} />
             <Route path="/footprints" element={<FootprintsPage />} />
             <Route path="/radar" element={<BuddyRadarPage />} />
             <Route path="/discovery" element={<DiscoveryPage />} />
