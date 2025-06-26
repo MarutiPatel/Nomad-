@@ -33,7 +33,7 @@ function Dashboard() {
   const location = useLocation();
 
   const navigationItems = [
-    { path: '/dashboard/footprints', icon: Footprints, label: 'Footprints' },
+    { path: '/dashboard', icon: Footprints, label: 'Footprints', exact: true },
     { path: '/dashboard/network', icon: Globe, label: 'Nomad Network' },
     { path: '/dashboard/discovery', icon: Target, label: 'Explore & Plan' },
     { path: '/dashboard/chat', icon: MessageCircle, label: 'Chats' },
@@ -226,7 +226,7 @@ function Dashboard() {
         {/* Main Content */}
         <main className="flex-1 lg:ml-0">
           <Routes>
-            <Route path="/" element={<DiscoveryPage />} />
+            <Route path="/" element={<FootprintsPage />} />
             <Route path="/footprints" element={<FootprintsPage />} />
             <Route path="/radar" element={<BuddyRadarPage />} />
             <Route path="/discovery" element={<DiscoveryPage />} />
@@ -252,7 +252,7 @@ function Dashboard() {
         <div className="flex items-center justify-around">
           {[
             navigationItems[0], // Footprints
-            navigationItems[2], // Explore & Plan
+            navigationItems[2], // Explore & Plan (Discovery)
             navigationItems[3], // Chat
             navigationItems[4], // Buddy Radar
             navigationItems[5]  // Profile
@@ -261,7 +261,7 @@ function Dashboard() {
               key={item.path}
               to={item.path}
               className={`flex flex-col items-center space-y-1 p-2 rounded-xl transition-all duration-300 ${
-                isActive(item.path, item.exact)
+                isActive(item.path, item.exact || false)
                   ? 'text-cyan-400'
                   : 'text-gray-400 hover:text-white'
               }`}
