@@ -408,10 +408,6 @@ function DiscoveryPage() {
     ? nearbyLocations 
     : nearbyLocations.filter(loc => loc.type === selectedFilter);
 
-  const handleDropFootprint = () => {
-    window.location.href = '/dashboard/footprints';
-  };
-
   const formatTimeAgo = (date: Date) => {
     const now = new Date();
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
@@ -451,6 +447,10 @@ function DiscoveryPage() {
   const handleAddToRoute = (recommendationId: string) => {
     // Update recommendation as added
     console.log('Adding to route:', recommendationId);
+  };
+
+  const handleExploreNearby = () => {
+    console.log('Exploring nearby locations');
   };
 
   const filteredRouteRecommendations = selectedRouteType === 'all' 
@@ -581,16 +581,11 @@ function DiscoveryPage() {
       {activeTab === 'nearby' && (
         <div>
           {/* Quick Actions */}
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            <button
-              onClick={handleDropFootprint}
-              className="bg-gradient-to-r from-cyan-500 to-blue-500 p-4 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex items-center justify-center space-x-2"
+          <div className="mb-6">
+            <button 
+              onClick={handleExploreNearby}
+              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 p-4 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex items-center justify-center space-x-2"
             >
-              <Plus className="h-5 w-5 text-white" />
-              <span className="text-white font-medium">Drop Footprint</span>
-            </button>
-            
-            <button className="bg-gradient-to-r from-purple-500 to-pink-500 p-4 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex items-center justify-center space-x-2">
               <Search className="h-5 w-5 text-white" />
               <span className="text-white font-medium">What's Nearby?</span>
             </button>
