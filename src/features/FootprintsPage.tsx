@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { 
   Camera, MapPin, Plus, Filter, Search, Heart, MessageCircle, 
   Share, Video, Mic, FileText, Tag, Clock, Users, Star,
-  Navigation, ChevronDown, Check, RefreshCw, X, Upload
+  Navigation, ChevronDown, Check, RefreshCw, X, Upload, AlertTriangle, Globe, Lock
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
