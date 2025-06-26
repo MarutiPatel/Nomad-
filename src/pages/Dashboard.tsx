@@ -33,12 +33,12 @@ function Dashboard() {
   const location = useLocation();
 
   const navigationItems = [
-    { path: '/dashboard/discovery', icon: Target, label: 'Explore & Plan' },
-    { path: '/dashboard/profile', icon: User, label: 'Profile' },
     { path: '/dashboard/footprints', icon: Footprints, label: 'Footprints' },
     { path: '/dashboard/network', icon: Globe, label: 'Nomad Network' },
+    { path: '/dashboard/discovery', icon: Target, label: 'Explore & Plan' },
     { path: '/dashboard/chat', icon: MessageCircle, label: 'Chats' },
-    { path: '/dashboard/radar', icon: Radar, label: 'Buddy Radar' }
+    { path: '/dashboard/radar', icon: Radar, label: 'Buddy Radar' },
+    { path: '/dashboard/profile', icon: User, label: 'Profile' }
   ];
 
   const additionalFeatures = [
@@ -251,11 +251,11 @@ function Dashboard() {
       <nav className="fixed bottom-0 left-0 right-0 bg-black/40 backdrop-blur-md border-t border-white/10 px-4 py-2 lg:hidden">
         <div className="flex items-center justify-around">
           {[
-            navigationItems[0], // Explore & Plan
-            navigationItems[1], // Profile
-            navigationItems[2], // Footprints
-            navigationItems[4], // Chat
-            navigationItems[5]  // Buddy Radar
+            navigationItems[0], // Footprints
+            navigationItems[2], // Explore & Plan
+            navigationItems[3], // Chat
+            navigationItems[4], // Buddy Radar
+            navigationItems[5]  // Profile
           ].map((item) => (
             <Link
               key={item.path}
