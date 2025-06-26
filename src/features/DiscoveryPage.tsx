@@ -251,11 +251,6 @@ function DiscoveryPage() {
 
   return (
     <div className="p-4 pb-20 lg:pb-4">
-      {/* TEST ELEMENT - This will confirm if the component is rendering */}
-      <div style={{ color: 'white', fontSize: '24px', textAlign: 'center', padding: '20px', backgroundColor: 'red' }}>
-        Discovery Page is Rendering!
-      </div>
-
       {/* Trip Progress Bar (when in trip mode) */}
       {isInTripMode && activeTrip && (
         <div className="fixed top-4 left-4 right-4 z-50 bg-gradient-to-r from-blue-500/90 to-cyan-500/90 backdrop-blur-md rounded-2xl p-4 border border-white/20 shadow-2xl">
