@@ -41,7 +41,7 @@ function Dashboard() {
   ];
 
   const additionalFeatures = [
-    { path: '/dashboard/places', icon: Utensils, label: 'Places & Reviews' },
+    { path: '/dashboard/places', icon: Utensils, label: 'Food & Utilities' },
     { path: '/dashboard/journal', icon: BookOpen, label: 'Travel Journal' },
     { path: '/dashboard/events', icon: Calendar, label: 'Live Events' },
     { path: '/dashboard/ar-world', icon: Camera, label: 'AR World Tags' },
