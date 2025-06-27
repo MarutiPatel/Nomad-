@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  Compass, Users, Shield, Zap, MapPin, Heart, Globe, ArrowRight, Menu, X,
-  Footprints, Radar, MessageCircle, Target, Utensils, Navigation, Eye, EyeOff,
-  Star, Trophy, Brain, Gamepad2, AlertTriangle, Clock, Camera, Gift, Headphones,
-  Telescope, Wand2, Bot, Cpu, TreePine, Coins, Smartphone
+  Compass, ArrowRight, Menu, X, Shield, Zap, Globe, Heart
 } from 'lucide-react';
 
 function LandingPage() {
@@ -77,7 +74,6 @@ function LandingPage() {
         {isMenuOpen && (
           <div className="absolute top-full left-0 right-0 bg-black/90 backdrop-blur-md border-b border-white/10">
             <div className="px-4 py-6 space-y-4">
-              <a href="#safety" className="block text-gray-300 hover:text-transparent hover:bg-gradient-to-r hover:from-cyan-400 hover:to-purple-400 hover:bg-clip-text transition-all duration-300 py-2">Safety</a>
               <Link to="/login" className="block w-full bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 px-6 py-3 rounded-full font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 text-center">
                 Get Started
               </Link>
@@ -150,45 +146,6 @@ function LandingPage() {
                   onClick={() => setCurrentSlide(index)}
                 />
               ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Privacy & Safety Highlight */}
-      <section id="safety" className="py-16 px-4 relative">
-        <div className="max-w-sm mx-auto">
-          <div className="bg-gradient-to-r from-green-500/10 via-blue-500/10 to-purple-500/10 backdrop-blur-sm rounded-3xl p-8 border border-white/10">
-            <div className="text-center mb-6">
-              <Shield className="h-12 w-12 text-green-400 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold mb-2">
-                <span className="bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
-                  Privacy-First Design
-                </span>
-              </h2>
-            </div>
-            
-            <div className="space-y-4 text-sm text-gray-300">
-              <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 rounded-full bg-gradient-to-r from-green-400 to-emerald-500" />
-                <span>Anonymous sign-up with no personal data required</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 rounded-full bg-gradient-to-r from-blue-400 to-cyan-500" />
-                <span>End-to-end encrypted disappearing messages</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 rounded-full bg-gradient-to-r from-purple-400 to-pink-500" />
-                <span>Anti-screenshot protection for sensitive content</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 rounded-full bg-gradient-to-r from-orange-400 to-red-500" />
-                <span>AI-powered safety alerts and community moderation</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 rounded-full bg-gradient-to-r from-red-400 to-pink-500" />
-                <span>Content protection when app loses focus or visibility</span>
-              </div>
             </div>
           </div>
         </div>
