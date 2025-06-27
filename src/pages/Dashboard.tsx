@@ -3,7 +3,7 @@ import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import { 
   Compass, MapPin, Users, MessageCircle, User, Settings, 
   Footprints, Radar, Target, Camera, Map, Heart, Trophy,
-  Bell, Search, Plus, Menu, X, LogOut, Shield, Zap,
+  Bell, Search, Plus, Menu, X, LogOut, Shield, Zap, 
   Clock, Utensils, Bot, Eye, Gift, AlertTriangle, BookOpen,
   Calendar, Globe, RefreshCw, Route as RouteIcon, Star,
   Smartphone, Headphones, Gamepad2, Video
@@ -16,8 +16,7 @@ import ProfilePage from '../features/ProfilePage';
 import DiscoveryPage from '../features/DiscoveryPage';
 import TimeCapsulePage from '../features/TimeCapsulePage';
 import PlacesPage from '../features/PlacesPage';
-import SafetyAlertsPage from '../features/SafetyAlertsPage';
-import GamificationPage from '../features/GamificationPage';
+import SafetyCenterPage from '../features/SafetyCenterPage';
 import AIAssistantPage from '../features/AIAssistantPage';
 import TravelJournalPage from '../features/TravelJournalPage';
 import LiveEventsPage from '../features/LiveEventsPage';
