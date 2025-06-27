@@ -22,7 +22,7 @@ import AIAssistantPage from '../features/AIAssistantPage';
 import TravelJournalPage from '../features/TravelJournalPage';
 import LiveEventsPage from '../features/LiveEventsPage';
 import NomadNetworkPage from '../features/NomadNetworkPage';
-import OfflineBuddyBeaconPage from '../features/OfflineBuddyBeaconPage';
+import SafetyCenterPage from '../features/SafetyCenterPage';
 import ARWorldPage from '../features/ARWorldPage';
 
 function Dashboard() {
@@ -47,8 +47,7 @@ function Dashboard() {
     { path: '/dashboard/ar-world', icon: Camera, label: 'AR World Tags' },
     { path: '/dashboard/time-capsules', icon: Clock, label: 'Time Capsules' },
     { path: '/dashboard/ai-assistant', icon: Bot, label: 'AI Assistant' },
-    { path: '/dashboard/buddy-beacon', icon: Smartphone, label: 'Buddy Beacon' },
-    { path: '/dashboard/safety', icon: AlertTriangle, label: 'Safety Center' },
+    { path: '/dashboard/safety-center', icon: AlertTriangle, label: 'Safety Center' },
     { path: '/dashboard/rewards', icon: Trophy, label: 'Rewards' }
   ];
 
@@ -236,10 +235,9 @@ function Dashboard() {
             <Route path="/ar-world" element={<ARWorldPage />} />
             <Route path="/time-capsules" element={<TimeCapsulePage />} />
             <Route path="/places" element={<PlacesPage />} />
-            <Route path="/safety" element={<SafetyAlertsPage />} />
+            <Route path="/safety-center" element={<SafetyCenterPage />} />
             <Route path="/rewards" element={<GamificationPage />} />
             <Route path="/ai-assistant" element={<AIAssistantPage />} />
-            <Route path="/buddy-beacon" element={<OfflineBuddyBeaconPage />} />
           </Routes>
         </main>
       </div>
