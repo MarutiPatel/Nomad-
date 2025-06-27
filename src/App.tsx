@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { TripProvider } from './contexts/TripContext';
 import { ReviewProvider } from './contexts/ReviewContext';
+import { ScreenshotProtectionProvider } from './contexts/ScreenshotProtectionContext';
 
 function AppRoutes() {
   const { user, loading } = useAuth();
@@ -35,13 +36,15 @@ function AppRoutes() {
 
 function App() {
   return (
-    <AuthProvider>
-      <TripProvider>
-        <ReviewProvider>
-          <AppRoutes />
-        </ReviewProvider>
-      </TripProvider>
-    </AuthProvider>
+    <ScreenshotProtectionProvider>
+      <AuthProvider>
+        <TripProvider>
+          <ReviewProvider>
+            <AppRoutes />
+          </ReviewProvider>
+        </TripProvider>
+      </AuthProvider>
+    </ScreenshotProtectionProvider>
   );
 }
 
