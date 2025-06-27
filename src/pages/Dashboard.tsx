@@ -21,7 +21,6 @@ import AIAssistantPage from '../features/AIAssistantPage';
 import TravelJournalPage from '../features/TravelJournalPage';
 import LiveEventsPage from '../features/LiveEventsPage';
 import NomadNetworkPage from '../features/NomadNetworkPage';
-import SafetyCenterPage from '../features/SafetyCenterPage';
 import ARWorldPage from '../features/ARWorldPage';
 
 function Dashboard() {
