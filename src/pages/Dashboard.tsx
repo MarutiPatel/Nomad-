@@ -15,14 +15,13 @@ import ChatPage from '../features/ChatPage';
 import ProfilePage from '../features/ProfilePage';
 import DiscoveryPage from '../features/DiscoveryPage';
 import TimeCapsulePage from '../features/TimeCapsulePage';
-import FoodDiscoveryPage from '../features/FoodDiscoveryPage';
+import PlacesPage from '../features/PlacesPage';
 import SafetyAlertsPage from '../features/SafetyAlertsPage';
 import GamificationPage from '../features/GamificationPage';
 import AIAssistantPage from '../features/AIAssistantPage';
 import TravelJournalPage from '../features/TravelJournalPage';
 import LiveEventsPage from '../features/LiveEventsPage';
 import NomadNetworkPage from '../features/NomadNetworkPage';
-import PlacesRatingPage from '../features/PlacesRatingPage';
 import OfflineBuddyBeaconPage from '../features/OfflineBuddyBeaconPage';
 import ARWorldPage from '../features/ARWorldPage';
 
@@ -42,13 +41,12 @@ function Dashboard() {
   ];
 
   const additionalFeatures = [
-    { path: '/dashboard/food-discovery', icon: Utensils, label: 'Food & Utilities' },
+    { path: '/dashboard/places', icon: Utensils, label: 'Places & Reviews' },
     { path: '/dashboard/journal', icon: BookOpen, label: 'Travel Journal' },
     { path: '/dashboard/events', icon: Calendar, label: 'Live Events' },
     { path: '/dashboard/ar-world', icon: Camera, label: 'AR World Tags' },
     { path: '/dashboard/time-capsules', icon: Clock, label: 'Time Capsules' },
     { path: '/dashboard/ai-assistant', icon: Bot, label: 'AI Assistant' },
-    { path: '/dashboard/places-rating', icon: Star, label: 'Places & Reviews' },
     { path: '/dashboard/buddy-beacon', icon: Smartphone, label: 'Buddy Beacon' },
     { path: '/dashboard/safety', icon: AlertTriangle, label: 'Safety Center' },
     { path: '/dashboard/rewards', icon: Trophy, label: 'Rewards' }
@@ -237,10 +235,9 @@ function Dashboard() {
             <Route path="/network" element={<NomadNetworkPage />} />
             <Route path="/ar-world" element={<ARWorldPage />} />
             <Route path="/time-capsules" element={<TimeCapsulePage />} />
-            <Route path="/food-discovery" element={<FoodDiscoveryPage />} />
+            <Route path="/places" element={<PlacesPage />} />
             <Route path="/safety" element={<SafetyAlertsPage />} />
             <Route path="/rewards" element={<GamificationPage />} />
-            <Route path="/places-rating" element={<PlacesRatingPage />} />
             <Route path="/ai-assistant" element={<AIAssistantPage />} />
             <Route path="/buddy-beacon" element={<OfflineBuddyBeaconPage />} />
           </Routes>
