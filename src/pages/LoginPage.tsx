@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  Compass, Mail, Phone, Lock as LockIcon, Eye, EyeOff, ArrowRight, 
+  Compass, Mail, Phone, Eye, EyeOff, ArrowRight, 
   Shield, Zap, Globe, Heart, User, Smartphone, AlertCircle,
   CheckCircle, RefreshCw, Users
 } from 'lucide-react';
@@ -318,14 +318,13 @@ function LoginPage() {
                   {/* Password Input */}
                   <div>
                     <div className="relative">
-                      <LockIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                       <input
                         type={showPassword ? 'text' : 'password'}
                         name="password"
                         value={formData.password}
                         onChange={handleInputChange}
                         placeholder="Enter your password (demo: any password works)"
-                        className={`w-full pl-12 pr-12 py-4 bg-black/20 border rounded-2xl text-white placeholder-gray-400 focus:outline-none transition-all duration-300 ${
+                        className={`w-full pl-4 pr-12 py-4 bg-black/20 border rounded-2xl text-white placeholder-gray-400 focus:outline-none transition-all duration-300 ${
                           formErrors.password 
                             ? 'border-red-400 focus:border-red-400' 
                             : 'border-white/10 focus:border-cyan-400'
@@ -351,14 +350,13 @@ function LoginPage() {
                   {!isLogin && (
                     <div>
                       <div className="relative">
-                        <LockIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                         <input
                           type={showPassword ? 'text' : 'password'}
                           name="confirmPassword"
                           value={formData.confirmPassword}
                           onChange={handleInputChange}
                           placeholder="Confirm your password"
-                          className={`w-full pl-12 pr-4 py-4 bg-black/20 border rounded-2xl text-white placeholder-gray-400 focus:outline-none transition-all duration-300 ${
+                          className={`w-full pl-4 pr-4 py-4 bg-black/20 border rounded-2xl text-white placeholder-gray-400 focus:outline-none transition-all duration-300 ${
                             formErrors.confirmPassword 
                               ? 'border-red-400 focus:border-red-400' 
                               : 'border-white/10 focus:border-cyan-400'
