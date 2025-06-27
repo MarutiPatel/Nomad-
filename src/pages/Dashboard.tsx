@@ -47,8 +47,7 @@ function Dashboard() {
     { path: '/dashboard/ar-world', icon: Camera, label: 'AR World Tags' },
     { path: '/dashboard/time-capsules', icon: Clock, label: 'Time Capsules' },
     { path: '/dashboard/ai-assistant', icon: Bot, label: 'AI Assistant' },
-    { path: '/dashboard/safety-center', icon: AlertTriangle, label: 'Safety Center' },
-    { path: '/dashboard/rewards', icon: Trophy, label: 'Rewards' }
+    { path: '/dashboard/safety-center', icon: AlertTriangle, label: 'Safety Center' }
   ];
 
   const isActive = (path: string, exact = false) => {
@@ -236,7 +235,6 @@ function Dashboard() {
             <Route path="/time-capsules" element={<TimeCapsulePage />} />
             <Route path="/places" element={<PlacesPage />} />
             <Route path="/safety-center" element={<SafetyCenterPage />} />
-            <Route path="/rewards" element={<GamificationPage />} />
             <Route path="/ai-assistant" element={<AIAssistantPage />} />
           </Routes>
         </main>
