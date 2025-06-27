@@ -1,12 +1,111 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  Compass, ArrowRight, Menu, X, Shield, Zap, Globe, Heart
+  Compass, Users, Shield, Zap, MapPin, Heart, Globe, ArrowRight, Menu, X,
+  Footprints, Radar, MessageCircle, Target, Utensils, Navigation, Eye, EyeOff,
+  Star, Trophy, Brain, Gamepad2, AlertTriangle, Clock, Camera, Gift, Headphones,
+  Telescope, Wand2, Bot, Cpu, TreePine, Coins, Smartphone
 } from 'lucide-react';
+import FeatureModal from '../components/FeatureModal';
 
 function LandingPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [isFeatureModalOpen, setIsFeatureModalOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('');
+
+  const coreFeatures = [
+    {
+      icon: Footprints,
+      title: "Digital Footprints",
+      description: "Leave your mark and discover paths taken by fellow travelers",
+      color: "from-orange-400 to-pink-500"
+    },
+    {
+      icon: Radar,
+      title: "Buddy Radar",
+      description: "Find travel souls nearby with AI-powered proximity matching",
+      color: "from-cyan-400 to-blue-500"
+    },
+    {
+      icon: MessageCircle,
+      title: "Disappearing Chats",
+      description: "Connect authentically with messages that vanish after your journey",
+      color: "from-green-400 to-teal-500"
+    },
+    {
+      icon: Target,
+      title: "Doppelarting Discovery",
+      description: "Discover your travel twin through vibe-based AI matching",
+      color: "from-purple-400 to-pink-500"
+    }
+  ];
+
+  const featureCategories = [
+    {
+      icon: Shield,
+      title: "Account & Identity",
+      description: "Anonymous sign-up, shape-shifting avatars, ghost mode",
+      color: "from-green-400 to-emerald-500",
+      count: "5+ features"
+    },
+    {
+      icon: Eye,
+      title: "Privacy & Security",
+      description: "Anti-screenshot protection, digital detox, encrypted storage",
+      color: "from-red-400 to-pink-500",
+      count: "8+ features"
+    },
+    {
+      icon: Clock,
+      title: "Footprints & Memories",
+      description: "Time capsules, NFT memories, travel heatmaps",
+      color: "from-yellow-400 to-orange-500",
+      count: "10+ features"
+    },
+    {
+      icon: Users,
+      title: "Social & Community",
+      description: "AR world tags, virtual postcards, crowd-controlled events",
+      color: "from-purple-400 to-pink-500",
+      count: "15+ features"
+    },
+    {
+      icon: Compass,
+      title: "Discovery & Exploration",
+      description: "Teleport roulette, dreamscape mode, time machine",
+      color: "from-cyan-400 to-blue-500",
+      count: "12+ features"
+    },
+    {
+      icon: Utensils,
+      title: "Food & Utility",
+      description: "Food discovery, camping sites, travel planning assistant",
+      color: "from-green-400 to-teal-500",
+      count: "8+ features"
+    },
+    {
+      icon: Trophy,
+      title: "Gamification & Rewards",
+      description: "Travel karma, mystery challenges, alien tourist mode",
+      color: "from-orange-400 to-red-500",
+      count: "6+ features"
+    },
+    {
+      icon: AlertTriangle,
+      title: "Safety & Alerts",
+      description: "AI safety alerts, crowdsourced warnings, emergency system",
+      color: "from-red-400 to-orange-500",
+      count: "5+ features"
+    },
+    {
+      icon: Brain,
+      title: "AI & Personalization",
+      description: "AI twin, smart recommendations, future tech ready",
+      color: "from-blue-400 to-purple-500",
+      count: "7+ features"
+    }
+  ];
 
   const slides = [
     {
@@ -45,6 +144,11 @@ function LandingPage() {
     return () => clearInterval(timer);
   }, [slides.length]);
 
+  const openFeatureModal = (category: string) => {
+    setSelectedCategory(category);
+    setIsFeatureModalOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900 text-white overflow-hidden">
       {/* Mobile-First Navigation */}
@@ -74,6 +178,9 @@ function LandingPage() {
         {isMenuOpen && (
           <div className="absolute top-full left-0 right-0 bg-black/90 backdrop-blur-md border-b border-white/10">
             <div className="px-4 py-6 space-y-4">
+              <a href="#features" className="block text-gray-300 hover:text-transparent hover:bg-gradient-to-r hover:from-cyan-400 hover:to-purple-400 hover:bg-clip-text transition-all duration-300 py-2">All Features</a>
+              <a href="#categories" className="block text-gray-300 hover:text-transparent hover:bg-gradient-to-r hover:from-cyan-400 hover:to-purple-400 hover:bg-clip-text transition-all duration-300 py-2">Feature Categories</a>
+              <a href="#safety" className="block text-gray-300 hover:text-transparent hover:bg-gradient-to-r hover:from-cyan-400 hover:to-purple-400 hover:bg-clip-text transition-all duration-300 py-2">Safety</a>
               <Link to="/login" className="block w-full bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 px-6 py-3 rounded-full font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 text-center">
                 Get Started
               </Link>
@@ -129,7 +236,7 @@ function LandingPage() {
                 <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Link>
               <button className="w-full px-8 py-4 rounded-full font-semibold text-lg border-2 border-white/20 hover:border-purple-400/50 hover:bg-white/5 transition-all duration-300 backdrop-blur-sm">
-                Learn More
+                Explore All Features
               </button>
             </div>
 
@@ -151,6 +258,169 @@ function LandingPage() {
         </div>
       </section>
 
+      {/* Core Features Section */}
+      <section id="features" className="py-16 px-4 relative">
+        <div className="max-w-sm mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">
+              <span className="bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                Core Features
+              </span>
+            </h2>
+            <p className="text-gray-400 text-sm leading-relaxed">
+              The foundation of anonymous travel connections
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {coreFeatures.map((feature, index) => (
+              <div
+                key={index}
+                className="group bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:border-white/20 transition-all duration-300 hover:scale-105 hover:bg-white/10"
+              >
+                <div className="flex items-center space-x-4">
+                  <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${feature.color} flex items-center justify-center shadow-lg`}>
+                    <feature.icon className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold mb-1 text-white group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-cyan-400 group-hover:to-purple-400 group-hover:bg-clip-text transition-all">
+                      {feature.title}
+                    </h3>
+                    <p className="text-gray-400 text-sm leading-relaxed">
+                      {feature.description}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Feature Categories Section */}
+      <section id="categories" className="py-16 px-4 relative">
+        <div className="max-w-sm mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">
+              <span className="bg-gradient-to-r from-orange-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+                Complete Feature Set
+              </span>
+            </h2>
+            <p className="text-gray-400 text-sm leading-relaxed">
+              Explore all 80+ features across 9 categories
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            {featureCategories.map((category, index) => (
+              <button
+                key={index}
+                onClick={() => openFeatureModal(category.title)}
+                className="group w-full bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10 hover:border-white/20 transition-all duration-300 hover:scale-105 text-left"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className={`w-10 h-10 rounded-full bg-gradient-to-r ${category.color} flex items-center justify-center shadow-lg`}>
+                      <category.icon className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-base font-semibold mb-1 text-white group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-cyan-400 group-hover:to-purple-400 group-hover:bg-clip-text transition-all">
+                        {category.title}
+                      </h3>
+                      <p className="text-gray-400 text-xs leading-relaxed">
+                        {category.description}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-xs text-gray-500 mb-1">{category.count}</span>
+                    <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-purple-400 group-hover:translate-x-1 transition-all" />
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-16 px-4 relative">
+        <div className="max-w-sm mx-auto">
+          <div className="bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-pink-500/10 backdrop-blur-sm rounded-3xl p-8 border border-white/10">
+            <div className="text-center mb-6">
+              <Heart className="h-12 w-12 text-pink-400 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold mb-2">
+                <span className="bg-gradient-to-r from-cyan-400 to-pink-400 bg-clip-text text-transparent">
+                  Join the Movement
+                </span>
+              </h2>
+              <p className="text-gray-400 text-sm">
+                Next-gen travel social network
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">80+</div>
+                <div className="text-xs text-gray-400">Features</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">9</div>
+                <div className="text-xs text-gray-400">Categories</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent">∞</div>
+                <div className="text-xs text-gray-400">Possibilities</div>
+              </div>
+            </div>
+
+            <Link to="/login" className="w-full bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 px-6 py-4 rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex items-center justify-center space-x-2">
+              <MapPin className="h-5 w-5" />
+              <span>Start Your Journey</span>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Privacy & Safety Highlight */}
+      <section id="safety" className="py-16 px-4 relative">
+        <div className="max-w-sm mx-auto">
+          <div className="bg-gradient-to-r from-green-500/10 via-blue-500/10 to-purple-500/10 backdrop-blur-sm rounded-3xl p-8 border border-white/10">
+            <div className="text-center mb-6">
+              <Shield className="h-12 w-12 text-green-400 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold mb-2">
+                <span className="bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
+                  Privacy-First Design
+                </span>
+              </h2>
+            </div>
+            
+            <div className="space-y-4 text-sm text-gray-300">
+              <div className="flex items-center space-x-3">
+                <div className="w-2 h-2 rounded-full bg-gradient-to-r from-green-400 to-emerald-500" />
+                <span>Anonymous sign-up with no personal data required</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="w-2 h-2 rounded-full bg-gradient-to-r from-blue-400 to-cyan-500" />
+                <span>End-to-end encrypted disappearing messages</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="w-2 h-2 rounded-full bg-gradient-to-r from-purple-400 to-pink-500" />
+                <span>Anti-screenshot protection for sensitive content</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="w-2 h-2 rounded-full bg-gradient-to-r from-orange-400 to-red-500" />
+                <span>AI-powered safety alerts and community moderation</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="w-2 h-2 rounded-full bg-gradient-to-r from-red-400 to-pink-500" />
+                <span>Content protection when app loses focus or visibility</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="bg-black/30 backdrop-blur-sm border-t border-white/10 py-8 px-4">
         <div className="max-w-sm mx-auto text-center">
@@ -167,6 +437,13 @@ function LandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* Feature Modal */}
+      <FeatureModal 
+        isOpen={isFeatureModalOpen}
+        onClose={() => setIsFeatureModalOpen(false)}
+        selectedCategory={selectedCategory}
+      />
     </div>
   );
 }
