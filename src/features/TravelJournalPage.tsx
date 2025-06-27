@@ -190,7 +190,6 @@ function TravelJournalPage() {
                     <div className="bg-purple-500/20 p-1 rounded-full">
                       <Eye className="h-3 w-3 text-purple-400" />
                     </div>
-                    )
                   )}
                 </div>
               </div>
