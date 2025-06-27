@@ -572,7 +572,7 @@ function GamificationPage() {
                       {challenge.timeLimit && challenge.isActive && (
                         <div className="text-xs text-orange-400">
                           {formatTimeRemaining(challenge.timeLimit)}
-                        <LockIcon className="h-6 w-6 text-white" />
+                        <Lock className="h-6 w-6 text-white" />
                       )}
                     </div>
                   </div>
