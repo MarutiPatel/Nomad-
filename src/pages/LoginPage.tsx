@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  Compass, Mail, Phone, Lock, Eye, EyeOff, ArrowRight, 
+  Compass, Mail, Phone, Lock as LockIcon, Eye, EyeOff, ArrowRight, 
   Shield, Zap, Globe, Heart, User, Smartphone, AlertCircle,
   CheckCircle, RefreshCw, Users
 } from 'lucide-react';
@@ -318,7 +318,7 @@ function LoginPage() {
                   {/* Password Input */}
                   <div>
                     <div className="relative">
-                      <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                      <LockIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                       <input
                         type={showPassword ? 'text' : 'password'}
                         name="password"
@@ -351,7 +351,7 @@ function LoginPage() {
                   {!isLogin && (
                     <div>
                       <div className="relative">
-                        <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                        <LockIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                         <input
                           type={showPassword ? 'text' : 'password'}
                           name="confirmPassword"

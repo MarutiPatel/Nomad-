@@ -109,7 +109,7 @@ function TimeCapsulePage() {
                 />
                 <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
                   {capsule.isLocked ? (
-                    <Lock className="h-12 w-12 text-white" />
+                    <LockIcon className="h-12 w-12 text-white" />
                   ) : (
                     <Unlock className="h-12 w-12 text-green-400" />
                   )}

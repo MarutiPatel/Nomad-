@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   User, Edit, Settings, Shield, Eye, EyeOff, MapPin, 
   Calendar, Globe, Heart, Star, Trophy, Camera, Save, X, Radar, Crown, Users, MessageCircle, Clock,
-  Target, Zap, TreePine, Coins, Navigation, CheckCircle, Unlock, Gift, Play, Pause, Plus
+  Target, Zap, TreePine, Coins, Navigation, CheckCircle, Unlock, Gift, Play, Pause, Plus, Lock as LockIcon
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
