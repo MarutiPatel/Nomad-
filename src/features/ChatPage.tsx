@@ -5,6 +5,7 @@ import {
   Flag, UserX, AlertTriangle, CheckCircle, X
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useScreenshotProtection } from '../contexts/ScreenshotProtectionContext';
 
 interface Chat {
   id: string;
@@ -38,6 +39,7 @@ interface Message {
 
 function ChatPage() {
   const { user, blockUser, reportUser } = useAuth();
+  const { isContentBlurred } = useScreenshotProtection();
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [messageInput, setMessageInput] = useState('');
   const [isDisappearingMode, setIsDisappearingMode] = useState(true);
@@ -421,7 +423,7 @@ function ChatPage() {
         </div>
 
         {/* Chat List */}
-        <div className="space-y-3">
+        <div className={`space-y-3 ${isContentBlurred ? 'blur-sensitive' : ''}`}>
           {chats.map((chat) => (
             <div
               key={chat.id}
@@ -575,7 +577,7 @@ function ChatPage() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className={`flex-1 overflow-y-auto p-4 space-y-4 ${isContentBlurred ? 'blur-sensitive' : ''}`}>
         {messages.map((message) => (
           <div
             key={message.id}
@@ -589,7 +591,9 @@ function ChatPage() {
       </div>
 
       {/* Message Input */}
-      <div className="bg-black/30 backdrop-blur-md border-t border-white/10 p-4">
+      <div className={`bg-black/30 backdrop-blur-md border-t border-white/10 p-4 ${
+        isContentBlurred ? 'blur-sensitive' : ''
+      }`}>
         {/* Disappearing Mode Toggle */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-2">

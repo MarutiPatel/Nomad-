@@ -5,6 +5,7 @@ import {
   Edit, Save, X, Image, Video, FileText, Clock, Eye
 } from 'lucide-react';
 
+import { useScreenshotProtection } from '../contexts/ScreenshotProtectionContext';
 interface JournalEntry {
   id: string;
   title: string;
@@ -34,6 +35,7 @@ interface JournalEntry {
 
 function TravelJournalPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const { isContentBlurred } = useScreenshotProtection();
   const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [playingAudio, setPlayingAudio] = useState<string | null>(null);
@@ -150,7 +152,7 @@ function TravelJournalPage() {
       </div>
 
       {/* Journal Entries */}
-      <div className="space-y-4">
+      <div className={`space-y-4 ${isContentBlurred ? 'blur-sensitive' : ''}`}>
         {entries.map((entry) => (
           <div
             key={entry.id}
@@ -188,6 +190,7 @@ function TravelJournalPage() {
                     <div className="bg-purple-500/20 p-1 rounded-full">
                       <Eye className="h-3 w-3 text-purple-400" />
                     </div>
+                    )
                   )}
                 </div>
               </div>

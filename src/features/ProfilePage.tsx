@@ -5,6 +5,7 @@ import {
   Target, Zap, TreePine, Coins, Navigation, CheckCircle, Unlock, Gift, Play, Pause, Plus
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useScreenshotProtection } from '../contexts/ScreenshotProtectionContext';
 
 // Interfaces for Gamification/Rewards
 interface Achievement {
@@ -83,6 +84,7 @@ interface LeaderboardEntry {
 
 function ProfilePage() {
   const { user, updateProfile } = useAuth();
+  const { isContentBlurred } = useScreenshotProtection();
   const [activeProfileTab, setActiveProfileTab] = useState<'profile' | 'rewards'>('profile');
   const [isEditing, setIsEditing] = useState(false);
   const [isGhostMode, setIsGhostMode] = useState(false);
@@ -694,7 +696,9 @@ function ProfilePage() {
           </div>
 
           {/* Profile Card */}
-          <div className="bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 p-6 mb-6">
+          <div className={`bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 p-6 mb-6 ${
+            isContentBlurred ? 'blur-sensitive blur-overlay' : ''
+          }`}>
             {/* Avatar Section */}
             <div className="text-center mb-6">
               <div className="relative inline-block">
@@ -862,7 +866,9 @@ function ProfilePage() {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className={`grid grid-cols-3 gap-4 mb-6 ${
+            isContentBlurred ? 'blur-sensitive' : ''
+          }`}>
             <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 text-center">
               <div className="text-lg font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
                 {user?.footprints || 0}
@@ -882,7 +888,9 @@ function ProfilePage() {
           </div>
 
           {/* Privacy Settings */}
-          <div className="bg-gradient-to-r from-green-500/10 via-blue-500/10 to-purple-500/10 backdrop-blur-sm rounded-2xl p-4 border border-white/10 mb-6">
+          <div className={`bg-gradient-to-r from-green-500/10 via-blue-500/10 to-purple-500/10 backdrop-blur-sm rounded-2xl p-4 border border-white/10 mb-6 ${
+            isContentBlurred ? 'blur-sensitive' : ''
+          }`}>
             <div className="flex items-center space-x-2 mb-3">
               <Shield className="h-5 w-5 text-green-400" />
               <span className="text-green-400 font-medium">Privacy Settings</span>

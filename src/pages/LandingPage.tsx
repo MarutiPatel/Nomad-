@@ -412,6 +412,10 @@ function LandingPage() {
                 <div className="w-2 h-2 rounded-full bg-gradient-to-r from-orange-400 to-red-500" />
                 <span>AI-powered safety alerts and community moderation</span>
               </div>
+              <div className="flex items-center space-x-3">
+                <div className="w-2 h-2 rounded-full bg-gradient-to-r from-red-400 to-pink-500" />
+                <span>Content protection when app loses focus or visibility</span>
+              </div>
             </div>
           </div>
         </div>

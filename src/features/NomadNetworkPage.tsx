@@ -5,6 +5,7 @@ import {
   Zap, Trophy, Eye, Share, Bookmark, Plus, Crown
 } from 'lucide-react';
 
+import { useScreenshotProtection } from '../contexts/ScreenshotProtectionContext';
 interface NomadProfile {
   id: string;
   displayName: string;
@@ -40,6 +41,7 @@ interface NomadProfile {
 function NomadNetworkPage() {
   const [activeTab, setActiveTab] = useState<'discover' | 'following' | 'search'>('discover');
   const [selectedProfile, setSelectedProfile] = useState<NomadProfile | null>(null);
+  const { isContentBlurred } = useScreenshotProtection();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchFilters, setSearchFilters] = useState({
     travelStyle: '',
@@ -380,7 +382,7 @@ function NomadNetworkPage() {
       {/* Content */}
       <div>
         {/* Profiles Grid */}
-        <div className="space-y-4">
+        <div className={`space-y-4 ${isContentBlurred ? 'blur-sensitive' : ''}`}>
           {getDisplayProfiles().map((profile) => (
             <div
               key={profile.id}
@@ -476,11 +478,11 @@ function NomadNetworkPage() {
                   )}
 
                   {/* Travel Style & Bio */}
-                  <div className="mb-3">
+                  <div className={`mb-3 ${isContentBlurred ? 'blur-sensitive' : ''}`}>
                     <span className="inline-block px-2 py-1 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full text-xs text-purple-400 border border-purple-400/30 mb-2">
                       {profile.travelStyle}
                     </span>
-                    <p className="text-gray-300 text-sm">{profile.bio}</p>
+                    <p className={`text-gray-300 text-sm ${isContentBlurred ? 'blur-sensitive' : ''}`}>{profile.bio}</p>
                   </div>
 
                   {/* Stats */}
