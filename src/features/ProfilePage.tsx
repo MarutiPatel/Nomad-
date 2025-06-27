@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   User, Edit, Settings, Shield, Eye, EyeOff, MapPin, 
   Calendar, Globe, Heart, Star, Trophy, Camera, Save, X, Radar, Crown, Users, MessageCircle, Clock,
-  Target, Zap, TreePine, Coins, Navigation, CheckCircle, Unlock, Gift, Play, Pause, Plus, Lock as LockIcon
+  Target, Zap, TreePine, Coins, Navigation, CheckCircle, Unlock, Gift, Play, Pause, Plus
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -1074,7 +1074,7 @@ function ProfilePage() {
                       {achievement.isUnlocked ? (
                         <achievement.icon className="h-6 w-6 text-white" />
                       ) : (
-                        <Lock className="h-6 w-6 text-white" />
+                        <LockIcon className="h-6 w-6 text-white" />
                       )}
                     </div>
 
